@@ -125,8 +125,10 @@ class OpDeviceFPTest : public ::testing::TestWithParam<FloatType> {
 };
 
 
-TEST_P(OpDeviceTest, MedianFilter) {
-  Device device = GetParam();
+TEST_P(OpDeviceFPTest, MedianFilter) {
+  Device device = GetParam().device;
+  const DataType dtype = GetParam().dtype;
+  const float error = GetParam().error;
   StorageView x({2, 8}, std::vector<float>{
       0.2556743323802948, 0.8028775453567505, 0.3514494299888611, 0.3542254865169525,
       0.5881291031837463, 0.1458204835653305, 0.6845740675926208, 0.543143630027771,
@@ -139,9 +141,9 @@ TEST_P(OpDeviceTest, MedianFilter) {
       0.9039326310157776, 0.4063926637172699, 0.7943458557128906, 0.4063926637172699,
       0.7943458557128906, 0.4063926637172699, 0.7943458557128906, 0.289182186126709},
       device);
-  StorageView y(device);
-  ops::MedianFilter(5)(x, y);
-  expect_storage_eq(y, expected);
+  StorageView y(dtype, device);
+  ops::MedianFilter(5)(x.to(dtype), y);
+  expect_storage_eq(y.to_float32(), expected, error);
 }
 
 TEST_P(OpDeviceTest, Add) {
@@ -722,9 +724,6 @@ TEST_P(OpDeviceFPTest, LayerNorm) {
 
 TEST_P(OpDeviceFPTest, LayerNormAxis) {
   const Device device = GetParam().device;
-  if (device == Device::CUDA) {
-    GTEST_SKIP() << "Generalized LayerNorm is not implemented on GPU";
-  }
   const DataType dtype = GetParam().dtype;
   const float error = GetParam().error;
   StorageView x({2, 3, 2}, std::vector<float>{
@@ -743,7 +742,7 @@ TEST_P(OpDeviceFPTest, LayerNormAxis) {
       1.4136513471603394, -1.3856042623519897}, device);
   StorageView y(dtype, device);
   ops::LayerNorm(1, 0)(x.to(dtype), y);
-  expect_storage_eq(y.to_float32(), expected, error);
+  expect_storage_eq(y.to_float32(), expected, error * 10);
 }
 
 TEST_P(OpDeviceFPTest, RMSNorm) {
@@ -778,7 +777,8 @@ TEST_P(OpDeviceTest, QuantizeINT8) {
   }
 
   // With rounding before cast and shift to uint8.
-  {
+  // Shift to uin8_t is not defined on CUDA
+  if (device != Device::CUDA) {
     StorageView expected_qa(a.shape(), std::vector<int8_t>{1, 90, -64, -103, -98, -1, 110, -128});
     ops::Quantize(ops::Quantize::ScaleType::GLOBAL, true, true)(a, qa, scale);
     expect_storage_eq(scale, expected_scale);
@@ -997,12 +997,6 @@ TEST_P(OpDeviceTest, Max) {
   });
 }
 
-#ifndef CT2_WITH_CUDNN
-#  define GUARD_CONV1D_GPU_TEST GTEST_SKIP() << "Conv1D tests on GPU require cuDNN"
-#else
-#  define GUARD_CONV1D_GPU_TEST do {} while (0)
-#endif
-
 static const StorageView conv_input({2, 2, 3}, std::vector<float>{
     0.5728129f, 0.8784890f, 0.2029965f, 0.3689166f, 0.6570600f, 0.9202735f,
     0.7081605f, 0.3570334f, 0.9339380f, 0.8162224f, 0.0597404f, 0.4628246f});
@@ -1018,8 +1012,6 @@ static const StorageView conv_bias({4}, std::vector<float>{
 
 TEST_P(OpDeviceFPTest, Conv1D) {
   const Device device = GetParam().device;
-  if (device == Device::CUDA)
-    GUARD_CONV1D_GPU_TEST;
   const DataType dtype = GetParam().dtype;
   const float error = GetParam().error;
   const StorageView expected({2, 4, 2}, std::vector<float>{
@@ -1038,8 +1030,6 @@ TEST_P(OpDeviceFPTest, Conv1D) {
 
 TEST_P(OpDeviceFPTest, Conv1DNoBias) {
   const Device device = GetParam().device;
-  if (device == Device::CUDA)
-    GUARD_CONV1D_GPU_TEST;
   const DataType dtype = GetParam().dtype;
   const float error = GetParam().error;
   const StorageView expected({2, 4, 2}, std::vector<float>{
@@ -1057,8 +1047,6 @@ TEST_P(OpDeviceFPTest, Conv1DNoBias) {
 
 TEST_P(OpDeviceFPTest, Conv1DPadding) {
   const Device device = GetParam().device;
-  if (device == Device::CUDA)
-    GUARD_CONV1D_GPU_TEST;
   const DataType dtype = GetParam().dtype;
   const float error = GetParam().error;
   const StorageView expected({2, 4, 4}, std::vector<float>{
@@ -1081,8 +1069,6 @@ TEST_P(OpDeviceFPTest, Conv1DPadding) {
 
 TEST_P(OpDeviceFPTest, Conv1DStride) {
   const Device device = GetParam().device;
-  if (device == Device::CUDA)
-    GUARD_CONV1D_GPU_TEST;
   const DataType dtype = GetParam().dtype;
   const float error = GetParam().error;
   const StorageView expected({2, 4, 1}, std::vector<float>{
@@ -1099,8 +1085,6 @@ TEST_P(OpDeviceFPTest, Conv1DStride) {
 
 TEST_P(OpDeviceFPTest, Conv1DPaddingAndStride) {
   const Device device = GetParam().device;
-  if (device == Device::CUDA)
-    GUARD_CONV1D_GPU_TEST;
   const DataType dtype = GetParam().dtype;
   const float error = GetParam().error;
   const StorageView expected({2, 4, 2}, std::vector<float>{

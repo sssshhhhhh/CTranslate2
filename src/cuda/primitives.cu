@@ -1,7 +1,39 @@
 #include "ctranslate2/primitives.h"
 
+#ifdef CT2_USE_HIP
+#include <hip/hip_runtime.h>
+#include <hipblas/hipblas.h>
+#include <thrust/extrema.h>
+#define cudaMemcpyAsync hipMemcpyAsync
+#define cudaMemcpyDeviceToDevice hipMemcpyDeviceToDevice
+#define cudaMemcpyDeviceToHost hipMemcpyDeviceToHost
+#define cudaMemcpyHostToDevice hipMemcpyHostToDevice
+#define cublasSgemm hipblasSgemm
+#define CUBLAS_OP_T HIPBLAS_OP_T
+#define CUBLAS_OP_N HIPBLAS_OP_N
+#define cudaDataType_t  hipDataType
+#define cublasComputeType_t hipblasComputeType_t
+#define CUDA_R_16F HIP_R_16F
+#define CUBLAS_COMPUTE_16F HIPBLAS_COMPUTE_16F
+#define CUBLAS_COMPUTE_32F HIPBLAS_COMPUTE_32F
+#define CUBLAS_COMPUTE_32I HIPBLAS_COMPUTE_32I
+#define CUDA_R_32F HIP_R_32F
+#define CUDA_R_16BF HIP_R_16BF
+#define CUDA_R_8I HIP_R_8I
+#define CUDA_R_32I HIP_R_32I
+#define CUBLAS_GEMM_DEFAULT HIPBLAS_GEMM_DEFAULT
+#define cublasSgemmStridedBatched hipblasSgemmStridedBatched
+#ifdef HIPBLAS_V2
+#define cublasGemmEx hipblasGemmEx
+#define cublasGemmStridedBatchedEx hipblasGemmStridedBatchedEx
+#else
+#define cublasGemmEx hipblasGemmEx_v2
+#define cublasGemmStridedBatchedEx hipblasGemmStridedBatchedEx_v2
+#endif
+#else
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
+#endif
 #include <thrust/device_ptr.h>
 
 #include "cuda/helpers.h"
@@ -484,12 +516,12 @@ namespace ctranslate2 {
 
     const void* alpha_ptr = &alpha_h;
     const void* beta_ptr = &beta_h;
-    cudaDataType_t compute_type = CUDA_R_16F;
+    cublasComputeType_t compute_type = CUBLAS_COMPUTE_16F;
 
     if (!cuda::use_true_fp16_gemm()) {
       alpha_ptr = &alpha;
       beta_ptr = &beta;
-      compute_type = CUDA_R_32F;
+      compute_type = CUBLAS_COMPUTE_32F;
     }
 
     // cuBLAS assumes column-major storage, so swap a and b accordingly.
@@ -527,7 +559,7 @@ namespace ctranslate2 {
                               a, CUDA_R_16BF, lda,
                               &beta,
                               c, CUDA_R_16BF, ldc,
-                              CUDA_R_32F,
+                              CUBLAS_COMPUTE_32F,
                               CUBLAS_GEMM_DEFAULT));
   }
 
@@ -555,7 +587,7 @@ namespace ctranslate2 {
                               a, CUDA_R_8I, lda,
                               &beta_i,
                               c, CUDA_R_32I, ldc,
-                              CUDA_R_32I,
+                              CUBLAS_COMPUTE_32I,
                               CUBLAS_GEMM_DEFAULT));
   }
 
@@ -597,12 +629,12 @@ namespace ctranslate2 {
 
     const void* alpha_ptr = &alpha_h;
     const void* beta_ptr = &beta_h;
-    cudaDataType_t compute_type = CUDA_R_16F;
+    cublasComputeType_t compute_type = CUBLAS_COMPUTE_16F;
 
     if (!cuda::use_true_fp16_gemm()) {
       alpha_ptr = &alpha;
       beta_ptr = &beta;
-      compute_type = CUDA_R_32F;
+      compute_type = CUBLAS_COMPUTE_32F;
     }
 
     // cuBLAS assumes column-major storage, so swap a and b accordingly.
@@ -641,7 +673,7 @@ namespace ctranslate2 {
                                             &beta,
                                             c, CUDA_R_16BF, ldc, stridec,
                                             batch_size,
-                                            CUDA_R_32F,
+                                            CUBLAS_COMPUTE_32F,
                                             CUBLAS_GEMM_DEFAULT));
   }
 

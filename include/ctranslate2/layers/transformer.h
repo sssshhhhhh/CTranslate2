@@ -79,7 +79,7 @@ namespace ctranslate2 {
                               const dim_t num_heads,
                               const bool pre_norm = true,
                               const ops::ActivationType activation_type = ops::ActivationType::ReLU,
-                              const bool use_flash_attention = true,
+                              const bool use_flash_attention = false,
                               Alibi* alibi = nullptr);
 
       void operator()(const StorageView& input,

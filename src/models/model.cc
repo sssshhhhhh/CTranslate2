@@ -844,6 +844,11 @@ namespace ctranslate2 {
                      " running independently a model in each device");
       }
 
+#ifdef CT2_USE_HIP
+      if (use_flash_attention) {
+        throw std::invalid_argument("FlashAttention unsupported with HIP.");
+      }
+#else
       bool is_sm8x = false;
       bool is_sm90 = false;
       if (device == Device::CUDA) {
@@ -855,6 +860,7 @@ namespace ctranslate2 {
       if (use_flash_attention && (device != Device::CUDA || (!is_sm8x && !is_sm90))) {
         throw std::invalid_argument("FlashAttention only supports Ampere GPUs or newer.");
       }
+#endif
 #endif
 
       std::vector<std::shared_ptr<const Model>> models;
