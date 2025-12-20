@@ -13,7 +13,11 @@ namespace ctranslate2 {
                                                                  scope + "/layer",
                                                                  _num_heads,
                                                                  /*pre_norm=*/true,
-                                                                 ops::ActivationType::GELU))
+                                                                 ops::ActivationType::GELU,
+#ifdef CT2_USE_HIP
+                                                                 model.use_flash_attention(),
+#endif
+                                                                ))
       , _output_norm(model, scope + "/layer_norm")
     {
     }

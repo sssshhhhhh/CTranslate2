@@ -668,6 +668,9 @@ if (WITH_CUDA)
 
 
 elseif(WITH_HIP)
+  if(WITH_TENSOR_PARALLEL)
+    message(FATAL_ERROR "WITH_HIP=ON incompatible with WITH_TENSOR_PARALLEL=ON")
+  endif()
   enable_language(HIP)
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
   message(STATUS "HIP Compiler: ${CMAKE_HIP_COMPILER}")
@@ -698,7 +701,32 @@ elseif(WITH_HIP)
     src/ops/awq/gemm_gpu.cu
     src/ops/awq/gemv_gpu.cu
     src/ops/awq/dequantize_gpu.cu
+    src/ops/flash_attention_gpu.cu
   )
+  list(APPEND CUDA_SOURCES src/ops/flash_attention_ck.cu)
+  if(WITH_FLASH_ATTN)
+    file(GLOB FA_SOURCES "src/ops/flash-attn-ck/fmha_*wd*.cpp")
+    list(APPEND CUDA_SOURCES ${FA_SOURCES})
+    add_definitions(-DCT2_WITH_FLASH_ATTN)
+    set_source_files_properties(${FA_SOURCES} PROPERTIES COMPILE_FLAGS "-O3 -std=c++20 -fgpu-flush-denormals-to-zero -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false")
+    set(FA_DEFS
+      CK_TILE_FMHA_FWD_FAST_EXP2=1
+      CK_ENABLE_BF16
+      CK_ENABLE_FP16
+      CK_USE_XDL
+      USE_PROF_API=1
+      FLASHATTENTION_DISABLE_BACKWARD
+      __HIP_PLATFORM_HCC__=1
+      CK_TILE_FLOAT_TO_BFLOAT16_DEFAULT=3
+    )
+    set_source_files_properties(${FA_SOURCES} PROPERTIES COMPILE_DEFINITIONS "${FA_DEFS}")
+    list(APPEND PRIVATE_INCLUDE_DIRECTORIES
+      ${CMAKE_CURRENT_SOURCE_DIR}/third_party/composable_kernel/include
+      ${CMAKE_CURRENT_SOURCE_DIR}/third_party/composable_kernel/library/include
+      ${CMAKE_CURRENT_SOURCE_DIR}/third_party/composable_kernel/example/ck_tile/01_fmha
+    )
+  endif()
+
   set_source_files_properties(${CUDA_SOURCES} PROPERTIES LANGUAGE HIP)
   set_source_files_properties(
     src/cpu/allocator.cc

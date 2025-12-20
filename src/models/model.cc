@@ -844,11 +844,7 @@ namespace ctranslate2 {
                      " running independently a model in each device");
       }
 
-#ifdef CT2_USE_HIP
-      if (use_flash_attention) {
-        throw std::invalid_argument("FlashAttention unsupported with HIP.");
-      }
-#else
+#ifndef CT2_USE_HIP
       bool is_sm8x = false;
       bool is_sm90 = false;
       if (device == Device::CUDA) {

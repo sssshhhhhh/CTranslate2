@@ -82,16 +82,16 @@ namespace ctranslate2 {
       StorageView context(input.dtype(), input.device());
       if (_self_attention)
         (*_self_attention)(input,
-                        input,
-                        lengths,
-                        context,
-                        nullptr,
-                        nullptr,
-                        nullptr,
-                        padder,
-                        padder,
-                        true,
-                        position_bias);
+                           input,
+                           lengths,
+                           context,
+                           nullptr,
+                           nullptr,
+                           nullptr,
+                           padder,
+                           padder,
+                           true,
+                           position_bias);
       _ff(context, output);
     }
 
@@ -202,17 +202,17 @@ namespace ctranslate2 {
         StorageView attn(dtype, device);
         if (_self_attention)
           (*_self_attention)(hidden,
-                        hidden,
-                        input_length,
-                        attn,
-                        cached_self_attn_keys,
-                        cached_self_attn_values,
-                        nullptr,
-                        input_padder,
-                        input_padder,
-                        true,
-                        position_bias,
-                        offset);
+                             hidden,
+                             input_length,
+                             attn,
+                             cached_self_attn_keys,
+                             cached_self_attn_values,
+                             nullptr,
+                             input_padder,
+                             input_padder,
+                             true,
+                             position_bias,
+                             offset);
 
         if (_post_attention_layer_norm)
           (*_post_attention_layer_norm)(input, hidden);
@@ -226,17 +226,17 @@ namespace ctranslate2 {
       }
       if (_self_attention)
         (*_self_attention)(input,
-                      input,
-                      input_length,
-                      output,
-                      cached_self_attn_keys,
-                      cached_self_attn_values,
-                      nullptr,
-                      input_padder,
-                      input_padder,
-                      true,
-                      position_bias,
-                      offset);
+                           input,
+                           input_length,
+                           output,
+                           cached_self_attn_keys,
+                           cached_self_attn_values,
+                           nullptr,
+                           input_padder,
+                           input_padder,
+                           true,
+                           position_bias,
+                           offset);
 
       StorageView context(dtype, device);
       if (_encoder_attention) {
@@ -309,7 +309,11 @@ namespace ctranslate2 {
                   scope + "/layer",
                   _num_heads,
                   model.get_flag_with_default(scope + "/pre_norm", true),
-                  model.get_enum_value<ops::ActivationType>(scope + "/activation")))
+                  model.get_enum_value<ops::ActivationType>(scope + "/activation"),
+#ifdef CT2_USE_HIP
+                  _use_flash_attention,
+#endif
+      ))
       , _position_encoder(_layers.front()->get_self_attention().has_positional_embeddings()
                           ? nullptr
                           : build_position_encoder(model, scope + "/position_encodings", _embeddings))
@@ -392,13 +396,17 @@ namespace ctranslate2 {
       , _alibi(make_alibi(model, scope))
       , _use_flash_attention(model.use_flash_attention())
       , _layers(build_layers_list<const TransformerDecoderLayer>(
-                  model,
-                  scope + "/layer",
-                  _num_heads,
-                  model.get_flag_with_default(scope + "/pre_norm", true),
-                  model.get_enum_value<ops::ActivationType>(scope + "/activation"),
-                  _use_flash_attention,
-                  _alibi.get()))
+                model,
+                scope + "/layer",
+                _num_heads,
+                model.get_flag_with_default(scope + "/pre_norm", true),
+                model.get_enum_value<ops::ActivationType>(scope + "/activation"),
+#ifdef CT2_USE_HIP
+                false,
+#else
+                _use_flash_attention,
+#endif
+                _alibi.get()))
       , _position_encoder(_layers.front()->get_self_attention().has_positional_embeddings()
                           ? nullptr
                           : build_position_encoder(model, scope + "/position_encodings", _embeddings))

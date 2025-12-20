@@ -3,16 +3,16 @@
 namespace ctranslate2 {
   namespace layers {
     FlashMultiHeadAttention::FlashMultiHeadAttention(const models::Model& model,
-                                           const std::string& scope,
-                                           dim_t num_heads,
-                                           bool self_attention,
-                                           bool pre_norm,
-                                           bool is_decoder,
-                                           Alibi* alibi)
+                                                     const std::string& scope,
+                                                     dim_t num_heads,
+                                                     bool self_attention,
+                                                     bool pre_norm,
+                                                     bool is_decoder,
+                                                     Alibi* alibi)
       : AttentionLayer(model, scope, num_heads, self_attention, pre_norm, is_decoder, alibi, true)
       , _cache_time_dim(1)
     {
-      ERROR_CHECK((self_attention), "FlashAttention only supports the self-attention");
+      ERROR_CHECK((self_attention), "FlashAttention only supports self-attention");
     }
 
     void FlashMultiHeadAttention::operator()(const StorageView& queries,
@@ -27,7 +27,7 @@ namespace ctranslate2 {
                                              bool return_normalized_attention,
                                              StorageView*,
                                              dim_t offset) const {
-      PROFILE("MultiHeadAttention");
+      PROFILE("FlashMultiHeadAttention");
       const Device device = queries.device();
       const DataType dtype = queries.dtype();
 
@@ -139,6 +139,7 @@ namespace ctranslate2 {
           (*_layer_norm)(output, output);
       }
     }
+
     void FlashMultiHeadAttention::split_heads(StorageView& x,
                                               dim_t num_heads,
                                               const Padder* padder,

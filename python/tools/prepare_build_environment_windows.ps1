@@ -8,7 +8,7 @@ pip install --no-cache-dir `
 rocm-sdk init
 $env:ROCM_PATH = $(python -c "from rocm_sdk._devel import get_devel_root;print(get_devel_root())")
 
-$env:PATH = "$env:ROCM_PATH\bin;$env:CTRANSLATE2_ROOT\bin;$env:CTRANSLATE2_ROOT\build\bin;$env:PATH"
+$env:PATH = "$env:ROCM_PATH\bin;$env:PATH"
 $env:CC = "$env:ROCM_PATH\lib\llvm\bin\clang.exe"
 $env:CXX = "$env:ROCM_PATH\lib\llvm\bin\clang++.exe"
 
@@ -43,7 +43,13 @@ cmake --build . --config Release --target install --parallel 6
 Set-Location ..\
 Remove-Item ".\oneDNN-$ONEDNN_VERSION" -Recurse
 
-cmake -GNinja -DCMAKE_BUILD_TYPE=Release -S . -B build -DCMAKE_CXX_FLAGS="-Wno-deprecated-literal-operator" -DCMAKE_INSTALL_PREFIX="$env:CTRANSLATE2_ROOT" -DCMAKE_PREFIX_PATH="C:\Program Files (x86)\Intel\oneAPI\compiler\latest\lib;C:\Program Files (x86)\oneDNN" -DBUILD_CLI=OFF -DWITH_DNNL=ON -DWITH_HIP=ON -DCMAKE_HIP_ARCHITECTURES="$env:PYTORCH_ROCM_ARCH" -DBUILD_TESTS=ON
+$options = ""
+if (-not $env:PYTORCH_ROCM_ARCH.Contains(";")) {
+    $targets = $env:PYTORCH_ROCM_ARCH.Substring(0, $env:PYTORCH_ROCM_ARCH.Length-2)
+    Start-Process python -ArgumentList ".\third_party\composable_kernel\example\ck_tile\01_fmha\generate.py", "-d", "fwd", "-f", "*batch*nlogits*nbias*nmask*nlse*ndropout*nsink*", "--output_dir", "./src/ops/flash-attn-ck", "--receipt", "2", "--optdim", "32,64,128,256", "--targets", $targets -NoNewWindow -Wait | Out-Default
+    $options += " -DWITH_FLASH_ATTN=ON"
+}
+cmake -GNinja -DCMAKE_BUILD_TYPE=Release -S . -B build -DCMAKE_CXX_FLAGS="-Wno-deprecated-literal-operator" -DCMAKE_INSTALL_PREFIX="$env:CTRANSLATE2_ROOT" -DCMAKE_PREFIX_PATH="C:\Program Files (x86)\Intel\oneAPI\compiler\latest\lib;C:\Program Files (x86)\oneDNN" -DBUILD_CLI=OFF -DWITH_DNNL=ON -DWITH_HIP=ON -DCMAKE_HIP_ARCHITECTURES="$env:PYTORCH_ROCM_ARCH" -DBUILD_TESTS=ON $options.Trim()
 
 cmake --build build --config Release --target install --parallel 6 --verbose
 

@@ -38,8 +38,6 @@ namespace ctranslate2 {
       StorageView positions({queries_length, keys_length}, DataType::INT32);
       auto* positions_data = positions.data<int32_t>();
 
-      const dim_t offset = keys_length - queries_length;
-
       for (dim_t i = 0; i < queries_length; ++i) {
         auto* row = positions_data + i * keys_length;
         for (dim_t j = 0; j < keys_length; ++j) {
