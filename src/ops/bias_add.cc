@@ -5,8 +5,9 @@
 namespace ctranslate2 {
   namespace ops {
 
-    BiasAdd::BiasAdd(const ActivationType* activation_type)
+    BiasAdd::BiasAdd(const ActivationType* activation_type, const dim_t axis)
       : _activation_type(activation_type)
+      , _axis(axis)
     {
     }
 

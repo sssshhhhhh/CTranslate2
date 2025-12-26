@@ -3,9 +3,13 @@
 namespace ctranslate2 {
   namespace layers {
 
+    static const ops::ActivationType activation_type = ops::ActivationType::GELU;
+
     WhisperEncoder::WhisperEncoder(const models::Model& model, const std::string& scope)
-      : _conv1(model, scope + "/conv1", /*stride=*/1, /*padding=*/1)
-      , _conv2(model, scope + "/conv2", /*stride=*/2, /*padding=*/1)
+      : _conv1(model, scope + "/conv1", /*stride=*/1, /*padding=*/1,
+               /*dilation=*/1, /*groups=*/1, &activation_type)
+      , _conv2(model, scope + "/conv2", /*stride=*/2, /*padding=*/1,
+               /*dilation=*/1, /*groups=*/1, &activation_type)
       , _transpose({0, 2, 1})
       , _position_embedding(model, scope + "/position_encodings")
       , _num_heads(model.get_attribute_with_default<int32_t>(scope + "/num_heads", 8))
@@ -13,9 +17,9 @@ namespace ctranslate2 {
                                                                  scope + "/layer",
                                                                  _num_heads,
                                                                  /*pre_norm=*/true,
-                                                                 ops::ActivationType::GELU,
+                                                                 ops::ActivationType::GELU
 #ifdef CT2_USE_HIP
-                                                                 model.use_flash_attention(),
+                                                                 , model.use_flash_attention()
 #endif
                                                                 ))
       , _output_norm(model, scope + "/layer_norm")
@@ -48,11 +52,7 @@ namespace ctranslate2 {
       StorageView input(output_type(), features.device());
 
       _conv1(features, input);
-      _gelu(input, input);
-
       _conv2(input, output);
-      _gelu(output, output);
-
       _transpose(output, input);
       _position_embedding(input);
 

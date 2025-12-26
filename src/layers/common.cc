@@ -472,8 +472,9 @@ namespace ctranslate2 {
                    dim_t stride,
                    dim_t padding,
                    dim_t dilation,
-                   dim_t groups)
-      : _conv_op(stride, padding, dilation, groups)
+                   dim_t groups,
+                   const ops::ActivationType* activation_type)
+      : _conv_op(stride, padding, dilation, groups, activation_type)
       , _weight(model.get_variable(scope + "/weight"))
       , _bias(model.get_variable_if_exists(scope + "/bias"))
       , _qscale(model.get_variable_if_exists(scope + "/weight_scale")) {

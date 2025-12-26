@@ -8,7 +8,7 @@ namespace ctranslate2 {
 
     class BiasAdd : public BinaryOp {
     public:
-      BiasAdd(const ActivationType* activation_type = nullptr);
+      BiasAdd(const ActivationType* activation_type = nullptr, const dim_t axis = -1);
 
       void operator()(const StorageView& value,
                       const StorageView& bias,
@@ -21,6 +21,7 @@ namespace ctranslate2 {
                    StorageView& output) const;
 
       const ActivationType* _activation_type;
+      const dim_t _axis;
     };
 
   }

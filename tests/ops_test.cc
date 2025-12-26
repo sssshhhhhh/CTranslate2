@@ -1101,6 +1101,45 @@ TEST_P(OpDeviceFPTest, Conv1DPaddingAndStride) {
   expect_storage_eq(output.to_float32(), expected, error);
 }
 
+TEST_P(OpDeviceFPTest, Conv1DDilation) {
+  const Device device = GetParam().device;
+  if (device == Device::CPU)
+      GTEST_SKIP() << "Dilated convolution is not implemented for CPU.";
+  const DataType dtype = GetParam().dtype;
+  const float error = GetParam().error;
+  const StorageView expected({2, 4, 1}, std::vector<float>{
+      0.601058f, -0.149898f, -0.079298f, -0.785548f,
+      1.143963f, 0.222425f, -0.220765f, -0.426858f});
+  StorageView output(dtype, device);
+  ops::Conv1D(1, 0, 2, 1)(
+      conv_input.to(device).to(dtype),
+      conv_weight.to(device).to(dtype),
+      conv_bias.to(device).to(dtype),
+      output);
+  EXPECT_EQ(output.dtype(), dtype);
+  expect_storage_eq(output.to_float32(), expected, error);
+}
+
+TEST_P(OpDeviceFPTest, Conv1DGELU) {
+  const Device device = GetParam().device;
+  const DataType dtype = GetParam().dtype;
+  const float error = GetParam().error;
+  const StorageView expected({2, 4, 2}, std::vector<float>{
+      0.7672063f, 0.62634534f, 0.02778943f, -0.05016639f,
+      -0.05019306f, -0.0735798f, -0.14061329f, -0.16747718f,
+      0.89712805f, 0.6890007f, 0.06828941f, 0.01265349f,
+      -0.0721195f, -0.00767813f, -0.14498018f, -0.08914787f});
+  StorageView output(dtype, device);
+  const ops::ActivationType activation_type = ops::ActivationType::GELU;
+  ops::Conv1D(1, 0, 1, 1, &activation_type)(
+      conv_input.to(device).to(dtype),
+      conv_weight.to(device).to(dtype),
+      conv_bias.to(device).to(dtype),
+      output);
+  EXPECT_EQ(output.dtype(), dtype);
+  expect_storage_eq(output.to_float32(), expected, error);
+}
+
 TEST_P(OpDeviceFPTest, Conv1DGroupNoBias) {
     const Device device = GetParam().device;
     const DataType dtype = GetParam().dtype;
@@ -1176,6 +1215,42 @@ TEST_P(OpDeviceFPTest, Conv1DGroup) {
                             conv_weight.to(device).to(dtype),
                             conv_bias.to(device).to(dtype),
                             output);
+    EXPECT_EQ(output.dtype(), dtype);
+    expect_storage_eq(output.to_float32(), expected, error);
+}
+
+static const StorageView bias_value({2, 2, 2}, std::vector<float>{
+    -0.356441f, 0.914919f, -1.626291f, 1.481655f,
+    -1.301039f, 0.617229f, -0.864480f, 1.266894f});
+static const StorageView bias_bias({2}, std::vector<float>{
+    -0.099073f, 0.898503f});
+
+TEST_P(OpDeviceFPTest, BiasAddGELU) {
+    const Device device = GetParam().device;
+    const DataType dtype = GetParam().dtype;
+    const float error = GetParam().error;
+    const StorageView expected({2, 2, 2}, std::vector<float>{
+            -0.147755f, 1.750164f, -0.072864f, 2.359563f,
+            -0.113045f, 1.417522f, -0.161525f, 2.132529f});
+    StorageView output(dtype, device);
+    const ops::ActivationType activation_type = ops::ActivationType::GELU;
+    ops::BiasAdd bias_add_op(&activation_type);
+    bias_add_op(bias_value.to(device).to(dtype), bias_bias.to(device).to(dtype), output);
+    EXPECT_EQ(output.dtype(), dtype);
+    expect_storage_eq(output.to_float32(), expected, error);
+}
+
+TEST_P(OpDeviceFPTest, BiasAddAxisGELU) {
+    const Device device = GetParam().device;
+    const DataType dtype = GetParam().dtype;
+    const float error = GetParam().error;
+    const StorageView expected({2, 2, 2}, std::vector<float>{
+            -0.147755f, 0.646726f, -0.169845f, 2.359563f,
+            -0.113045f, 0.361582f, 0.017473f, 2.132529f});
+    StorageView output(dtype, device);
+    const ops::ActivationType activation_type = ops::ActivationType::GELU;
+    ops::BiasAdd bias_add_op(&activation_type, -2);
+    bias_add_op(bias_value.to(device).to(dtype), bias_bias.to(device).to(dtype), output);
     EXPECT_EQ(output.dtype(), dtype);
     expect_storage_eq(output.to_float32(), expected, error);
 }

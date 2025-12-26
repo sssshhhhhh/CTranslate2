@@ -309,9 +309,9 @@ namespace ctranslate2 {
                   scope + "/layer",
                   _num_heads,
                   model.get_flag_with_default(scope + "/pre_norm", true),
-                  model.get_enum_value<ops::ActivationType>(scope + "/activation"),
+                  model.get_enum_value<ops::ActivationType>(scope + "/activation")
 #ifdef CT2_USE_HIP
-                  _use_flash_attention,
+                  , _use_flash_attention
 #endif
       ))
       , _position_encoder(_layers.front()->get_self_attention().has_positional_embeddings()

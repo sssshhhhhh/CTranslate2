@@ -29,6 +29,9 @@ add_executable(benchmark_ops
 target_link_libraries(benchmark_ops PRIVATE
   ${PROJECT_NAME}
   )
+if(NOT MSVC)
+  target_compile_options(benchmark_ops PRIVATE -Wno-unused-result)
+endif()
 
 if(WITH_CUDA)
   target_link_libraries(benchmark_ops PRIVATE ${CUDA_LIBRARIES})

@@ -8,7 +8,8 @@ namespace ctranslate2 {
 
     void apply_bias_and_activation(StorageView& x,
                                    const StorageView* bias,
-                                   const ActivationType* activation_type);
+                                   const ActivationType* activation_type,
+                                   const dim_t axis = -1);
 
     class Gemm : public Op {
     public:

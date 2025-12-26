@@ -9,9 +9,10 @@ namespace ctranslate2 {
 
     void apply_bias_and_activation(StorageView& x,
                                    const StorageView* bias,
-                                   const ActivationType* activation_type) {
+                                   const ActivationType* activation_type,
+                                   const dim_t axis) {
       if (bias) {
-        const ops::BiasAdd bias_add_op(activation_type);
+        const BiasAdd bias_add_op(activation_type, axis);
         bias_add_op(x, *bias, x);
       } else if (activation_type) {
         get_activation_op(*activation_type)(x, x);
