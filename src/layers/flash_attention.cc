@@ -125,19 +125,15 @@ namespace ctranslate2 {
       }
       combine_heads(context, _num_heads, queries_padder, beam_size);
 
-      _linear.back()(context, output);
+      _linear.back()(context, output, _layer_norm ? &queries : nullptr);
       if (_tensor_parallel) {
         StorageView tmp(output.shape(), output.dtype(), output.device());
         ops::ReduceAll ops_reduce_all(ops::ReduceAll::RED_OP::SUM);
         ops_reduce_all(output, tmp);
         output = std::move(tmp);
       }
-      if (_layer_norm) {
-        ops::Add()(queries, output, output);
-
-        if (!_pre_norm)
-          (*_layer_norm)(output, output);
-      }
+      if (_layer_norm && !_pre_norm)
+        (*_layer_norm)(output, output);
     }
 
     void FlashMultiHeadAttention::split_heads(StorageView& x,

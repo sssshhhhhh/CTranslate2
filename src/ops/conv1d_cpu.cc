@@ -134,7 +134,7 @@ namespace ctranslate2 {
         throw std::runtime_error("Dilation is not supported in this Conv1D implementation");
 
       compute_with_gemm(input, weight, output, qscale);
-      apply_bias_and_activation(output, bias, _activation_type, /*axis=*/-2);
+      apply_bias_and_activation(output, bias, _activation_type, /*residual=*/nullptr, /*axis=*/-2);
     }
 
     void Conv1D::compute_with_gemm(const StorageView &input, const StorageView &weight, StorageView &output,

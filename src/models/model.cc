@@ -732,7 +732,7 @@ namespace ctranslate2 {
                 split_variables(std::move(variable), outer_dim, partitions_size, outputs);
               }
             };
-            if (outputs.size() > current_index && !outputs[current_index].empty())
+            if (static_cast<int>(outputs.size()) > current_index && !outputs[current_index].empty())
               variable = std::move(outputs[current_index]);
           }
         }

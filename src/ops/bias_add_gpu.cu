@@ -6,6 +6,24 @@
 namespace ctranslate2 {
   namespace ops {
 
+    template <typename T>
+    struct plus3 {
+        __device__
+        T operator()(const T& a, const thrust::tuple<T, T>& bc) const {
+            return a + thrust::get<0>(bc) + thrust::get<1>(bc);
+        }
+    };
+
+    template <typename T>
+    void trinary_add(const T* a, const T* b, const T* c, T* d,
+                      dim_t width, dim_t depth, dim_t size) {
+      auto index_a = cuda::repeat_vec_block<cuda::index_t>(width, depth);
+      auto index_it = thrust::make_transform_iterator(thrust::counting_iterator<cuda::index_t>(0), index_a);
+      auto a_it = thrust::make_permutation_iterator(cuda::device_cast(a), index_it);
+      auto bc_it = thrust::make_zip_iterator(thrust::make_tuple(cuda::device_cast(b), cuda::device_cast(c)));
+      THRUST_CALL(thrust::transform, a_it, a_it + size, bc_it, cuda::device_cast(d), plus3<cuda::device_type<T>>());
+    }
+
     template <typename DeviceT, typename T, typename Epilogue>
     void bias_add(const T* x, const T* b, T* y, dim_t numel, dim_t width, dim_t depth, Epilogue epilogue) {
       cuda::binary_transform(b, x, y, numel,
@@ -16,7 +34,8 @@ namespace ctranslate2 {
     template <Device D, typename T>
     void BiasAdd::compute(const StorageView& value,
                           const StorageView& bias,
-                          StorageView& output) const {
+                          StorageView& output,
+                          const StorageView* residual) const {
       const dim_t numel = value.size();
       const dim_t depth = bias.size();
       const dim_t axis = _axis < 0 ? value.rank() + _axis : _axis;
@@ -30,7 +49,10 @@ namespace ctranslate2 {
       T* y = output.data<T>();
 
       if (!_activation_type) {
-        primitives<D>::add_block_broadcast(b, x, y, width, depth, value.size());
+        if (residual)
+          trinary_add(b, x, residual->data<T>(), y, width, depth, value.size());
+        else
+          primitives<D>::add_block_broadcast(b, x, y, width, depth, value.size());
 
       } else {
 
@@ -64,6 +86,9 @@ namespace ctranslate2 {
           bias_add<DeviceT>(x, b, y, numel, width, depth, cuda::tanh_func<DeviceT>());
           break;
         }
+
+        if (residual) // fuse with above if ever used
+          Add()(*residual, output, output);
       }
     }
 
@@ -71,7 +96,8 @@ namespace ctranslate2 {
     template void                                                       \
     BiasAdd::compute<Device::CUDA, T>(const StorageView& value,         \
                                       const StorageView& bias,          \
-                                      StorageView& output) const;
+                                      StorageView& output,              \
+                                      const StorageView* residual) const;
 
     DECLARE_IMPL(float)
     DECLARE_IMPL(float16_t)

@@ -336,7 +336,7 @@ namespace ctranslate2 {
       }
     }
 
-    void Dense::operator()(const StorageView& input, StorageView& output) const {
+    void Dense::operator()(const StorageView& input, StorageView& output, const StorageView* residual) const {
       PROFILE("Dense");
       const StorageView* qscale = _partial_qscale.empty() ? _qscale : &_partial_qscale;
       const StorageView* weight = _partial_weight.empty() ? &_weight : &_partial_weight;
@@ -346,8 +346,10 @@ namespace ctranslate2 {
                                          : &_partial_u8_shift_compensation);
 
       bool affected_by_tp = ScopedMPISetter::getNRanks() > 1 && _is_layer_out;
-      if (affected_by_tp && ScopedMPISetter::getCurRank() != 0)
+      if (affected_by_tp && ScopedMPISetter::getCurRank() != 0) {
         bias = nullptr;
+        residual = nullptr;
+      }
       if (_quantized_gemm) {
         const auto device = input.device();
         StorageView qinput(_weight.dtype(), device);
@@ -395,6 +397,8 @@ namespace ctranslate2 {
                        /*trans_b=*/true,
                        output,
                        bias);
+        if (residual)
+          ops::Add()(*residual, output, output);
       } else if (_qzero && _qscale) {
 #ifdef CT2_USE_HIP
         throw std::invalid_argument("Quantization unsupported with HIP.");
@@ -410,20 +414,20 @@ namespace ctranslate2 {
                                 /*trans_a=*/false,
                                 /*trans_b=*/false,
                                 /*a_is_packed=*/false,
-                                /*b_is_packed*/false,
+                                /*b_is_packed=*/false,
                                 _activation_type);
-              gemm_op(input, weight_dequant, output, nullptr, bias);
+              gemm_op(input, weight_dequant, output, nullptr, bias, residual);
             } else {
               ops::GemmAwq gemm_awq_op(/*alpha=*/1, /*beta=*/0, /*trans_a=*/false, /*trans_b=*/false,
                 /*a_is_packed=*/false, /*b_is_packed=*/false, _activation_type);
-              gemm_awq_op(input, *weight, *qscale, *_qzero, output, bias);
+              gemm_awq_op(input, *weight, *qscale, *_qzero, output, bias, residual);
             }
             break;
           case models::QUANTIZATION_TYPE::AWQ_GEMV:
           {
             ops::GemvAwq gemv_awq_op(/*alpha=*/1, /*beta=*/0, /*trans_a=*/false, /*trans_b=*/false,
               /*a_is_packed=*/false, /*b_is_packed=*/false, _activation_type);
-            gemv_awq_op(input, *weight, *qscale, *_qzero, output, bias);
+            gemv_awq_op(input, *weight, *qscale, *_qzero, output, bias, residual);
             break;
           }
           default:
@@ -432,7 +436,7 @@ namespace ctranslate2 {
         }
 #endif
       } else {
-        _gemm_op(input, *weight, output, nullptr, bias);
+        _gemm_op(input, *weight, output, nullptr, bias, residual);
       }
     }
 

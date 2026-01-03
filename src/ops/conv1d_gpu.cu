@@ -116,7 +116,7 @@ namespace ctranslate2 {
                                                      batch_size);
       }
 
-      apply_bias_and_activation(output, bias, _activation_type, /*axis=*/-2);
+      apply_bias_and_activation(output, bias, _activation_type, /*residual=*/nullptr, /*axis=*/-2);
     }
 
     // Template instantiations

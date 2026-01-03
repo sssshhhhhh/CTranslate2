@@ -13,12 +13,13 @@ namespace ctranslate2 {
 
     void BiasAdd::operator()(const StorageView& value,
                              const StorageView& bias,
-                             StorageView& output) const {
+                             StorageView& output,
+                             const StorageView* residual) const {
       PROFILE("BiasAdd");
       output.resize_as(value);
 
       DEVICE_AND_FLOAT_DISPATCH("BiasAdd", value.device(), value.dtype(),
-                                (compute<D, T>(value, bias, output)));
+                                (compute<D, T>(value, bias, output, residual)));
     }
 
   }

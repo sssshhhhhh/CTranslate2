@@ -10,13 +10,17 @@ namespace ctranslate2 {
     void apply_bias_and_activation(StorageView& x,
                                    const StorageView* bias,
                                    const ActivationType* activation_type,
+                                   const StorageView* residual,
                                    const dim_t axis) {
       if (bias) {
         const BiasAdd bias_add_op(activation_type, axis);
-        bias_add_op(x, *bias, x);
+        bias_add_op(x, *bias, x, residual);
+        return;
       } else if (activation_type) {
         get_activation_op(*activation_type)(x, x);
       }
+      if (residual)
+        Add()(*residual, x, x);
     }
 
 
@@ -41,7 +45,8 @@ namespace ctranslate2 {
                           const StorageView& b,
                           StorageView& c,
                           const StorageView* a_shift_compensation,
-                          const StorageView* bias) const {
+                          const StorageView* bias,
+                          const StorageView* residual) const {
       PROFILE("Gemm");
 
       switch (a.dtype()) {
@@ -67,7 +72,7 @@ namespace ctranslate2 {
         throw std::invalid_argument("Gemm: unsupported input type " + dtype_name(a.dtype()));
       }
 
-      apply_bias_and_activation(c, bias, _activation_type);
+      apply_bias_and_activation(c, bias, _activation_type, residual);
     }
 
     template <Device D, typename In, typename Out>
