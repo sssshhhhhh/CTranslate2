@@ -12,7 +12,8 @@ namespace ctranslate2 {
       : AttentionLayer(model, scope, num_heads, self_attention, pre_norm, is_decoder, alibi, true)
       , _cache_time_dim(1)
     {
-      ERROR_CHECK((self_attention), "FlashAttention only supports self-attention");
+      if (!self_attention)
+        throw std::runtime_error("FlashAttention only supports self-attention");
     }
 
     void FlashMultiHeadAttention::operator()(const StorageView& queries,
@@ -158,7 +159,7 @@ namespace ctranslate2 {
                                                 dim_t num_heads,
                                                 const Padder* padder,
                                                 dim_t beam_size) {
-      // x has shape [batch_size, num_heads, time, head_dim]
+      // x has shape [batch_size, time, num_heads, head_dim]
       const dim_t batch_size = x.dim(0);
       const dim_t time = x.dim(1);
       const dim_t depth = x.dim(3) * num_heads;

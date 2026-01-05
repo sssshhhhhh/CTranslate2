@@ -12,15 +12,12 @@ namespace ctranslate2 {
       , _ffn1_layer_norm(model, scope + "/enc_ffn1_layer_norm")
       , _ff1(model, scope + "/enc_ffn1", pre_norm, activation_type)
       , _self_attn_layer_norm(model, scope + "/enc_attn_layer_norm")
-      , _self_attention(!use_flash_attention ? std::unique_ptr<AttentionLayer>(new MultiHeadAttention(model,
-                        scope + "/enc_attn",
-                        _num_heads,
-                        /*self_attention=*/true,
-                        pre_norm)) : std::unique_ptr<AttentionLayer>(new FlashMultiHeadAttention(model,
-                        scope + "/enc_attn",
-                        _num_heads,
-                        /*self_attention=*/true,
-                        pre_norm)))
+      , _self_attention(init_attention_layer(model,
+                                             scope + "/enc_attn",
+                                             use_flash_attention,
+                                             _num_heads,
+                                             true, // self_attention
+                                             pre_norm))
       , _transpose({0, 2, 1})
       , _layer_norm(model, scope + "/enc_conv_layer_norm")
       , _pconv1(model, scope + "/enc_conv_pointwise_conv1", /*stride=*/1, /*padding=*/0)
@@ -106,15 +103,12 @@ namespace ctranslate2 {
       , _residual_conv(model, scope + "/adpt_residual_conv", /*stride=*/2, /*padding=*/1)
       , _attn_layer_norm(model, scope + "/adpt_attn_layer_norm")
       , _attn_conv(model, scope + "/adpt_attn_conv", /*stride=*/2, /*padding=*/1)
-      , _self_attention(!use_flash_attention ? std::unique_ptr<AttentionLayer>(new MultiHeadAttention(model,
-                        scope + "/adpt_attn_layer",
-                        _num_heads,
-                        /*self_attention=*/true,
-                        pre_norm)) : std::unique_ptr<AttentionLayer>(new FlashMultiHeadAttention(model,
-                        scope + "/adpt_attn_layer",
-                        _num_heads,
-                        /*self_attention=*/true,
-                        pre_norm)))
+      , _self_attention(init_attention_layer(model,
+                                             scope + "/adpt_attn_layer",
+                                             use_flash_attention,
+                                             _num_heads,
+                                             true, // self_attention
+                                             pre_norm))
       , _ffn_layer_norm(model, scope + "/adpt_ffn_layer_norm")
       , _ffn(model, scope + "/adpt_ffn", pre_norm, activation_type) {
       }

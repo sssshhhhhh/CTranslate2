@@ -57,15 +57,12 @@ namespace ctranslate2 {
                                                      const bool pre_norm,
                                                      const ops::ActivationType activation_type,
                                                      const bool use_flash_attention)
-      : _self_attention(!use_flash_attention ? std::unique_ptr<AttentionLayer>(new MultiHeadAttention(model,
-                        scope + "/self_attention",
-                        num_heads,
-                        /*self_attention=*/true,
-                        pre_norm)) : std::unique_ptr<AttentionLayer>(new FlashMultiHeadAttention(model,
-                        scope + "/self_attention",
-                        num_heads,
-                        /*self_attention=*/true,
-                        pre_norm)))
+      : _self_attention(init_attention_layer(model,
+                                             scope + "/self_attention",
+                                             use_flash_attention,
+                                             num_heads,
+                                             true, // self_attention
+                                             pre_norm))
       , _ff(model, scope + "/ffn", pre_norm, activation_type) {
     }
 
@@ -99,19 +96,18 @@ namespace ctranslate2 {
                                                      const ops::ActivationType activation_type,
                                                      const bool use_flash_attention,
                                                      Alibi* alibi)
-      : _self_attention(!use_flash_attention ? std::unique_ptr<AttentionLayer>(new MultiHeadAttention(model,
-                        scope + "/self_attention",
-                        num_heads,
-                        /*self_attention=*/true,
-                        pre_norm,
-                        /*is_decoder=*/true,
-                        alibi)) : std::unique_ptr<AttentionLayer>(new FlashMultiHeadAttention(model,
-                        scope + "/self_attention",
-                        num_heads,
-                        /*self_attention=*/true,
-                        pre_norm,
-                        /*is_decoder=*/true,
-                        alibi)))
+      : _self_attention(init_attention_layer(model,
+                                             scope + "/self_attention",
+#ifdef CT2_USE_HIP
+                                             false,
+#else
+                                             use_flash_attention,
+#endif
+                                             num_heads,
+                                             true, // self_attention
+                                             pre_norm,
+                                             true, // is_decoder
+                                             alibi))
       , _shared_layer_norm(build_optional_layer<LayerNorm>(model, scope + "/shared_layer_norm"))
       , _input_layer_norm(build_optional_layer<LayerNorm>(model, scope + "/input_layer_norm"))
       , _post_attention_layer_norm(build_optional_layer<LayerNorm>(
@@ -120,12 +116,13 @@ namespace ctranslate2 {
                                      model, scope + "/pre_feedforward_layer_norm"))
       , _post_feedforward_layer_norm(build_optional_layer<LayerNorm>(
                                      model, scope + "/post_feedforward_layer_norm"))
-      , _encoder_attention(build_optional_layer<MultiHeadAttention>(model,
-                                                                    scope + "/attention",
-                                                                    num_heads,
-                                                                    /*self_attention=*/false,
-                                                                    pre_norm,
-                                                                    /*is_decoder=*/true))
+      , _encoder_attention(init_attention_layer(model,
+                                                scope + "/attention",
+                                                false, // flash_attention
+                                                num_heads,
+                                                false, // self_attention
+                                                pre_norm,
+                                                true)) // is_decoder
       , _ff(model, scope + "/ffn", pre_norm, activation_type) {
     }
 
@@ -397,11 +394,7 @@ namespace ctranslate2 {
                 _num_heads,
                 model.get_flag_with_default(scope + "/pre_norm", true),
                 model.get_enum_value<ops::ActivationType>(scope + "/activation"),
-#ifdef CT2_USE_HIP
-                false,
-#else
                 _use_flash_attention,
-#endif
                 _alibi.get()))
       , _position_encoder(_layers.front()->get_self_attention().has_positional_embeddings()
                           ? nullptr

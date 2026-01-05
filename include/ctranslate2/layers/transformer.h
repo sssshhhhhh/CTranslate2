@@ -10,6 +10,16 @@
 namespace ctranslate2 {
   namespace layers {
 
+    template <typename... Args>
+    std::unique_ptr<AttentionLayer> init_attention_layer(const models::Model& model,
+                                                         const std::string& scope,
+                                                         const bool use_flash_attention,
+                                                         Args&&... args) {
+      if (use_flash_attention)
+        return std::make_unique<FlashMultiHeadAttention>(model, scope, std::forward<Args>(args)...);
+      return std::make_unique<MultiHeadAttention>(model, scope, std::forward<Args>(args)...);
+    }
+
     class FeedForwardNetwork : public Layer
     {
     public:

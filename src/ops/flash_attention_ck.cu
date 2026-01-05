@@ -139,10 +139,10 @@ namespace ctranslate2 {
                                                StorageView* alibi,
                                                dim_t offset) const {
 #ifdef CT2_WITH_FLASH_ATTN
-      if (cached_keys || cached_values || attention || rotary_cos || rotary_sin
-        || rotary_interleave || alibi || offset) {
+      if (cached_keys || cached_values || attention
+          || rotary_cos || rotary_sin || rotary_interleave || alibi || offset) {
 #endif
-          throw std::runtime_error("Flash attention 2 is not supported");
+        throw std::runtime_error("FlashAttention is not supported");
 #ifdef CT2_WITH_FLASH_ATTN
       }
 
@@ -166,9 +166,6 @@ namespace ctranslate2 {
       output.resize(queries.shape());
       auto round_multiple = [](int x, int m) { return (x + m - 1) / m * m; };
       const int head_size = round_multiple(head_size_og, 8);
-      const int head_size_rounded = round_multiple(head_size, 32);
-      const int seqlen_q_rounded = round_multiple(seqlen_q, 128);
-      const int seqlen_k_rounded = round_multiple(seqlen_k, 128);
 
       cudaStream_t stream = ctranslate2::cuda::get_cuda_stream();
       ck_tile::stream_config stream_config{stream};
