@@ -581,6 +581,8 @@ if (WITH_CUDA)
     list(APPEND PRIVATE_INCLUDE_DIRECTORIES ${CUDNN_INCLUDE_DIR})
     list(APPEND LIBRARIES ${CUDNN_LIBRARIES})
     add_definitions(-DCT2_WITH_CUDNN)
+    list(APPEND CUDA_SOURCES src/ops/conv1d_cudnn_gpu.cu)
+    list(REMOVE_ITEM CUDA_SOURCES src/ops/conv1d_gpu.cu)
   endif()
 
   if(CUDA_DYNAMIC_LOADING)
