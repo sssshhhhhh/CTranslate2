@@ -129,6 +129,7 @@ set(SOURCES
   src/layers/attention_layer.cc
   src/layers/attention.cc
   src/layers/flash_attention.cc
+  src/layers/rocm_attention.cc
   src/layers/common.cc
   src/layers/decoder.cc
   src/layers/transformer.cc

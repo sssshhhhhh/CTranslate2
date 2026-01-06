@@ -2,6 +2,7 @@
 
 #include "ctranslate2/layers/attention.h"
 #include "ctranslate2/layers/flash_attention.h"
+#include "ctranslate2/layers/rocm_attention.h"
 #include "ctranslate2/layers/common.h"
 #include "ctranslate2/layers/decoder.h"
 #include "ctranslate2/layers/encoder.h"
@@ -15,9 +16,14 @@ namespace ctranslate2 {
                                                          const std::string& scope,
                                                          const bool use_flash_attention,
                                                          Args&&... args) {
+#ifdef CT2_USE_HIP
+      (void)use_flash_attention;
+      return std::make_unique<RocmAttention>(model, scope, std::forward<Args>(args)...);
+#else
       if (use_flash_attention)
         return std::make_unique<FlashMultiHeadAttention>(model, scope, std::forward<Args>(args)...);
       return std::make_unique<MultiHeadAttention>(model, scope, std::forward<Args>(args)...);
+#endif
     }
 
     class FeedForwardNetwork : public Layer

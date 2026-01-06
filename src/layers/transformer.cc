@@ -153,11 +153,7 @@ namespace ctranslate2 {
                                                      Alibi* alibi)
       : _self_attention(init_attention_layer(model,
                                              scope + "/self_attention",
-#ifdef CT2_USE_HIP
-                                             false,
-#else
                                              use_flash_attention,
-#endif
                                              num_heads,
                                              true, // self_attention
                                              pre_norm,

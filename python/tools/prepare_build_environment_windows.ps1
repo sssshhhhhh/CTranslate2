@@ -45,7 +45,7 @@ Remove-Item ".\oneDNN-$ONEDNN_VERSION" -Recurse
 
 $options = ""
 if ($env:PYTORCH_ROCM_ARCH.Contains("gfx12")) {
-    Start-Process python -ArgumentList ".\third_party\composable_kernel\example\ck_tile\01_fmha\generate.py", "-d", "fwd", "-f", "*batch*nlogits*nbias*nmask*nlse*ndropout*nsink*", "--output_dir", "./src/ops/flash-attn-ck", "--receipt", "2", "--optdim", "32,64,128,256", "--targets", "gfx12" -NoNewWindow -Wait | Out-Default
+    Start-Process python -ArgumentList ".\third_party\composable_kernel\example\ck_tile\01_fmha\generate.py", "-d", "fwd", "-f", "*batch*nlogits*nbias*nlse*ndropout*nsink*", "--output_dir", "./src/ops/flash-attn-ck", "--receipt", "2", "--optdim", "32,64,128,256", "--targets", "gfx12" -NoNewWindow -Wait | Out-Default
     $options += " -DWITH_FLASH_ATTN=ON"
 }
 cmake -GNinja -DCMAKE_BUILD_TYPE=Release -S . -B build -DCMAKE_CXX_FLAGS="-Wno-deprecated-literal-operator" -DCMAKE_HIP_FLAGS="-Wno-deprecated-literal-operator" -DCMAKE_INSTALL_PREFIX="$env:CTRANSLATE2_ROOT" -DCMAKE_PREFIX_PATH="C:\Program Files (x86)\Intel\oneAPI\compiler\latest\lib;C:\Program Files (x86)\oneDNN" -DBUILD_CLI=OFF -DWITH_DNNL=ON -DWITH_HIP=ON -DCMAKE_HIP_ARCHITECTURES="$env:PYTORCH_ROCM_ARCH" -DBUILD_TESTS=ON $options.Trim()

@@ -4,10 +4,7 @@
 #include "fmha_fwd.hpp"
 #include "mask.hpp"
 #endif
-#include "ctranslate2/ops/transpose.h"
 #include "cuda/utils.h"
-
-#include "dispatch.h"
 
 namespace ctranslate2 {
   namespace ops {
@@ -125,34 +122,29 @@ namespace ctranslate2 {
 #endif
 
     template<>
-    void FlashAttention::compute<Device::CUDA>(StorageView& queries,
-                                               StorageView& keys,
-                                               StorageView& values,
-                                               StorageView& output,
-                                               StorageView* cached_keys,
-                                               StorageView* cached_values,
-                                               StorageView* attention,
+    void FlashAttention::compute<Device::CUDA>(StorageView& queries,        // batch_size x seqlen_q x num_heads x round_multiple(head_size, 8)
+                                               StorageView& keys,           // batch_size x seqlen_k x num_heads_k x round_multiple(head_size, 8)
+                                               StorageView& values,         // batch_size x seqlen_k x num_heads_k x round_multiple(head_size, 8)
+                                               StorageView& output,         // batch_size x seqlen_q x num_heads x round_multiple(head_size, 8)
+                                               StorageView* cached_keys,    // nullptr
+                                               StorageView* cached_values,  // nullptr
+                                               StorageView* attention,      // nullptr
                                                bool return_normalized_attention,
-                                               StorageView* rotary_cos,
-                                               StorageView* rotary_sin,
+                                               StorageView* rotary_cos,     // nullptr
+                                               StorageView* rotary_sin,     // nullptr
                                                const bool rotary_interleave,
-                                               StorageView* alibi,
+                                               StorageView* alibi,          // nullptr
                                                dim_t offset) const {
 #ifdef CT2_WITH_FLASH_ATTN
       if (cached_keys || cached_values || attention
           || rotary_cos || rotary_sin || rotary_interleave || alibi || offset) {
-#endif
-        throw std::runtime_error("FlashAttention is not supported");
-#ifdef CT2_WITH_FLASH_ATTN
+        throw std::runtime_error("Model does not support FlashAttention");
       }
 
       const Device device = queries.device();
       const DataType dtype = queries.dtype();
 
       std::string dtype_str = dtype == DataType::FLOAT16 ? "fp16" : "bf16";
-      int window_size_left = _sliding_window > 0 ? _sliding_window : -1;
-      int window_size_right = _sliding_window > 0 ? 0 : -1;
-
       const auto shape = queries.shape();
       const int batch_size = shape[0];
       int seqlen_q = shape[1];
@@ -161,7 +153,8 @@ namespace ctranslate2 {
       const int seqlen_k = keys.dim(1);
       const int num_heads_k = keys.dim(2);
 
-      mask_info mask = mask_info::decode("0", seqlen_q, seqlen_k);
+      std::string mask_identify = _is_causal && seqlen_q != 1 ? "b:-1,0" : "0";
+      mask_info mask = mask_info::decode(mask_identify, seqlen_q, seqlen_k);;
 
       output.resize(queries.shape());
       auto round_multiple = [](int x, int m) { return (x + m - 1) / m * m; };
@@ -187,6 +180,8 @@ namespace ctranslate2 {
       float status = fmha_fwd(traits, args, stream_config);
       if (status < 0)
         throw std::runtime_error("invalid argument for fmha_fwd");
+#else
+      throw std::invalid_argument("This CTranslate2 package was not compiled with FlashAttention");
 #endif
     }
 
