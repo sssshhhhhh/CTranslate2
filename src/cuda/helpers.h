@@ -164,16 +164,6 @@ namespace ctranslate2 {
       }
     };
 
-    template <typename T, typename Op, typename Epilogue>
-    struct op_epilogue {
-      Op op;
-      Epilogue epilogue;
-
-      __device__ T operator()(const T& lhs, const T& rhs) const {
-        return epilogue(op(lhs, rhs));
-      }
-    };
-
     // Some functional operators, similar to the ones from Thrust.
 
     template <typename T>

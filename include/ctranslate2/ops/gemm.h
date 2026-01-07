@@ -58,7 +58,15 @@ namespace ctranslate2 {
       void compute(const StorageView& a,
                    const StorageView& b,
                    StorageView& c,
-                   const StorageView* a_shift_compensation) const;
+                   const dim_t m,
+                   const dim_t n,
+                   const dim_t k,
+                   const dim_t lda,
+                   const dim_t ldb,
+                   const dim_t ldc,
+                   const StorageView* a_shift_compensation,
+                   const StorageView* bias,
+                   const StorageView* residual) const;
     };
 
   }

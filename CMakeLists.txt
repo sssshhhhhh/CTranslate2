@@ -165,6 +165,7 @@ set(SOURCES
   src/ops/gather_cpu.cc
   src/ops/gelu.cc
   src/ops/gemm.cc
+  src/ops/gemm_cpu.cc
   src/ops/gumbel_max.cc
   src/ops/gumbel_max_cpu.cc
   src/ops/layer_norm.cc
@@ -236,6 +237,7 @@ set(CUDA_SOURCES
   src/ops/dequantize_gpu.cu
   src/ops/flash_attention_gpu.cu
   src/ops/gather_gpu.cu
+  src/ops/gemm_gpu.cu
   src/ops/gumbel_max_gpu.cu
   src/ops/layer_norm_gpu.cu
   src/ops/mean_gpu.cu
@@ -688,6 +690,7 @@ elseif(WITH_HIP)
 
   find_package(hiprand REQUIRED)
   find_package(hipblas REQUIRED)
+  find_package(hipblaslt REQUIRED)
   find_package(rocprim REQUIRED)
   find_package(rocthrust REQUIRED)
   find_package(hipcub REQUIRED)
@@ -774,7 +777,7 @@ elseif(WITH_HIP)
   add_compile_definitions(__HIP_PLATFORM_AMD__)
   add_compile_definitions(__HIP_PLATFORM_HCC__)
   target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/include ${ROCM_PATH}/include /include)
-  target_link_libraries(${PROJECT_NAME} PRIVATE hiprand roc::hipblas roc::rocprim roc::rocthrust hip::hipcub)
+  target_link_libraries(${PROJECT_NAME} PRIVATE hiprand roc::hipblas roc::hipblaslt roc::rocprim roc::rocthrust hip::hipcub)
 
   set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 

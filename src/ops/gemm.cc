@@ -7,6 +7,7 @@
 namespace ctranslate2 {
   namespace ops {
 
+    // act(x + bias + residual)
     void apply_bias_and_activation(StorageView& x,
                                    const StorageView* bias,
                                    const ActivationType* activation_type,
@@ -15,12 +16,12 @@ namespace ctranslate2 {
       if (bias) {
         const BiasAdd bias_add_op(activation_type, axis);
         bias_add_op(x, *bias, x, residual);
-        return;
-      } else if (activation_type) {
-        get_activation_op(*activation_type)(x, x);
+      } else {
+        if (residual)
+          Add()(*residual, x, x);
+        if (activation_type)
+          get_activation_op(*activation_type)(x, x);
       }
-      if (residual)
-        Add()(*residual, x, x);
     }
 
 
@@ -48,38 +49,6 @@ namespace ctranslate2 {
                           const StorageView* bias,
                           const StorageView* residual) const {
       PROFILE("Gemm");
-
-      switch (a.dtype()) {
-      case DataType::INT8:
-        DEVICE_DISPATCH(a.device(), (compute<D, int8_t, int32_t>(a, b, c, a_shift_compensation)));
-        break;
-
-      case DataType::INT16:
-        if (a.device() != Device::CPU)
-          throw std::invalid_argument("INT16 GEMM is only supported on CPU");
-        compute<Device::CPU, int16_t, int32_t>(a, b, c, a_shift_compensation);
-        break;
-
-      case DataType::FLOAT32:
-      case DataType::FLOAT16:
-      case DataType::BFLOAT16: {
-        DEVICE_AND_FLOAT_DISPATCH("Gemm", a.device(), a.dtype(),
-                                  (compute<D, T, T>(a, b, c, a_shift_compensation)));
-        break;
-      }
-
-      default:
-        throw std::invalid_argument("Gemm: unsupported input type " + dtype_name(a.dtype()));
-      }
-
-      apply_bias_and_activation(c, bias, _activation_type, residual);
-    }
-
-    template <Device D, typename In, typename Out>
-    void Gemm::compute(const StorageView& a,
-                       const StorageView& b,
-                       StorageView& c,
-                       const StorageView* a_shift_compensation) const {
       const dim_t k = a.dim(_trans_a ? -2 : -1);
       const dim_t n = b.dim(_trans_b ? -2 : -1);
       const dim_t m = a.size() / k;  // Collapse leading dimensions.
@@ -92,16 +61,31 @@ namespace ctranslate2 {
         output_shape[output_shape.size() - 1] = n;
         c.resize(std::move(output_shape));
       }
+      switch (a.dtype()) {
+      case DataType::INT8:
+        DEVICE_DISPATCH(a.device(), (compute<D, int8_t, int32_t>(a, b, c, m, n, k, lda, ldb, ldc,
+                                                                 a_shift_compensation, bias, residual)));
+        break;
 
-      primitives<D>::gemm(_a_is_packed, _b_is_packed,
-                          _trans_a, _trans_b,
-                          m, n, k,
-                          _alpha,
-                          a.data<In>(), lda,
-                          b.data<In>(), ldb,
-                          _beta,
-                          c.data<Out>(), ldc,
-                          a_shift_compensation ? a_shift_compensation->data<Out>() : nullptr);
+      case DataType::INT16:
+        if (a.device() != Device::CPU)
+          throw std::invalid_argument("INT16 GEMM is only supported on CPU");
+        compute<Device::CPU, int16_t, int32_t>(a, b, c, m, n, k, lda, ldb, ldc,
+                                               a_shift_compensation, bias, residual);
+        break;
+
+      case DataType::FLOAT32:
+      case DataType::FLOAT16:
+      case DataType::BFLOAT16: {
+        DEVICE_AND_FLOAT_DISPATCH("Gemm", a.device(), a.dtype(),
+                                  (compute<D, T, T>(a, b, c, m, n, k, lda, ldb, ldc,
+                                                    a_shift_compensation, bias, residual)));
+        break;
+      }
+
+      default:
+        throw std::invalid_argument("Gemm: unsupported input type " + dtype_name(a.dtype()));
+      }
     }
 
     template <typename T>

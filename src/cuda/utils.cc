@@ -28,6 +28,8 @@
 #define cublasCreate hipblasCreate
 #define cublasDestroy hipblasDestroy
 #define cublasSetStream hipblasSetStream
+#define cudaMalloc hipMalloc
+#define cudaFree hipFree
 #define cudaGetDeviceCount hipGetDeviceCount
 #define cudaSuccess hipSuccess
 #define cudaGetDeviceProperties hipGetDeviceProperties
@@ -114,6 +116,21 @@ namespace ctranslate2 {
       cublasHandle_t _handle;
     };
 
+    class CublasWorkspace {
+    public:
+      CublasWorkspace() {
+        CUDA_CHECK(cudaMalloc(&_workspace, max_workspace_size));
+      }
+      ~CublasWorkspace() {
+        cudaFree(_workspace);
+      }
+      void* get() const {
+        return _workspace;
+      }
+    private:
+      void* _workspace;
+    };
+
     // We create one cuBLAS/cuDNN handle per host thread. The handle is destroyed
     // when the thread exits.
 
@@ -125,6 +142,11 @@ namespace ctranslate2 {
     cublasHandle_t get_cublas_handle() {
       static thread_local CublasHandle cublas_handle;
       return cublas_handle.get();
+    }
+
+    void* get_cublas_workspace() {
+      static thread_local CublasWorkspace workspace;
+      return workspace.get();
     }
 
 #ifdef CT2_WITH_CUDNN
@@ -204,7 +226,6 @@ namespace ctranslate2 {
     // for hardware support of reduced precision.
 
 #ifdef CT2_USE_HIP
-    //TODO: capabilty research
     bool gpu_supports_int8(int device) {
       return true;
     }

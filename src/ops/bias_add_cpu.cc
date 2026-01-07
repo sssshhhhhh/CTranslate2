@@ -27,10 +27,10 @@ namespace ctranslate2 {
                                           bias.size(),
                                           value.size());
       }
-      if (_activation_type)
-        get_activation_op(*_activation_type)(output, output);
       if (residual)
         Add()(*residual, output, output);
+      if (_activation_type)
+        get_activation_op(*_activation_type)(output, output);
     }
 
 #define DECLARE_IMPL(T)                                         \

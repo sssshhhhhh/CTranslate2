@@ -14,6 +14,16 @@ namespace ctranslate2 {
         }
     };
 
+    template <typename T, typename Op, typename Epilogue>
+    struct op_epilogue {
+      Op op;
+      Epilogue epilogue;
+
+      __device__ T operator()(const T& lhs, const T& rhs) const {
+        return epilogue(op(lhs, rhs));
+      }
+    };
+
     template <typename T>
     void trinary_add(const T* a, const T* b, const T* c, T* d,
                       dim_t width, dim_t depth, dim_t size) {
@@ -27,7 +37,7 @@ namespace ctranslate2 {
     template <typename DeviceT, typename T, typename Epilogue>
     void bias_add(const T* x, const T* b, T* y, dim_t numel, dim_t width, dim_t depth, Epilogue epilogue) {
       cuda::binary_transform(b, x, y, numel,
-                             cuda::op_epilogue<DeviceT, cuda::plus<DeviceT>, Epilogue>(),
+                             op_epilogue<DeviceT, cuda::plus<DeviceT>, Epilogue>(),
                              cuda::repeat_vec_block<cuda::index_t>(width, depth));
     }
 
@@ -48,11 +58,13 @@ namespace ctranslate2 {
       const T* b = bias.data<T>();
       T* y = output.data<T>();
 
-      if (!_activation_type) {
-        if (residual)
-          trinary_add(b, x, residual->data<T>(), y, width, depth, value.size());
-        else
-          primitives<D>::add_block_broadcast(b, x, y, width, depth, value.size());
+      if (residual) {
+        trinary_add(b, x, residual->data<T>(), y, width, depth, value.size());
+        if (_activation_type) // fuse if ever used
+          get_activation_op(*_activation_type)(output, output);
+
+      } else if (!_activation_type) {
+        primitives<D>::add_block_broadcast(b, x, y, width, depth, value.size());
 
       } else {
 
@@ -86,9 +98,6 @@ namespace ctranslate2 {
           bias_add<DeviceT>(x, b, y, numel, width, depth, cuda::tanh_func<DeviceT>());
           break;
         }
-
-        if (residual) // fuse with above if ever used
-          Add()(*residual, output, output);
       }
     }
 
