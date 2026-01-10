@@ -68,6 +68,7 @@ namespace ctranslate2 {
       const dim_t _cache_time_dim;
       std::unique_ptr<const LayerNorm> _q_norm;  // Query normalization
       std::unique_ptr<const LayerNorm> _k_norm;  // Key normalization
+      const bool _keep_packed_qkv;
     };
   }
 }

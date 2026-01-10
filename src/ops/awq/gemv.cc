@@ -1,6 +1,5 @@
 #include <ctranslate2/ops/awq/gemv.h>
 #include <ctranslate2/ops/sum.h>
-#include <iostream>
 
 #include "dispatch.h"
 

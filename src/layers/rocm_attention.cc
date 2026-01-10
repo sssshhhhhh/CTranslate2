@@ -2,7 +2,6 @@
 #include "ctranslate2/ops/split.h"
 #include "ctranslate2/utils.h"
 
-#include <iostream>
 #include <algorithm>
 #include <cmath>
 #include <numeric>
@@ -276,6 +275,10 @@ namespace ctranslate2 {
       , _cache_time_dim(_flash_attention || _merge_time_and_head_dims ? 1 : 2)
       , _q_norm(build_optional_layer<LayerNorm>(model, scope + "/q_norm"))
       , _k_norm(build_optional_layer<LayerNorm>(model, scope + "/k_norm"))
+      , _keep_packed_qkv(_flash_attention
+                         && _num_heads == _num_heads_kv
+                         && !_q_norm && !_k_norm
+                         && !has_positional_embeddings())
     {
       if (_flash_attention && (
           _relative_position_keys
@@ -398,9 +401,18 @@ namespace ctranslate2 {
 
         } else {
           split_heads(fused_proj, 3 * _num_heads, queries_padder);
-          const dim_t depth = _cache_time_dim == 1 ? 2 : 1;
-          const ops::Split split_op(depth, {_num_heads, _num_heads_kv, _num_heads_kv});
-          split_op(fused_proj, queries_proj, keys_proj, values_proj);
+          if (_keep_packed_qkv && !cached_keys) { // handle using strides in fa2
+            queries_proj = std::move(fused_proj);
+            const dim_t batch_size = queries_proj.dim(0);
+            const dim_t time = queries_proj.dim(1);
+            queries_proj.reshape({batch_size, time, 3, _num_heads, _d_head});
+            keys_proj.shallow_copy(queries_proj);
+            values_proj.shallow_copy(queries_proj);
+          } else {
+            const dim_t depth = _cache_time_dim == 1 ? 2 : 1;
+            const ops::Split split_op(depth, {_num_heads, _num_heads_kv, _num_heads_kv});
+            split_op(fused_proj, queries_proj, keys_proj, values_proj);
+          }
         }
 
         if (_q_norm)

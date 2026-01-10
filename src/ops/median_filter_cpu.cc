@@ -1,7 +1,5 @@
 #include "ctranslate2/ops/median_filter.h"
 
-#include <iostream>
-
 #include <algorithm>
 #include "cpu/parallel.h"
 #include "type_dispatch.h"

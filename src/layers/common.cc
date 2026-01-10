@@ -401,7 +401,7 @@ namespace ctranslate2 {
           ops::Add()(*residual, output, output);
       } else if (_qzero && _qscale) {
 #ifdef CT2_USE_HIP
-        (void*)_activation_type;
+        (void)_activation_type;
         throw std::invalid_argument("AWQ unsupported with HIP");
 #else
         switch (_quant_method) {

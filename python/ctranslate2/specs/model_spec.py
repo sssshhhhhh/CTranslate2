@@ -210,6 +210,7 @@ class LayerSpec(FrozenAttr, metaclass=FrozenMeta):
             key = _split_scope(name)[-1]
             if not quantization:
                 setattr(spec, key, value)
+                return
 
             weight_dtype = quantization.split("_")[0]
             float_dtype = quantization.split("_")[-1]
@@ -286,7 +287,7 @@ class LayerSpec(FrozenAttr, metaclass=FrozenMeta):
                     case "bfloat16":
                         value = value.to("bfloat16")
                     case "float32":
-                        value = value.to("bfloat16")
+                        value = value.to("float32")
 
             setattr(spec, key, value)
             if scale is not None:

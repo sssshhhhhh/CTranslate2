@@ -5,6 +5,7 @@
 #include "mask.hpp"
 #endif
 #include "cuda/utils.h"
+#include "type_dispatch.h"
 
 namespace ctranslate2 {
   namespace ops {
@@ -40,19 +41,23 @@ namespace ctranslate2 {
         // q: (batch_size, seqlen_q, nheads, d)
         // k: (batch_size, seqlen_k, nheads_k, d)
         // v: (batch_size, seqlen_k, nheads_k, d)
+        // packed qkv: (batch_size, seqlen_q, 3, nheads, d)
         // o: (batch_size, seqlen_q, nheads, d)
 
         // alibi_slopes:(batch_size, nheads) or (nhead)
         // lse: (batch_size, nheads, seqlen_q)
+
+        const bool packed_qkv = q.buffer() == k.buffer();
 
         ck_tile::index_t stride_q = q.stride(1);
         ck_tile::index_t stride_k = k.stride(1);
         ck_tile::index_t stride_v = v.stride(1);
         ck_tile::index_t stride_o = out.stride(1);
 
-        ck_tile::index_t nhead_stride_q = q.stride(2);
-        ck_tile::index_t nhead_stride_k = k.stride(2);
-        ck_tile::index_t nhead_stride_v = v.stride(2);
+        const dim_t nhead_dim = packed_qkv ? 3 : 2;
+        ck_tile::index_t nhead_stride_q = q.stride(nhead_dim);
+        ck_tile::index_t nhead_stride_k = k.stride(nhead_dim);
+        ck_tile::index_t nhead_stride_v = v.stride(nhead_dim);
         ck_tile::index_t nhead_stride_o = out.stride(2);
 
         ck_tile::index_t batch_stride_q = q.stride(0);
@@ -119,13 +124,24 @@ namespace ctranslate2 {
                              false, // has_dropout_randval,
                              drop_seed_offset};
     }
+
+    template <typename T>
+    void set_packed_qkv_ptrs(fmha_fwd_args& args, const StorageView& x) {
+      // x: (batch_size, seqlen_q, 3, nheads, d)
+      const T* ptr = x.data<T>();
+      const dim_t nheads = x.dim(3);
+      const dim_t d = x.dim(4);
+      args.q_ptr = ptr;
+      args.k_ptr = ptr + nheads * d;
+      args.v_ptr = ptr + 2 * nheads * d;
+    }
 #endif
 
     template<>
-    void FlashAttention::compute<Device::CUDA>(StorageView& queries,        // batch_size x seqlen_q x num_heads x round_multiple(head_size, 8)
-                                               StorageView& keys,           // batch_size x seqlen_k x num_heads_k x round_multiple(head_size, 8)
-                                               StorageView& values,         // batch_size x seqlen_k x num_heads_k x round_multiple(head_size, 8)
-                                               StorageView& output,         // batch_size x seqlen_q x num_heads x round_multiple(head_size, 8)
+    void FlashAttention::compute<Device::CUDA>(StorageView& queries,        // batch_size x seqlen_q x num_heads x head_size
+                                               StorageView& keys,           // batch_size x seqlen_k x num_heads_k x head_size
+                                               StorageView& values,         // batch_size x seqlen_k x num_heads_k x head_size
+                                               StorageView& output,         // batch_size x seqlen_q x num_heads x head_size
                                                StorageView* cached_keys,    // nullptr
                                                StorageView* cached_values,  // nullptr
                                                StorageView* attention,      // nullptr
@@ -138,27 +154,38 @@ namespace ctranslate2 {
 #ifdef CT2_WITH_FLASH_ATTN
       if (cached_keys || cached_values || attention
           || rotary_cos || rotary_sin || rotary_interleave || alibi || offset) {
-        throw std::runtime_error("Model does not support FlashAttention");
+        throw std::invalid_argument("Model does not support FlashAttention");
       }
 
       const Device device = queries.device();
       const DataType dtype = queries.dtype();
 
       std::string dtype_str = dtype == DataType::FLOAT16 ? "fp16" : "bf16";
+      const bool packed_qkv = queries.buffer() == keys.buffer();
       const auto shape = queries.shape();
       const int batch_size = shape[0];
       int seqlen_q = shape[1];
-      int num_heads = shape[2];
-      const int head_size_og = shape[3];
-      const int seqlen_k = keys.dim(1);
-      const int num_heads_k = keys.dim(2);
+      int num_heads;
+      int head_size;
+      int seqlen_k;
+      int num_heads_k;
+
+      if (packed_qkv) {
+        // batch_size x seqlen_q x 3 x num_heads x head_size
+        num_heads = shape[3];
+        head_size = shape[4];
+        seqlen_k = seqlen_q;
+        num_heads_k = num_heads;
+      } else {
+        num_heads = shape[2];
+        head_size = shape[3];
+        seqlen_k = keys.dim(1);
+        num_heads_k = keys.dim(2);
+      }
 
       std::string mask_identify = _is_causal && seqlen_q != 1 ? "b:-1,0" : "0";
       mask_info mask = mask_info::decode(mask_identify, seqlen_q, seqlen_k);;
-
-      output.resize(queries.shape());
-      auto round_multiple = [](int x, int m) { return (x + m - 1) / m * m; };
-      const int head_size = round_multiple(head_size_og, 8);
+      output.resize({batch_size, seqlen_q, num_heads, head_size});
 
       cudaStream_t stream = ctranslate2::cuda::get_cuda_stream();
       ck_tile::stream_config stream_config{stream};
@@ -176,6 +203,8 @@ namespace ctranslate2 {
                                        values,
                                        output,
                                        _queries_scale);
+      if (packed_qkv)
+        TYPE_DISPATCH(queries.dtype(), set_packed_qkv_ptrs<T>(args, queries));
 
       float status = fmha_fwd(traits, args, stream_config);
       if (status < 0)
