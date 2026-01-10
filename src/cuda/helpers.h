@@ -6,11 +6,15 @@
 #ifdef CT2_USE_HIP
 #include <hip/hip_fp16.h>
 #include <hip/hip_bf16.h>
+#include <hip/hip_fp8.h>
 #include <thrust/iterator/counting_iterator.h>
 #define __nv_bfloat16 __hip_bfloat16
+#define __nv_fp8_e4m3 __hip_fp8_e4m3
+#define __nv_fp8_e5m2 __hip_fp8_e5m2
 #else
 #include <cuda_fp16.h>
 #include <cuda_bf16.h>
+#include <cuda_fp8.h>
 #endif
 
 #include "ctranslate2/types.h"
@@ -44,7 +48,7 @@ namespace ctranslate2 {
       using type = T;
     };
 
-    // Map float16_t and bfloat16_t to their corresponding device types.
+    // Map floats to their corresponding device types.
     template<>
     struct DeviceType<float16_t> {
       using type = __half;
@@ -53,6 +57,16 @@ namespace ctranslate2 {
     template<>
     struct DeviceType<bfloat16_t> {
       using type = __nv_bfloat16;
+    };
+
+    template<>
+    struct DeviceType<float8_t> {
+      using type = __nv_fp8_e4m3;
+    };
+
+    template<>
+    struct DeviceType<bfloat8_t> {
+      using type = __nv_fp8_e5m2;
     };
 
     template <typename T>
@@ -201,6 +215,13 @@ namespace ctranslate2 {
       }
     };
 
+    template <typename T>
+    struct relu_func {
+      __device__ T operator()(T x) const {
+        return x > T(0.f) ? x : T(0.f);
+      }
+    };
+
 #if !CUDA_CAN_USE_HALF
     template<>
     struct plus<__half> {
@@ -236,16 +257,7 @@ namespace ctranslate2 {
         return float(lhs) < float(rhs) ? lhs : rhs;
       }
     };
-#endif
 
-    template <typename T>
-    struct relu_func {
-      __device__ T operator()(T x) const {
-        return x > T(0.f) ? x : T(0.f);
-      }
-    };
-
-#if !CUDA_CAN_USE_HALF
     template<>
     struct relu_func<__half> {
       __device__ __half operator()(__half x) const {

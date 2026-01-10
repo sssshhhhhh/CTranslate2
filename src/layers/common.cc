@@ -401,7 +401,8 @@ namespace ctranslate2 {
           ops::Add()(*residual, output, output);
       } else if (_qzero && _qscale) {
 #ifdef CT2_USE_HIP
-        throw std::invalid_argument("Quantization unsupported with HIP.");
+        (void*)_activation_type;
+        throw std::invalid_argument("AWQ unsupported with HIP");
 #else
         switch (_quant_method) {
           case models::QUANTIZATION_TYPE::AWQ_GEMM:
@@ -436,7 +437,14 @@ namespace ctranslate2 {
         }
 #endif
       } else {
-        _gemm_op(input, *weight, output, nullptr, bias, residual);
+        _gemm_op(input,
+                 *weight,
+                 output,
+                 nullptr, // a_shift_compensation
+                 bias,
+                 residual,
+                 nullptr, // a_scale
+                 qscale); // b_scale
       }
     }
 

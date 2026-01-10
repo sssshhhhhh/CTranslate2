@@ -3,15 +3,14 @@
 #include <cstdint>
 #include <string>
 
-#include <half_float/half.hpp>
-
+#include "float16.h"
 #include "bfloat16.h"
+#include "float8.h"
 #include "devices.h"
 
 namespace ctranslate2 {
 
   using dim_t = int64_t;  // This type should be signed.
-  using float16_t = half_float::half;
 
   enum class DataType {
     FLOAT32,
@@ -20,10 +19,13 @@ namespace ctranslate2 {
     INT32,
     FLOAT16,
     BFLOAT16,
+    FLOAT8,
+    BFLOAT8,
   };
 
   std::string dtype_name(DataType type);
   bool is_float_type(DataType type);
+  bool is_lowp_type(DataType type); // FP8 and lower precision
 
   enum class ComputeType {
     DEFAULT,
@@ -36,6 +38,14 @@ namespace ctranslate2 {
     INT16,
     FLOAT16,
     BFLOAT16,
+    FLOAT8,
+    FLOAT8_FLOAT32,
+    FLOAT8_FLOAT16,
+    FLOAT8_BFLOAT16,
+    BFLOAT8,
+    BFLOAT8_FLOAT32,
+    BFLOAT8_FLOAT16,
+    BFLOAT8_BFLOAT16,
   };
 
   ComputeType str_to_compute_type(const std::string& compute_type);
@@ -43,6 +53,7 @@ namespace ctranslate2 {
 
   bool mayiuse_bfloat16(const Device device, const int device_index = 0);
   bool mayiuse_float16(const Device device, const int device_index = 0);
+  bool mayiuse_float8(const Device device, const int device_index = 0);
   bool mayiuse_int16(const Device device, const int device_index = 0);
   bool mayiuse_int8(const Device device, const int device_index = 0);
 

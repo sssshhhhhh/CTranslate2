@@ -101,6 +101,8 @@ namespace ctranslate2 {
         .value("float32", DataType::FLOAT32)
         .value("float16", DataType::FLOAT16)
         .value("bfloat16", DataType::BFLOAT16)
+        .value("float8", DataType::FLOAT8)
+        .value("bfloat8", DataType::BFLOAT8)
         .value("int8", DataType::INT8)
         .value("int16", DataType::INT16)
         .value("int32", DataType::INT32)

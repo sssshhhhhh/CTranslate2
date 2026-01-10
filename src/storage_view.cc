@@ -92,29 +92,52 @@ namespace ctranslate2 {
     return device_copy.copy_from(*this);
   }
 
+  template <typename T>
+  static void convert(const StorageView& x, StorageView& y) {
+    switch (x.dtype()) {
+    case DataType::FLOAT32:
+      DEVICE_DISPATCH(x.device(), primitives<D>::convert(x.data<float>(), y.data<T>(), x.size()));
+      break;
+    case DataType::FLOAT16:
+      DEVICE_DISPATCH(x.device(), primitives<D>::convert(x.data<float16_t>(), y.data<T>(), x.size()));
+      break;
+    case DataType::BFLOAT16:
+      DEVICE_DISPATCH(x.device(), primitives<D>::convert(x.data<bfloat16_t>(), y.data<T>(), x.size()));
+      break;
+    case DataType::FLOAT8:
+      DEVICE_DISPATCH(x.device(), primitives<D>::convert(x.data<float8_t>(), y.data<T>(), x.size()));
+      break;
+    case DataType::BFLOAT8:
+      DEVICE_DISPATCH(x.device(), primitives<D>::convert(x.data<bfloat8_t>(), y.data<T>(), x.size()));
+      break;
+    default:
+      // TODO: support other conversions.
+      throw std::invalid_argument("Conversion from " + dtype_name(x.dtype())
+                                  + " to " + dtype_name(y.dtype()) + " is not yet implemented");
+    }
+  }
+
   StorageView StorageView::to(DataType dtype) const {
     if (_dtype == dtype)
       return *this;
     StorageView converted(_shape, dtype, _device);
-    if (_dtype == DataType::FLOAT32 && dtype == DataType::FLOAT16) {
-      DEVICE_DISPATCH(_device,
-                      primitives<D>::convert(data<float>(), converted.data<float16_t>(), _size));
-    } else if (_dtype == DataType::FLOAT16 && dtype == DataType::FLOAT32) {
-      DEVICE_DISPATCH(_device,
-                      primitives<D>::convert(data<float16_t>(), converted.data<float>(), _size));
-    } else if (_dtype == DataType::FLOAT32 && dtype == DataType::BFLOAT16) {
-      DEVICE_DISPATCH(_device,
-                      primitives<D>::convert(data<float>(), converted.data<bfloat16_t>(), _size));
-    } else if (_dtype == DataType::BFLOAT16 && dtype == DataType::FLOAT32) {
-      DEVICE_DISPATCH(_device,
-                      primitives<D>::convert(data<bfloat16_t>(), converted.data<float>(), _size));
-    } else if (_dtype == DataType::BFLOAT16 && dtype == DataType::FLOAT16) {
-      DEVICE_DISPATCH(_device,
-                      primitives<D>::convert(data<bfloat16_t>(), converted.data<float16_t>(), _size));
-    } else if (_dtype == DataType::FLOAT16 && dtype == DataType::BFLOAT16) {
-      DEVICE_DISPATCH(_device,
-                      primitives<D>::convert(data<float16_t>(), converted.data<bfloat16_t>(), _size));
-    } else {
+    switch (dtype) {
+    case DataType::FLOAT32:
+      convert<float>(*this, converted);
+      break;
+    case DataType::FLOAT16:
+      convert<float16_t>(*this, converted);
+      break;
+    case DataType::BFLOAT16:
+      convert<bfloat16_t>(*this, converted);
+      break;
+    case DataType::FLOAT8:
+      convert<float8_t>(*this, converted);
+      break;
+    case DataType::BFLOAT8:
+      convert<bfloat8_t>(*this, converted);
+      break;
+    default:
       // TODO: support other conversions.
       throw std::invalid_argument("Conversion from " + dtype_name(_dtype)
                                   + " to " + dtype_name(dtype) + " is not yet implemented");
@@ -503,5 +526,7 @@ namespace ctranslate2 {
   StorageView::copy_from(const T* data, dim_t size, Device device, bool);
 
   DECLARE_ALL_TYPES(DECLARE_IMPL)
+  DECLARE_IMPL(float8_t);
+  DECLARE_IMPL(bfloat8_t);
 
 }

@@ -1,5 +1,5 @@
 #include "ctranslate2/layers/transformer.h"
-
+#include <iostream>
 #include <cmath>
 
 namespace ctranslate2 {

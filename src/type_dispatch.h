@@ -26,18 +26,18 @@ namespace ctranslate2 {
   template <DataType VALUE>
   struct EnumToDataType {}; // Specializations below
 
-#define MATCH_TYPE_AND_ENUM(TYPE, ENUM)                 \
-  template<>                                            \
-  struct DataTypeToEnum<TYPE> {                         \
-    static constexpr DataType value = ENUM;             \
-  };                                                    \
-  template<>                                            \
-  struct IsValidDataType<TYPE> {                        \
-    static constexpr bool value = true;                 \
-  };                                                    \
-  template<>                                            \
-  struct EnumToDataType<ENUM> {                         \
-    typedef TYPE Type;                                  \
+#define MATCH_TYPE_AND_ENUM(TYPE, ENUM)         \
+  template<>                                    \
+  struct DataTypeToEnum<TYPE> {                 \
+    static constexpr DataType value = ENUM;     \
+  };                                            \
+  template<>                                    \
+  struct IsValidDataType<TYPE> {                \
+    static constexpr bool value = true;         \
+  };                                            \
+  template<>                                    \
+  struct EnumToDataType<ENUM> {                 \
+    typedef TYPE Type;                          \
   }
 
   MATCH_TYPE_AND_ENUM(float, DataType::FLOAT32);
@@ -46,6 +46,8 @@ namespace ctranslate2 {
   MATCH_TYPE_AND_ENUM(int32_t, DataType::INT32);
   MATCH_TYPE_AND_ENUM(float16_t, DataType::FLOAT16);
   MATCH_TYPE_AND_ENUM(bfloat16_t, DataType::BFLOAT16);
+  MATCH_TYPE_AND_ENUM(float8_t, DataType::FLOAT8);
+  MATCH_TYPE_AND_ENUM(bfloat8_t, DataType::BFLOAT8);
 
 #undef MATCH_TYPE_AND_ENUM
 
@@ -57,14 +59,16 @@ namespace ctranslate2 {
   }
 
 #define SINGLE_ARG(...) __VA_ARGS__
-#define TYPE_DISPATCH(TYPE_ENUM, STMTS)             \
-  switch (TYPE_ENUM) {                              \
-    TYPE_CASE(float, SINGLE_ARG(STMTS))             \
-    TYPE_CASE(int8_t, SINGLE_ARG(STMTS))            \
-    TYPE_CASE(int16_t, SINGLE_ARG(STMTS))           \
-    TYPE_CASE(int32_t, SINGLE_ARG(STMTS))           \
-    TYPE_CASE(float16_t, SINGLE_ARG(STMTS))         \
-    TYPE_CASE(bfloat16_t, SINGLE_ARG(STMTS))        \
+#define TYPE_DISPATCH(TYPE_ENUM, STMTS)         \
+  switch (TYPE_ENUM) {                          \
+    TYPE_CASE(float, SINGLE_ARG(STMTS))         \
+    TYPE_CASE(int8_t, SINGLE_ARG(STMTS))        \
+    TYPE_CASE(int16_t, SINGLE_ARG(STMTS))       \
+    TYPE_CASE(int32_t, SINGLE_ARG(STMTS))       \
+    TYPE_CASE(float16_t, SINGLE_ARG(STMTS))     \
+    TYPE_CASE(bfloat16_t, SINGLE_ARG(STMTS))    \
+    TYPE_CASE(float8_t, SINGLE_ARG(STMTS))      \
+    TYPE_CASE(bfloat8_t, SINGLE_ARG(STMTS))     \
   }
 
 #define DECLARE_ALL_TYPES(FUNC)                 \

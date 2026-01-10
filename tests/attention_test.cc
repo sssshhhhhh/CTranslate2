@@ -37,12 +37,12 @@ public:
 
 class CrossAttentionTest : public ::testing::Test {
 protected:
-  static constexpr dim_t NUM_HEADS = 8;
+  static constexpr dim_t NUM_HEADS = 4;
   static constexpr dim_t D_MODEL = 64;
   static constexpr dim_t D_HEAD = D_MODEL / NUM_HEADS;
   static constexpr dim_t BATCH = 2;
-  static constexpr dim_t Q_LEN = 4;
-  static constexpr dim_t V_LEN = 6;
+  static constexpr dim_t Q_LEN = 6;
+  static constexpr dim_t V_LEN = 8;
 
   float get_4d(const StorageView& view, dim_t b, dim_t h, dim_t t, dim_t d) {
     const auto& shape = view.shape();
@@ -73,7 +73,7 @@ TEST_F(CrossAttentionTest, MultiQueryAttention) {
   attention.process_cross_attention(values, fused_proj, q_proj, k_proj, v_proj,
                                     &cached_keys, &cached_values, nullptr, nullptr, beam);
 
-  ASSERT_EQ(cached_keys.shape(), (Shape{BATCH, V_LEN, NUM_HEADS}));
+  ASSERT_EQ(cached_keys.shape(), (Shape{BATCH, V_LEN, D_HEAD}));
 
   // Verify q_norm and k_norm are applied (RMSNorm normalizes to ~1.0 magnitude)
   float q_val = q_proj.data<float>()[0];

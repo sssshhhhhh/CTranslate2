@@ -1,17 +1,12 @@
 #include "ctranslate2/ops/median_filter.h"
 
-#include "type_dispatch.h"
 #include "cuda/helpers.h"
-#include <type_traits>
 
 namespace ctranslate2 {
   namespace ops {
 
     constexpr dim_t num_threads = 256;
-
-    namespace {
-      constexpr int kMaxWindow = 129; // supports window widths up to 129 (rank 64)
-    }
+    constexpr int kMaxWindow = 129; // supports window widths up to 129 (rank 64)
 
     template <typename DeviceT, int kMax>
     __global__ void sliding_median_lastdim_kernel(const DeviceT* input,
@@ -94,8 +89,8 @@ namespace ctranslate2 {
         width);
     }
 
-#define DECLARE_IMPL(T)                                         \
-    template void                                               \
+#define DECLARE_IMPL(T)                                                 \
+    template void                                                       \
     MedianFilter::compute<Device::CUDA, T>(const StorageView& input,    \
                                            const dim_t axis_size,       \
                                            StorageView& output) const;

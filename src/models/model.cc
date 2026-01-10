@@ -193,6 +193,7 @@ namespace ctranslate2 {
         std::tie(weight_dtype, float_dtype) = compute_type_to_data_type(_effective_compute_type);
         if (_use_flash_attention && (float_dtype != DataType::FLOAT16 && float_dtype != DataType::BFLOAT16))
           throw std::runtime_error("FlashAttention only support fp16 and bf16 data type");
+        const bool is_lowp = is_lowp_type(weight_dtype);
 
         const auto variable_index = _variable_index;
         for (auto& variable_pair : variable_index) {
@@ -218,6 +219,9 @@ namespace ctranslate2 {
                 variable_weight_dtype = float_dtype;
               }
             }
+            // Low precision only supported with GEMM
+            if (is_lowp && !is_linear_weight(name))
+              variable_weight_dtype = float_dtype;
             ensure_dtype(name, variable, variable_weight_dtype);
             // Undo reshape for conv weights
             if (is_conv) {
@@ -303,10 +307,9 @@ namespace ctranslate2 {
                              StorageView& variable,
                              const DataType target_dtype) {
       const std::string scale_name = name + "_scale";
-      const StorageView* saved_scale = nullptr;
+      const StorageView* saved_scale = get_variable_if_exists(scale_name);
       if (!is_float_type(variable.dtype())) {
         // Check that the quantization scale of the variable exists.
-        saved_scale = get_variable_if_exists(scale_name);
         if (!saved_scale) {
           if (variable.dtype() == DataType::INT16) {
             // Backward compatibility with int16 models without a saved scale.
@@ -327,40 +330,28 @@ namespace ctranslate2 {
                                       /*round_before_cast=*/round_before_cast_in_quantization());
       const ops::Dequantize dequantize_op{};
       StorageView target_variable(target_dtype);
+      const bool is_lowp = is_lowp_type(target_dtype);
+
+      if (saved_scale) {
+        if (is_lowp)
+          spdlog::warn("Dequantizing low precision variable " + name + " to convert from "
+                       + dtype_name(variable.dtype()) + " to " + dtype_name(target_dtype));
+        // Dequantize back to float
+        StorageView dequantized;
+        dequantize_op(variable, *saved_scale, dequantized);
+        remove_variable(scale_name);  // The scale is no longer needed.
+        variable = std::move(dequantized);
+      }
 
       if (is_float_type(target_dtype)) {
-        if (is_float_type(variable.dtype())) {
-          target_variable = variable.to(target_dtype);
-        } else {
-          // Dequantize int8 or int16 back to float.
-          StorageView dequantized;
-          dequantize_op(variable, *saved_scale, dequantized);
-          remove_variable(scale_name);  // The scale is no longer needed.
-          if (dequantized.dtype() == target_dtype) {
-            target_variable = std::move(dequantized);
-          } else {
-            target_variable = dequantized.to(target_dtype);
-          }
-        }
-
-      } else if (is_float_type(variable.dtype())) {
-        // Quantize float to int8 or int16.
-        StorageView scale;
-        if (variable.dtype() != DataType::FLOAT32) {
-          quantize_op(variable.to_float32(), target_variable, scale);
-        } else {
-          quantize_op(variable, target_variable, scale);
-        }
-        register_variable(scale_name, std::move(scale));
+        // TODO: low precision scale
+        target_variable = variable.to(target_dtype);
 
       } else {
-        // Convert int8 -> float32 -> int16 or int16 -> float32 -> int8.
-        StorageView tmp_variable;
-        StorageView new_scale;
-        dequantize_op(variable, *saved_scale, tmp_variable);
-        quantize_op(tmp_variable, target_variable, new_scale);
-        remove_variable(scale_name);
-        register_variable(scale_name, std::move(new_scale));
+        // Quantize float
+        StorageView scale;
+        quantize_op(variable.to_float32(), target_variable, scale);
+        register_variable(scale_name, std::move(scale));
       }
 
       variable = std::move(target_variable);

@@ -180,6 +180,9 @@ namespace ctranslate2 {
       void ensure_dtype(const std::string& name,
                         StorageView& variable,
                         const DataType target_dtype);
+      void quantize_lowp(const std::string& name,
+                         StorageView& variable,
+                         const DataType target_dtype);
       ComputeType infer_compute_type() const;
 
       Device _device = Device::CPU;

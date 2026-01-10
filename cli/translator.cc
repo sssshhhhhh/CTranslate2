@@ -38,9 +38,15 @@ int main(int argc, char* argv[]) {
      cxxopts::value<int>()->default_value("-1"))
     ;
 
+  std::string compute_types;
+  for (int i = 0; i <= static_cast<int>(ctranslate2::ComputeType::BFLOAT8_BFLOAT16); ++i) {
+    if (i != 0) compute_types += ", ";
+    compute_types += compute_type_to_str(static_cast<ctranslate2::ComputeType>(i));
+  }
+
   cmd_options.add_options("Model")
     ("model", "Path to the CTranslate2 model directory.", cxxopts::value<std::string>())
-    ("compute_type", "The type used for computation: default, auto, float32, float16, bfloat16, int16, int8, int8_float32, int8_float16, or int8_bfloat16",
+    ("compute_type", "The type used for computation: " + compute_types,
      cxxopts::value<std::string>()->default_value("default"))
     ("cuda_compute_type", "Computation type on CUDA devices (overrides compute_type)",
      cxxopts::value<std::string>())

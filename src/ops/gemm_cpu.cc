@@ -9,15 +9,25 @@ namespace ctranslate2 {
     void Gemm::compute(const StorageView& a,
                        const StorageView& b,
                        StorageView& c,
-                       const dim_t m,
-                       const dim_t n,
-                       const dim_t k,
-                       const dim_t lda,
-                       const dim_t ldb,
-                       const dim_t ldc,
                        const StorageView* a_shift_compensation,
                        const StorageView* bias,
-                       const StorageView* residual) const {
+                       const StorageView* residual,
+                       const StorageView*,
+                       const StorageView*) const {
+      const dim_t k = a.dim(_trans_a ? -2 : -1);
+      const dim_t n = b.dim(_trans_b ? -2 : -1);
+      const dim_t m = a.size() / k;  // Collapse leading dimensions.
+      const dim_t lda = _trans_a ? m : k;
+      const dim_t ldb = _trans_b ? k : n;
+      const dim_t ldc = n;
+
+      {
+        Shape output_shape(a.shape());
+        output_shape[output_shape.size() - 2] = a.dim(_trans_a ? -1 : -2); // m
+        output_shape[output_shape.size() - 1] = n;
+        c.resize(std::move(output_shape));
+      }
+
       primitives<D>::gemm(_a_is_packed, _b_is_packed,
                           _trans_a, _trans_b,
                           m, n, k,
@@ -36,15 +46,11 @@ namespace ctranslate2 {
     Gemm::compute<Device::CPU, In, Out>(const StorageView& a,                       \
                                         const StorageView& b,                       \
                                         StorageView& c,                             \
-                                        const dim_t m,                              \
-                                        const dim_t n,                              \
-                                        const dim_t k,                              \
-                                        const dim_t lda,                            \
-                                        const dim_t ldb,                            \
-                                        const dim_t ldc,                            \
                                         const StorageView* a_shift_compensation,    \
                                         const StorageView* bias,                    \
-                                        const StorageView* residual) const;
+                                        const StorageView* residual,                \
+                                        const StorageView* scale_a,                 \
+                                        const StorageView* scale_b) const;
 
     DECLARE_IMPL(int8_t, int32_t)
     DECLARE_IMPL(int16_t, int32_t)

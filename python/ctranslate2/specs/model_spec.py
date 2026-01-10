@@ -30,6 +30,14 @@ ACCEPTED_MODEL_TYPES = (
     "int8_float16",
     "int8_bfloat16",
     "int16",
+    "float8",
+    "float8_float32",
+    "float8_float16",
+    "float8_bfloat16",
+    "bfloat8",
+    "bfloat8_float32",
+    "bfloat8_float16",
+    "bfloat8_bfloat16",
     "float16",
     "bfloat16",
     "float32",
@@ -199,8 +207,13 @@ class LayerSpec(FrozenAttr, metaclass=FrozenMeta):
         def _quantize(spec, name, value):
             if not isinstance(value, Variable) or value.is_scalar():
                 return
-
             key = _split_scope(name)[-1]
+            if not quantization:
+                setattr(spec, key, value)
+
+            weight_dtype = quantization.split("_")[0]
+            float_dtype = quantization.split("_")[-1]
+            float_dtype = "float32" if quantization == "int16" else float_dtype
             scale = None
             is_quantizable = hasattr(spec, "%s_scale" % key)
             is_convertible = value.dtype in ("float32", "float16", "bfloat16")
@@ -219,12 +232,8 @@ class LayerSpec(FrozenAttr, metaclass=FrozenMeta):
                     value = value.astype(np.int16)
                     scale = NumpyVariable(scale)
                     value = NumpyVariable(value)
-                elif quantization in (
-                    "int8",
-                    "int8_float32",
-                    "int8_float16",
-                    "int8_bfloat16",
-                ):
+
+                elif weight_dtype == "int8":
                     value = value.to("float32").numpy()
                     # For conv1d layer we need to reshape to 2D before calculating scale
                     old_shape = None
@@ -242,16 +251,42 @@ class LayerSpec(FrozenAttr, metaclass=FrozenMeta):
                         value = value.reshape(old_shape)
                     scale = NumpyVariable(scale)
                     value = NumpyVariable(value)
+
+                # Conv1d layer doesn't support low precision quantization (yet)
+                elif weight_dtype in ("float8", "bfloat8") and len(value.shape) != 3:
+                    if not torch_is_available:
+                        raise RuntimeError(
+                            "Converting to %s requires torch to be installed"
+                            % quantization
+                        )
+
+                    value = torch.from_numpy(value.to("float32").numpy())
+                    match weight_dtype:
+                        case "float8":
+                            torch_dtype = torch.float8_e4m3fn
+                        case "bfloat8":
+                            torch_dtype = torch.float8_e5m2
+                    fmax = torch.finfo(torch_dtype).max
+                    amax = value.abs().max(dim=1)
+                    scale = torch.where(amax == 0, 1, amax / fmax)
+                    value /= scale[None, :]
+                    match weight_dtype:
+                        case "float8":
+                            value = value.to(torch.float8_e4m3fn)
+                        case "bfloat8":
+                            value = value.to(torch.float8_e5m2)
+
                 elif quantization in ("float16", "bfloat16", "float32"):
                     value = value.to(quantization)
 
             elif is_convertible:
-                if quantization in ("float16", "int8_float16"):
-                    value = value.to("float16")
-                elif quantization in ("bfloat16", "int8_bfloat16"):
-                    value = value.to("bfloat16")
-                elif quantization in ("float32", "int16", "int8_float32"):
-                    value = value.to("float32")
+                match float_dtype:
+                    case "float16":
+                        value = value.to("float16")
+                    case "bfloat16":
+                        value = value.to("bfloat16")
+                    case "float32":
+                        value = value.to("bfloat16")
 
             setattr(spec, key, value)
             if scale is not None:
@@ -267,7 +302,9 @@ class LayerSpec(FrozenAttr, metaclass=FrozenMeta):
 
         Arguments:
           quantization: Weight quantization scheme (possible values are: int8, int8_float32,
-            int8_float16, int8_bfloat16, int16, float16, bfloat16, float32).
+            int8_float16, int8_bfloat16, int16, float8, float8_float32, float8_float16,
+            float8_bfloat16, bfloat8, bfloat8_float32, bfloat8_float16, bfloat8_bfloat16,
+            float16, bfloat16, float32).
         """
         self._alias_variables()
         self._quantize(quantization)
@@ -279,7 +316,22 @@ class LayerSpec(FrozenAttr, metaclass=FrozenMeta):
 
 def _dtype_to_type_id(object_dtype):
     # Order should match the DataType enum in include/ctranslate2/types.h
-    dtypes = ("float32", "int8", "int16", "int32", "float16", "bfloat16")
+    dtypes = (
+        "float32",
+        "int8",
+        "int16",
+        "int32",
+        "float16",
+        "bfloat16",
+        "float8",
+        "float8_float32",
+        "float8_float16",
+        "float8_bfloat16",
+        "bfloat8",
+        "bfloat8_float32",
+        "bfloat8_float16",
+        "bfloat8_bfloat16",
+    )
     try:
         return dtypes.index(object_dtype)
     except ValueError:
@@ -693,10 +745,10 @@ class NumpyVariable(Variable):
         return self.array.tobytes()
 
     def _to(self, dtype: str) -> Variable:
-        if dtype == "bfloat16":
+        if dtype in ("bfloat16", "float8_e4m3fn", "float8_e5m2"):
             if not torch_is_available:
                 raise RuntimeError(
-                    "Converting to bfloat16 requires torch to be installed"
+                    "Converting to %s requires torch to be installed" % dtype
                 )
             return PyTorchVariable.from_numpy(self.array).to(dtype)
 

@@ -261,7 +261,9 @@ def test_smooth_activation_torch():
 
 
 @test_utils.skip_on_windows
-@pytest.mark.parametrize("variable_dtype", ["float32", "float16", "bfloat16"])
+@pytest.mark.parametrize(
+    "variable_dtype", ["float32", "float16", "bfloat16", "float8_e4m3fn", "float8_e5m2"]
+)
 @pytest.mark.parametrize(
     "quantization,expected_weight_dtype,expected_bias_dtype",
     [
@@ -271,6 +273,14 @@ def test_smooth_activation_torch():
         ("int8_float16", "int8", "float16"),
         ("int8_bfloat16", "int8", "bfloat16"),
         ("int16", "int16", "float32"),
+        ("float8", "float8_e4m3fn", None),
+        ("float8_float32", "float8_e4m3fn", "float32"),
+        ("float8_float16", "float8_e4m3fn", "float16"),
+        ("float8_bfloat16", "float8_e4m3fn", "bfloat16"),
+        ("bfloat8", "float8_e5m2", None),
+        ("bfloat8_float32", "float8_e5m2", "float32"),
+        ("bfloat8_float16", "float8_e5m2", "float16"),
+        ("bfloat8_bfloat16", "float8_e5m2", "bfloat16"),
         ("float16", "float16", "float16"),
         ("bfloat16", "bfloat16", "bfloat16"),
         ("float32", "float32", "float32"),

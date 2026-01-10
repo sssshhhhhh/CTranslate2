@@ -48,6 +48,8 @@ namespace ctranslate2 {
                                     StorageView& output) const;
 
     DECLARE_ALL_TYPES(DECLARE_IMPL)
+    DECLARE_IMPL(float8_t)
+    DECLARE_IMPL(bfloat8_t)
 
   }
 }

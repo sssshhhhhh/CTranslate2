@@ -50,7 +50,7 @@ if sys.platform == "darwin":
     ldflags.append("-Wl,-rpath,/usr/local/lib")
 elif sys.platform == "win32":
     cflags = ["/std:c++17", "/d2FH4-"]
-    package_data["ctranslate2"] = ["*.dll", "hipblaslt/library/*", "rocblas/library/*"]
+    package_data["ctranslate2"] = ["*.dll"]
 elif sys.platform == "linux":
     cflags.append("-fPIC")
     ldflags.append("-Wl,-rpath,/usr/local/lib64:/usr/local/lib")

@@ -219,6 +219,8 @@ namespace ctranslate2 {
     Slide::compute<Device::CUDA, T>(const StorageView& input,           \
                                     StorageView& output, const dim_t& index) const;
     DECLARE_ALL_TYPES(DECLARE_IMPL)
+    DECLARE_IMPL(float8_t)
+    DECLARE_IMPL(bfloat8_t)
 
   }
 }

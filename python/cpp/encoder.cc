@@ -94,7 +94,8 @@ namespace ctranslate2 {
                    device_index: Device IDs where to place this encoder on.
                    compute_type: Model computation type or a dictionary mapping a device name
                      to the computation type (possible values are: default, auto, int8, int8_float32,
-                     int8_float16, int8_bfloat16, int16, float16, bfloat16, float32).
+                     int8_float16, int8_bfloat16, int16, float8, float8_float32, float8_float16, float8_bfloat16,
+                     bfloat8, bfloat8_float32, bfloat8_float16, bfloat8_bfloat16, float16, bfloat16, float32).
                    inter_threads: Maximum number of parallel generations.
                    intra_threads: Number of OpenMP threads per encoder (0 to use a default value).
                    max_queued_batches: Maximum numbers of batches in the queue (-1 for unlimited,

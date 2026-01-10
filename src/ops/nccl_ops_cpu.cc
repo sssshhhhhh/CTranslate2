@@ -19,5 +19,8 @@ namespace ctranslate2 {
         template void GatherAll::compute<Device::CPU, T>(const StorageView&, \
                                                           StorageView&) const;
     DECLARE_ALL_TYPES(DECLARE_IMPL)
+    DECLARE_IMPL(float8_t)
+    DECLARE_IMPL(bfloat8_t)
+
   }
 }

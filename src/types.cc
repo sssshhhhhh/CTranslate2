@@ -25,6 +25,10 @@ namespace ctranslate2 {
       return "float16";
     case DataType::BFLOAT16:
       return "bfloat16";
+    case DataType::FLOAT8:
+      return "float8";
+    case DataType::BFLOAT8:
+      return "bfloat8";
     default:
       return "";
     }
@@ -35,6 +39,18 @@ namespace ctranslate2 {
     case DataType::FLOAT32:
     case DataType::FLOAT16:
     case DataType::BFLOAT16:
+    case DataType::FLOAT8:
+    case DataType::BFLOAT8:
+      return true;
+    default:
+      return false;
+    }
+  }
+
+  bool is_lowp_type(DataType type) {
+    switch (type) {
+    case DataType::FLOAT8:
+    case DataType::BFLOAT8:
       return true;
     default:
       return false;
@@ -58,6 +74,22 @@ namespace ctranslate2 {
       return ComputeType::FLOAT16;
     if (compute_type == "bfloat16")
       return ComputeType::BFLOAT16;
+    if (compute_type == "float8")
+      return ComputeType::FLOAT8;
+    if (compute_type == "float8_float32")
+      return ComputeType::FLOAT8_FLOAT32;
+    if (compute_type == "float8_float16")
+      return ComputeType::FLOAT8_FLOAT16;
+    if (compute_type == "float8_bfloat16")
+      return ComputeType::FLOAT8_BFLOAT16;
+    if (compute_type == "bfloat8")
+      return ComputeType::BFLOAT8;
+    if (compute_type == "bfloat8_float32")
+      return ComputeType::BFLOAT8_FLOAT32;
+    if (compute_type == "bfloat8_float16")
+      return ComputeType::BFLOAT8_FLOAT16;
+    if (compute_type == "bfloat8_bfloat16")
+      return ComputeType::BFLOAT8_BFLOAT16;
     if (compute_type == "default")
       return ComputeType::DEFAULT;
     if (compute_type == "auto")
@@ -87,8 +119,44 @@ namespace ctranslate2 {
       return "float16";
     case ComputeType::BFLOAT16:
       return "bfloat16";
+    case ComputeType::FLOAT8:
+      return "float8";
+    case ComputeType::FLOAT8_FLOAT32:
+      return "float8_float32";
+    case ComputeType::FLOAT8_FLOAT16:
+      return "float8_float16";
+    case ComputeType::FLOAT8_BFLOAT16:
+      return "float8_bfloat16";
+    case ComputeType::BFLOAT8:
+      return "bfloat8";
+    case ComputeType::BFLOAT8_FLOAT32:
+      return "bfloat8_float32";
+    case ComputeType::BFLOAT8_FLOAT16:
+      return "bfloat8_float16";
+    case ComputeType::BFLOAT8_BFLOAT16:
+      return "bfloat8_bfloat16";
     };
     throw std::invalid_argument("Invalid compute type value");
+  }
+
+  bool mayiuse_float8(const Device device, const int device_index) {
+    switch (device) {
+    case Device::CUDA: {
+#ifdef CT2_WITH_CUDA
+      static const bool allow_float8 = read_bool_from_env("CT2_CUDA_ALLOW_FP8");
+#ifdef CT2_USE_HIP
+      return allow_float8 || cuda::get_device_properties(device_index).major >= 12;
+#else
+      return allow_float8;
+#endif
+#else
+      (void)device_index;
+      return false;
+#endif
+    }
+    default:
+      return false;
+    }
   }
 
   bool mayiuse_bfloat16(const Device device, const int device_index) {
@@ -158,6 +226,7 @@ namespace ctranslate2 {
                                    const Device device,
                                    const int device_index,
                                    const bool enable_fallback) {
+    const bool support_float8 = mayiuse_float8(device, device_index);
     const bool support_bfloat16 = mayiuse_bfloat16(device, device_index);
     const bool support_float16 = mayiuse_float16(device, device_index);
     const bool support_int16 = mayiuse_int16(device, device_index);
@@ -182,6 +251,79 @@ namespace ctranslate2 {
         return ComputeType::BFLOAT16;
       if (!enable_fallback)
         unsupported_compute_type("bfloat16");
+      return ComputeType::FLOAT32;
+    }
+
+    case ComputeType::FLOAT8: {
+      const DataType float_type = compute_type_to_data_type(model_compute_type).second;
+      ComputeType actual_compute_type = ComputeType::FLOAT8_FLOAT16;
+      
+      switch (float_type) {
+      case DataType::FLOAT32:
+        actual_compute_type = ComputeType::FLOAT8_FLOAT32;
+        break;
+      case DataType::BFLOAT16:
+        actual_compute_type = ComputeType::FLOAT8_BFLOAT16;
+        break;
+      default:
+        actual_compute_type = ComputeType::FLOAT8_FLOAT16;
+        break;
+      }
+
+      const ComputeType resolved_compute_type = resolve_compute_type(actual_compute_type,
+                                                                     model_compute_type,
+                                                                     device,
+                                                                     device_index,
+                                                                     /*enable_fallback=*/true);
+
+      const DataType weight_type = compute_type_to_data_type(resolved_compute_type).first;
+      if (weight_type != DataType::FLOAT8)
+        unsupported_compute_type("float8");
+
+      return resolved_compute_type;
+    }
+
+    case ComputeType::BFLOAT8: {
+      const DataType float_type = compute_type_to_data_type(model_compute_type).second;
+      ComputeType actual_compute_type = ComputeType::BFLOAT8_FLOAT16;
+      
+      switch (float_type) {
+      case DataType::FLOAT32:
+        actual_compute_type = ComputeType::BFLOAT8_FLOAT32;
+        break;
+      case DataType::BFLOAT16:
+        actual_compute_type = ComputeType::BFLOAT8_BFLOAT16;
+        break;
+      default:
+        actual_compute_type = ComputeType::FLOAT8_FLOAT16;
+        break;
+      }
+
+      const ComputeType resolved_compute_type = resolve_compute_type(actual_compute_type,
+                                                                     model_compute_type,
+                                                                     device,
+                                                                     device_index,
+                                                                     /*enable_fallback=*/true);
+
+      const DataType weight_type = compute_type_to_data_type(resolved_compute_type).first;
+      if (weight_type != DataType::BFLOAT8)
+        unsupported_compute_type("bfloat8");
+
+      return resolved_compute_type;
+    }
+
+    case ComputeType::FLOAT8_FLOAT32:
+    case ComputeType::FLOAT8_FLOAT16:
+    case ComputeType::FLOAT8_BFLOAT16:
+    case ComputeType::BFLOAT8_FLOAT32:
+    case ComputeType::BFLOAT8_FLOAT16:
+    case ComputeType::BFLOAT8_BFLOAT16: {
+      if (support_float8) // Assume fp16/bf16 support
+        return requested_compute_type;
+      if (!enable_fallback)
+        unsupported_compute_type(compute_type_to_str(requested_compute_type));
+      if (device == Device::CUDA && support_float16)
+        return ComputeType::FLOAT16;
       return ComputeType::FLOAT32;
     }
 
@@ -310,6 +452,18 @@ namespace ctranslate2 {
       return std::make_pair(DataType::FLOAT16, DataType::FLOAT16);
     case ComputeType::BFLOAT16:
       return std::make_pair(DataType::BFLOAT16, DataType::BFLOAT16);
+    case ComputeType::FLOAT8_FLOAT32:
+      return std::make_pair(DataType::FLOAT8, DataType::FLOAT32);
+    case ComputeType::FLOAT8_FLOAT16:
+      return std::make_pair(DataType::FLOAT8, DataType::FLOAT16);
+    case ComputeType::FLOAT8_BFLOAT16:
+      return std::make_pair(DataType::FLOAT8, DataType::BFLOAT16);
+    case ComputeType::BFLOAT8_FLOAT32:
+      return std::make_pair(DataType::BFLOAT8, DataType::FLOAT32);
+    case ComputeType::BFLOAT8_FLOAT16:
+      return std::make_pair(DataType::BFLOAT8, DataType::FLOAT16);
+    case ComputeType::BFLOAT8_BFLOAT16:
+      return std::make_pair(DataType::BFLOAT8, DataType::BFLOAT16);
     default:
       throw std::invalid_argument("resolve_compute_type should be called first");
     }
@@ -329,6 +483,26 @@ namespace ctranslate2 {
     }
     case DataType::INT16:
       return ComputeType::INT16;
+    case DataType::FLOAT8: {
+      switch (float_type) {
+      case DataType::FLOAT32:
+        return ComputeType::FLOAT8_FLOAT32;
+      case DataType::BFLOAT16:
+        return ComputeType::FLOAT8_BFLOAT16;
+      default:
+        return ComputeType::FLOAT8_FLOAT16;
+      }
+    }
+    case DataType::BFLOAT8: {
+      switch (float_type) {
+      case DataType::FLOAT32:
+        return ComputeType::BFLOAT8_FLOAT32;
+      case DataType::BFLOAT16:
+        return ComputeType::BFLOAT8_BFLOAT16;
+      default:
+        return ComputeType::BFLOAT8_FLOAT16;
+      }
+    }
     case DataType::FLOAT16:
       return ComputeType::FLOAT16;
     case DataType::BFLOAT16:
@@ -345,6 +519,7 @@ namespace ctranslate2 {
   dim_t get_preferred_size_multiple(const ComputeType compute_type,
                                     const Device device,
                                     const int device_index) {
+
 #ifdef CT2_WITH_CUDA
     if (device == Device::CUDA) {
       if ((compute_type == ComputeType::FLOAT16 || compute_type == ComputeType::BFLOAT16)

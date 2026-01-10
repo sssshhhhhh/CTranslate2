@@ -68,7 +68,9 @@ class Converter(abc.ABC):
           vmap: Optional path to a vocabulary mapping file that will be included
             in the converted model directory.
           quantization: Weight quantization scheme (possible values are: int8, int8_float32,
-            int8_float16, int8_bfloat16, int16, float16, bfloat16, float32).
+            int8_float16, int8_bfloat16, int16, float8, float8_float32, float8_float16,
+            float8_bfloat16, bfloat8, bfloat8_float32, bfloat8_float16, bfloat8_bfloat16,
+            float16, bfloat16, float32).
           force: Override the output directory if it already exists.
 
         Returns:

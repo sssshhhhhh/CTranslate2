@@ -42,46 +42,62 @@ namespace ctranslate2 {
     {
     }
 
+
+#define LOWP_CASE(T)                                                                    \
+      case DataTypeToEnum<T>::value: {                                                  \
+        const StorageView a_lowp = a.to(DataTypeToEnum<T>::value);                      \
+        switch (c.dtype()) {                                                            \
+        case DataType::FLOAT32:                                                         \
+          compute<Device::CUDA, T, float>(a_lowp, b, c, nullptr, bias,                  \
+                                          residual, scale_a, scale_b);                  \
+          break;                                                                        \
+        case DataType::FLOAT16:                                                         \
+          compute<Device::CUDA, T, float16_t>(a_lowp, b, c, nullptr, bias,              \
+                                              residual, scale_a, scale_b);              \
+          break;                                                                        \
+        case DataType::BFLOAT16:                                                        \
+          compute<Device::CUDA, T, bfloat16_t>(a_lowp, b, c, nullptr, bias,             \
+                                               residual, scale_a, scale_b);             \
+          break;                                                                        \
+        default:                                                                        \
+          throw std::invalid_argument("Low precision GEMM: unsupported output type "    \
+                                      + dtype_name(c.dtype()));                         \
+        }                                                                               \
+        break;                                                                          \
+      }
+
     void Gemm::operator()(const StorageView& a,
                           const StorageView& b,
                           StorageView& c,
                           const StorageView* a_shift_compensation,
                           const StorageView* bias,
-                          const StorageView* residual) const {
+                          const StorageView* residual,
+                          const StorageView* scale_a,
+                          const StorageView* scale_b) const {
       PROFILE("Gemm");
-      const dim_t k = a.dim(_trans_a ? -2 : -1);
-      const dim_t n = b.dim(_trans_b ? -2 : -1);
-      const dim_t m = a.size() / k;  // Collapse leading dimensions.
-      const dim_t lda = _trans_a ? m : k;
-      const dim_t ldb = _trans_b ? k : n;
-      const dim_t ldc = n;
 
-      {
-        Shape output_shape(a.shape());
-        output_shape[output_shape.size() - 1] = n;
-        c.resize(std::move(output_shape));
-      }
-      switch (a.dtype()) {
+      switch (b.dtype()) {
       case DataType::INT8:
-        DEVICE_DISPATCH(a.device(), (compute<D, int8_t, int32_t>(a, b, c, m, n, k, lda, ldb, ldc,
-                                                                 a_shift_compensation, bias, residual)));
+        DEVICE_DISPATCH(a.device(),
+                        (compute<D, int8_t, int32_t>(a, b, c, a_shift_compensation, bias, residual)));
         break;
 
       case DataType::INT16:
         if (a.device() != Device::CPU)
           throw std::invalid_argument("INT16 GEMM is only supported on CPU");
-        compute<Device::CPU, int16_t, int32_t>(a, b, c, m, n, k, lda, ldb, ldc,
-                                               a_shift_compensation, bias, residual);
+        compute<Device::CPU, int16_t, int32_t>(a, b, c, a_shift_compensation, bias, residual);
         break;
 
       case DataType::FLOAT32:
       case DataType::FLOAT16:
       case DataType::BFLOAT16: {
         DEVICE_AND_FLOAT_DISPATCH("Gemm", a.device(), a.dtype(),
-                                  (compute<D, T, T>(a, b, c, m, n, k, lda, ldb, ldc,
-                                                    a_shift_compensation, bias, residual)));
+                                  (compute<D, T, T>(a, b, c, a_shift_compensation, bias, residual)));
         break;
       }
+
+      LOWP_CASE(float8_t)
+      LOWP_CASE(bfloat8_t)
 
       default:
         throw std::invalid_argument("Gemm: unsupported input type " + dtype_name(a.dtype()));

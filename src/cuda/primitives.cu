@@ -80,18 +80,6 @@ namespace ctranslate2 {
                                cudaMemcpyDeviceToDevice, cuda::get_cuda_stream()));
   }
 
-  template<>
-  template <typename U, typename V>
-  void primitives<Device::CUDA>::convert(const U* x, V* y, dim_t size) {
-    THRUST_CALL(thrust::copy,
-                cuda::device_cast(x), cuda::device_cast(x) + size, cuda::device_cast(y));
-  }
-
-  template void primitives<Device::CUDA>::convert(const float*, float16_t*, dim_t);
-  template void primitives<Device::CUDA>::convert(const float16_t*, float*, dim_t);
-  template void primitives<Device::CUDA>::convert(const float*, bfloat16_t*, dim_t);
-  template void primitives<Device::CUDA>::convert(const bfloat16_t*, float*, dim_t);
-
   struct convert_via_float {
     template <typename T>
     __device__ float operator()(T x) const {
@@ -100,15 +88,15 @@ namespace ctranslate2 {
   };
 
   template<>
-  template<>
-  void primitives<Device::CUDA>::convert(const float16_t* x, bfloat16_t* y, dim_t size) {
-    cuda::unary_transform(x, y, size, convert_via_float());
-  }
-
-  template<>
-  template<>
-  void primitives<Device::CUDA>::convert(const bfloat16_t* x, float16_t* y, dim_t size) {
-    cuda::unary_transform(x, y, size, convert_via_float());
+  template <typename U, typename V>
+  void primitives<Device::CUDA>::convert(const U* x, V* y, dim_t size) {
+    if constexpr (std::is_same_v<U, V>)
+      copy(x, y, size);
+    else if constexpr (std::is_same_v<U, float> || std::is_same_v<V, float>)
+      THRUST_CALL(thrust::copy,
+                  cuda::device_cast(x), cuda::device_cast(x) + size, cuda::device_cast(y));
+    else
+      cuda::unary_transform(x, y, size, convert_via_float());
   }
 
   template<>
@@ -757,99 +745,121 @@ namespace ctranslate2 {
     CUDA_CHECK(cudaMemcpyAsync(y, x, size * sizeof (T), cudaMemcpyDeviceToHost, cuda::get_cuda_stream()));
   }
 
-#define DECLARE_IMPL(T)                                                 \
-  template T                                                            \
-  primitives<Device::CUDA>::at(const T* x, dim_t index);                \
-  template void                                                         \
-  primitives<Device::CUDA>::fill(T* x, T a, dim_t size);                \
-  template void                                                         \
-  primitives<Device::CUDA>::strided_fill(T* x, T a, dim_t inc_x, dim_t size); \
-  template void                                                         \
-  primitives<Device::CUDA>::indexed_fill(T*, T, const int32_t*, dim_t); \
-  template void                                                         \
-  primitives<Device::CUDA>::copy<T>(const T* x, T* y, dim_t size);      \
-  template T                                                            \
-  primitives<Device::CUDA>::sum(const T* array, dim_t size);            \
-  template dim_t                                                        \
-  primitives<Device::CUDA>::max_element(const T* array, dim_t size);    \
-  template T                                                            \
-  primitives<Device::CUDA>::max(const T* array, dim_t size);            \
-  template void                                                         \
-  primitives<Device::CUDA>::add(T a, const T* x, T* y, dim_t size);     \
-  template void                                                         \
-  primitives<Device::CUDA>::add(const T* a, const T* b, T* c, dim_t size); \
-  template void                                                         \
-  primitives<Device::CUDA>::add_batch_broadcast(const T* a, const T* b, \
-                                                T* c, dim_t a_size, dim_t b_size); \
-  template void                                                         \
-  primitives<Device::CUDA>::add_depth_broadcast(const T* a, const T* b, \
-                                                T* c, dim_t a_size, dim_t b_size); \
-  template void                                                         \
-  primitives<Device::CUDA>::add_block_broadcast(const T* a, const T* b, \
-                                                T* c, dim_t block, dim_t a_size, dim_t b_size); \
-  template void                                                         \
-  primitives<Device::CUDA>::sub(const T* a, const T* b, T* c, dim_t size); \
-  template void                                                         \
-  primitives<Device::CUDA>::min(T a, const T* x, T* y, dim_t size);      \
-  template void                                                         \
-  primitives<Device::CUDA>::min(const T* a, const T* b, T* c, dim_t size); \
-  template void                                                         \
-  primitives<Device::CUDA>::max(T a, const T* x, T* y, dim_t size);     \
-  template void                                                         \
-  primitives<Device::CUDA>::max(const T* a, const T* b, T* c, dim_t size); \
-  template void                                                         \
-  primitives<Device::CUDA>::mul(T a, const T* x, T* y, dim_t size);     \
-  template void                                                         \
-  primitives<Device::CUDA>::mul(const T* a, const T* b, T* c, dim_t size); \
-  template void                                                         \
-  primitives<Device::CUDA>::mul_batch_broadcast(const T* a, const T* b, \
-                                                T* c, dim_t a_size, dim_t b_size); \
-  template void                                                         \
-  primitives<Device::CUDA>::penalize_previous_tokens(T*,                \
-                                                     const T*,          \
-                                                     const int32_t*,    \
-                                                     T,                 \
-                                                     dim_t,             \
-                                                     dim_t,             \
-                                                     dim_t);            \
-  template void                                                         \
-  primitives<Device::CUDA>::transpose_2d(const T* a,                    \
-                                         const dim_t* dims,             \
-                                         T* b);                         \
-  template void                                                         \
-  primitives<Device::CUDA>::transpose_3d(const T* a,                    \
-                                         const dim_t* dims,             \
-                                         const dim_t* perm,             \
-                                         T* b);                         \
-  template void                                                         \
-  primitives<Device::CUDA>::transpose_4d(const T* a,                    \
-                                         const dim_t* dims,             \
-                                         const dim_t* perm,             \
-                                         T* b);                         \
-  template void                                                         \
-  cross_device_primitives<Device::CPU, Device::CUDA>::copy<T>(const T*, T*, dim_t); \
-  template void                                                         \
-  cross_device_primitives<Device::CUDA, Device::CPU>::copy<T>(const T*, T*, dim_t);
+#define DECLARE_IMPL(T)                                                                 \
+  template T primitives<Device::CUDA>::at(const T*, dim_t);                             \
+  template void primitives<Device::CUDA>::fill(T*, T, dim_t);                           \
+  template void primitives<Device::CUDA>::strided_fill(T*, T, dim_t, dim_t);            \
+  template void primitives<Device::CUDA>::indexed_fill(T*, T, const int32_t*, dim_t);   \
+  template void primitives<Device::CUDA>::copy<T>(const T*, T*, dim_t);                 \
+  template T primitives<Device::CUDA>::sum(const T*, dim_t);                            \
+  template dim_t primitives<Device::CUDA>::max_element(const T*, dim_t);                \
+  template T primitives<Device::CUDA>::max(const T*, dim_t);                            \
+  template void primitives<Device::CUDA>::add(T, const T*, T*, dim_t);                  \
+  template void primitives<Device::CUDA>::add(const T*, const T*, T*, dim_t);           \
+  template void primitives<Device::CUDA>::add_batch_broadcast(const T*, const T*, T*,   \
+                                                              dim_t, dim_t);            \
+  template void primitives<Device::CUDA>::add_depth_broadcast(const T*, const T*, T*,   \
+                                                              dim_t, dim_t);            \
+  template void primitives<Device::CUDA>::add_block_broadcast(const T*, const T*, T*,   \
+                                                              dim_t, dim_t, dim_t);     \
+  template void primitives<Device::CUDA>::sub(const T*, const T*, T*, dim_t);           \
+  template void primitives<Device::CUDA>::min(T, const T*, T*, dim_t);                  \
+  template void primitives<Device::CUDA>::min(const T*, const T*, T*, dim_t);           \
+  template void primitives<Device::CUDA>::max(T, const T*, T*, dim_t);                  \
+  template void primitives<Device::CUDA>::max(const T*, const T*, T*, dim_t);           \
+  template void primitives<Device::CUDA>::mul(T, const T*, T*, dim_t);                  \
+  template void primitives<Device::CUDA>::mul(const T*, const T*, T*, dim_t);           \
+  template void primitives<Device::CUDA>::mul_batch_broadcast(const T*, const T*, T*,   \
+                                                              dim_t, dim_t);            \
+  template void primitives<Device::CUDA>::penalize_previous_tokens(T*, const T*,        \
+                                                                   const int32_t*, T,   \
+                                                                   dim_t, dim_t, dim_t);\
+  template void primitives<Device::CUDA>::transpose_2d(const T*, const dim_t*, T*);     \
+  template void primitives<Device::CUDA>::transpose_3d(const T*, const dim_t*,          \
+                                                       const dim_t*, T*);               \
+  template void primitives<Device::CUDA>::transpose_4d(const T*, const dim_t*,          \
+                                                       const dim_t*, T*);               \
+  template void cross_device_primitives<Device::CPU, Device::CUDA>::copy<T>(const T*, T*, dim_t); \
+  template void cross_device_primitives<Device::CUDA, Device::CPU>::copy<T>(const T*, T*, dim_t);
 
   DECLARE_ALL_TYPES(DECLARE_IMPL)
 
 
-#define DECLARE_FLOAT_IMPL(T)                                           \
-  template void primitives<Device::CUDA>::relu(const T*, T*, dim_t);    \
-  template void primitives<Device::CUDA>::gelu(const T*, T*, dim_t);    \
-  template void primitives<Device::CUDA>::gelu_tanh(const T*, T*, dim_t); \
-  template void primitives<Device::CUDA>::gelu_sigmoid(const T*, T*, dim_t); \
-  template void primitives<Device::CUDA>::sigmoid(const T*, T*, dim_t);   \
-  template void primitives<Device::CUDA>::swish(const T*, T*, dim_t);   \
-  template float primitives<Device::CUDA>::logsumexp(const T*, dim_t);  \
-  template void primitives<Device::CUDA>::sin(const T*, T*, dim_t);     \
-  template void primitives<Device::CUDA>::cos(const T*, T*, dim_t);     \
-  template void primitives<Device::CUDA>::tanh(const T*, T*, dim_t);    \
-  template void primitives<Device::CUDA>::exp(const T*, T*, dim_t);     \
+#define DECLARE_FLOAT_IMPL(T)                                                           \
+  template void primitives<Device::CUDA>::relu(const T*, T*, dim_t);                    \
+  template void primitives<Device::CUDA>::gelu(const T*, T*, dim_t);                    \
+  template void primitives<Device::CUDA>::gelu_tanh(const T*, T*, dim_t);               \
+  template void primitives<Device::CUDA>::gelu_sigmoid(const T*, T*, dim_t);            \
+  template void primitives<Device::CUDA>::sigmoid(const T*, T*, dim_t);                 \
+  template void primitives<Device::CUDA>::swish(const T*, T*, dim_t);                   \
+  template float primitives<Device::CUDA>::logsumexp(const T*, dim_t);                  \
+  template void primitives<Device::CUDA>::sin(const T*, T*, dim_t);                     \
+  template void primitives<Device::CUDA>::cos(const T*, T*, dim_t);                     \
+  template void primitives<Device::CUDA>::tanh(const T*, T*, dim_t);                    \
+  template void primitives<Device::CUDA>::exp(const T*, T*, dim_t);                     \
   template void primitives<Device::CUDA>::log(const T*, T*, dim_t);
 
   DECLARE_FLOAT_IMPL(float)
   DECLARE_FLOAT_IMPL(float16_t)
   DECLARE_FLOAT_IMPL(bfloat16_t)
+
+
+#define DECLARE_CVT_IMPL(T)                                                             \
+  template void primitives<Device::CUDA>::convert(const T*, float*, dim_t);             \
+  template void primitives<Device::CUDA>::convert(const T*, float16_t*, dim_t);         \
+  template void primitives<Device::CUDA>::convert(const T*, bfloat16_t*, dim_t);        \
+  template void primitives<Device::CUDA>::convert(const T*, float8_t*, dim_t);          \
+  template void primitives<Device::CUDA>::convert(const T*, bfloat8_t*, dim_t);         \
+
+  DECLARE_CVT_IMPL(float)
+  DECLARE_CVT_IMPL(float16_t)
+  DECLARE_CVT_IMPL(bfloat16_t)
+  DECLARE_CVT_IMPL(float8_t)
+  DECLARE_CVT_IMPL(bfloat8_t)
+
+
+// Only implement data movement for low precision
+#define THROW_UNIMPL(FUNC, ARGS, RET_T)                                                 \
+  template<>                                                                            \
+  template<>                                                                            \
+  RET_T primitives<Device::CUDA>::FUNC ARGS {                                           \
+    throw std::runtime_error(#FUNC " unimplemented for low precision type");            \
+  }
+
+#define DECLARE_LOWP_IMPL(T)                                                            \
+  template T primitives<Device::CUDA>::at(const T*, dim_t);                             \
+  template void primitives<Device::CUDA>::fill(T*, T, dim_t);                           \
+  template void primitives<Device::CUDA>::strided_fill(T*, T, dim_t, dim_t);            \
+  template void primitives<Device::CUDA>::indexed_fill(T*, T, const int32_t*, dim_t);   \
+  template void primitives<Device::CUDA>::copy<T>(const T*, T*, dim_t);                 \
+  template void primitives<Device::CUDA>::transpose_2d(const T*, const dim_t*, T*);     \
+  template void primitives<Device::CUDA>::transpose_3d(const T*, const dim_t*,          \
+                                                       const dim_t*, T*);               \
+  template void primitives<Device::CUDA>::transpose_4d(const T*, const dim_t*,          \
+                                                       const dim_t*, T*);               \
+  template void cross_device_primitives<Device::CPU, Device::CUDA>::copy<T>(const T*, T*, dim_t); \
+  template void cross_device_primitives<Device::CUDA, Device::CPU>::copy<T>(const T*, T*, dim_t); \
+  THROW_UNIMPL(sum, (const T*, dim_t), T)                                               \
+  THROW_UNIMPL(max_element, (const T*, dim_t), dim_t)                                   \
+  THROW_UNIMPL(max, (const T*, dim_t), T)                                               \
+  THROW_UNIMPL(add, (T, const T*, T*, dim_t), void)                                     \
+  THROW_UNIMPL(add, (const T*, const T*, T*, dim_t), void)                              \
+  THROW_UNIMPL(add_batch_broadcast, (const T*, const T*, T*, dim_t, dim_t), void)       \
+  THROW_UNIMPL(add_depth_broadcast, (const T*, const T*, T*, dim_t, dim_t), void)       \
+  THROW_UNIMPL(add_block_broadcast,                                                     \
+               (const T*, const T*, T*, dim_t, dim_t, dim_t), void)                     \
+  THROW_UNIMPL(sub, (const T*, const T*, T*, dim_t), void)                              \
+  THROW_UNIMPL(min, (T, const T*, T*, dim_t), void)                                     \
+  THROW_UNIMPL(min, (const T*, const T*, T*, dim_t), void)                              \
+  THROW_UNIMPL(max, (T, const T*, T*, dim_t), void)                                     \
+  THROW_UNIMPL(max, (const T*, const T*, T*, dim_t), void)                              \
+  THROW_UNIMPL(mul, (T, const T*, T*, dim_t), void)                                     \
+  THROW_UNIMPL(mul, (const T*, const T*, T*, dim_t), void)                              \
+  THROW_UNIMPL(mul_batch_broadcast, (const T*, const T*, T*, dim_t, dim_t), void)       \
+  THROW_UNIMPL(penalize_previous_tokens,                                                \
+               (T*, const T*, const int32_t*, T, dim_t, dim_t, dim_t), void)
+
+  DECLARE_LOWP_IMPL(float8_t)
+  DECLARE_LOWP_IMPL(bfloat8_t)
 
 }

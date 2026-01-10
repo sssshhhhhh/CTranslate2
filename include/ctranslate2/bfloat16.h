@@ -5,19 +5,18 @@
 #include <cstdint>
 #include <cstring>
 
+#include "bit_cast.h"
+
 namespace ctranslate2 {
 
-  // Adapted from https://github.com/oneapi-src/oneDNN/blob/v3.0.1/src/common/bfloat16.hpp
-
-  template <typename T, typename U>
-  inline T bit_cast(const U &u) {
-    T t;
-    std::memcpy(&t, &u, sizeof(U));
-    return t;
-  }
+  // Adapted from https://github.com/uxlfoundation/oneDNN/blob/v3.10.2/src/common/bfloat16.hpp
 
   class bfloat16_t {
   public:
+    uint16_t _bits;
+
+    constexpr bfloat16_t(uint16_t bits, bool) : _bits(bits) {}
+
     bfloat16_t() = default;
     bfloat16_t(float f) {
       *this = f;
@@ -55,14 +54,6 @@ namespace ctranslate2 {
     operator float() const {
       std::array<uint16_t, 2> iraw = {{0, _bits}};
       return bit_cast<float>(iraw);
-    }
-
-  private:
-    uint16_t _bits;
-
-    // Converts the 32 bits of a normal float or zero to the bits of a bfloat16.
-    static constexpr uint16_t convert_bits_of_normal_or_zero(const uint32_t bits) {
-      return uint32_t{bits + uint32_t{0x7FFFU + (uint32_t{bits >> 16} & 1U)}} >> 16;
     }
   };
 

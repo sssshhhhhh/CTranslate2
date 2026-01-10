@@ -2,7 +2,7 @@
 #include "ctranslate2/ops/split.h"
 #include "ctranslate2/utils.h"
 
-
+#include <iostream>
 #include <algorithm>
 #include <cmath>
 #include <numeric>
@@ -311,7 +311,6 @@ namespace ctranslate2 {
                                                 const Padder* queries_padder,
                                                 const Padder* values_padder,
                                                 dim_t& beam_size) const {
-
       queries_proj = std::move(fused_proj);
 
       if (cached_keys == nullptr || cached_keys->empty()) {
@@ -474,6 +473,17 @@ namespace ctranslate2 {
                     0); // offset
 
       } else {
+        if (_flash_attention) { // transpose and use eager to return attention
+          context = std::move(queries_proj);
+          transpose_op(context, queries_proj);
+          // k/v_proj can be a view of cache
+          StorageView keys_tmp(dtype, device);
+          transpose_op(keys_proj, keys_tmp);
+          keys_proj = std::move(keys_tmp);
+          StorageView values_tmp(dtype, device);
+          transpose_op(values_proj, values_tmp);
+          values_proj = std::move(values_tmp);
+        }
         if (_num_heads_kv < _num_heads && !_merge_time_and_head_dims) {
           replicate_heads(keys_proj, _num_heads / _num_heads_kv);
           replicate_heads(values_proj, _num_heads / _num_heads_kv);
@@ -498,6 +508,10 @@ namespace ctranslate2 {
                               beam_size,
                               _alibi,
                               position_bias);
+        if (_flash_attention) {
+          transpose_op(context, queries_proj);
+          context = std::move(queries_proj);
+        }
       }
 
       if (prefilling && cached_keys && cached_keys->shape()[_cache_time_dim] > _sliding_window) {
