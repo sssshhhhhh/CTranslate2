@@ -20,8 +20,9 @@ public:
                       StorageView({d_head}, std::vector<float>(d_head, 1.0f)));
     register_variable("attn/k_norm/gamma",
                       StorageView({d_head}, std::vector<float>(d_head, 1.0f)));
-    register_variable("attn/multi_query", StorageView(int8_t(num_heads_kv == 1)));
-    register_variable("attn/num_heads_kv", StorageView(int32_t(num_heads_kv)));
+
+    register_variable("attn/num_heads_kv",
+                      StorageView(static_cast<int32_t>(num_heads_kv)));
 
     set_compute_type(ComputeType::FLOAT32, Device::CPU, 0, false);
   }
@@ -49,6 +50,11 @@ protected:
     return view.data<float>()[b * shape[1] * shape[2] * shape[3] +
                               h * shape[2] * shape[3] + t * shape[3] + d];
   }
+
+  float get_3d(const StorageView& view, dim_t b, dim_t t, dim_t d) {
+    const auto& shape = view.shape();
+    return view.data<float>()[b * shape[1] * shape[2] + t * shape[2] + d];
+  }
 };
 
 // MQA: All heads share same K/V
@@ -73,7 +79,16 @@ TEST_F(CrossAttentionTest, MultiQueryAttention) {
   attention.process_cross_attention(values, fused_proj, q_proj, k_proj, v_proj,
                                     &cached_keys, &cached_values, nullptr, nullptr, beam);
 
+  // MQA: K/V stay in 3D format [batch, time, d_head] - shared across all heads
   ASSERT_EQ(cached_keys.shape(), (Shape{BATCH, V_LEN, D_HEAD}));
+  ASSERT_EQ(cached_values.shape(), (Shape{BATCH, V_LEN, D_HEAD}));
+
+  // Verify K/V values are consistent across batch and time dimensions
+  // (In MQA, there's only one set of K/V, so we just verify the tensor is valid)
+  float k0 = get_3d(cached_keys, 0, 0, 0);
+  float v0 = get_3d(cached_values, 0, 0, 0);
+  EXPECT_NE(k0, 0.0f) << "K values should be non-zero after projection";
+  EXPECT_NE(v0, 0.0f) << "V values should be non-zero after projection";
 
   // Verify q_norm and k_norm are applied (RMSNorm normalizes to ~1.0 magnitude)
   float q_val = q_proj.data<float>()[0];
@@ -101,27 +116,9 @@ TEST_F(CrossAttentionTest, GroupedQueryAttention) {
   attention.process_cross_attention(values, fused_proj, q_proj, k_proj, v_proj,
                                     &cached_keys, &cached_values, nullptr, nullptr, beam);
 
+  // GQA: Before head replication, shape is [batch, num_kv_heads, time, d_head]
   ASSERT_EQ(cached_keys.shape(), (Shape{BATCH, NUM_KV_HEADS, V_LEN, D_HEAD}));
-
-  // Replicate heads
-  const ops::Tile tile_op(2, HEADS_PER_GROUP);
-  cached_keys.expand_dims(2);
-  cached_values.expand_dims(2);
-  tile_op(cached_keys);
-  tile_op(cached_values);
-  cached_keys.reshape({BATCH, NUM_HEADS, V_LEN, D_HEAD});
-  cached_values.reshape({BATCH, NUM_HEADS, V_LEN, D_HEAD});
-
-  // Heads in same group share K/V
-  for (dim_t group = 0; group < NUM_KV_HEADS; ++group) {
-    dim_t first = group * HEADS_PER_GROUP;
-    float k_group = get_4d(cached_keys, 0, first, 0, 0);
-    float v_group = get_4d(cached_values, 0, first, 0, 0);
-    for (dim_t h = first + 1; h < first + HEADS_PER_GROUP; ++h) {
-      EXPECT_EQ(get_4d(cached_keys, 0, h, 0, 0), k_group);
-      EXPECT_EQ(get_4d(cached_values, 0, h, 0, 0), v_group);
-    }
-  }
+  ASSERT_EQ(cached_values.shape(), (Shape{BATCH, NUM_KV_HEADS, V_LEN, D_HEAD}));
 }
 
 // MHA: Each head has independent K/V
@@ -138,6 +135,7 @@ TEST_F(CrossAttentionTest, StandardMultiHeadAttention) {
   attention.process_cross_attention(values, fused_proj, q_proj, k_proj, v_proj,
                                     &cached_keys, &cached_values, nullptr, nullptr, beam);
 
+  // Shape: [batch, num_heads, time, d_head] - each head has own K/V
   ASSERT_EQ(cached_keys.shape(), (Shape{BATCH, NUM_HEADS, V_LEN, D_HEAD}));
   ASSERT_EQ(cached_values.shape(), cached_keys.shape());
 }

@@ -15,7 +15,10 @@ namespace ctranslate2 {
     std::unique_ptr<AttentionLayer> init_attention_layer(const models::Model& model,
                                                          const std::string& scope,
                                                          const bool use_flash_attention,
+                                                         const bool optional,
                                                          Args&&... args) {
+      if (optional && !model.layer_exists(scope))
+        return nullptr;
 #ifdef CT2_USE_HIP
       (void)use_flash_attention;
       return std::make_unique<RocmAttention>(model, scope, std::forward<Args>(args)...);

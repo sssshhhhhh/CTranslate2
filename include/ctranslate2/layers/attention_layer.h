@@ -42,7 +42,7 @@ namespace ctranslate2 {
       virtual bool has_positional_embeddings() const = 0;
 
       bool multi_query() const {
-        return _multi_query;
+        return num_heads_kv == 1 && !_tensor_parallel;
       }
 
       static StorageView prepare_length_mask(const StorageView& lengths,

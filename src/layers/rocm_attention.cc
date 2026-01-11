@@ -267,7 +267,7 @@ namespace ctranslate2 {
       , _relative_position_keys(model.get_variable_if_exists(scope + "/relative_position_keys"))
       , _relative_asymmetric_position_keys(model.get_variable_if_exists(scope + "/relative_asymmetric_position_keys"))
       , _relative_position_values(model.get_variable_if_exists(scope + "/relative_position_values"))
-      , _merge_time_and_head_dims(_multi_query
+      , _merge_time_and_head_dims(multi_query()
                                   && !_relative_attention_bias
                                   && !_relative_position_keys
                                   && !_relative_position_values
@@ -338,9 +338,6 @@ namespace ctranslate2 {
         }
       }
 
-      if (_q_norm)
-        (*_q_norm)(queries_proj, queries_proj);
-
       if (queries_proj.dim(1) == 1 && cached_keys)
         beam_size = queries_proj.dim(0) / cached_keys->dim(0);
 
@@ -351,6 +348,9 @@ namespace ctranslate2 {
       } else {
         split_heads(queries_proj, _num_heads, queries_padder, beam_size);
       }
+
+      if (_q_norm)
+        (*_q_norm)(queries_proj, queries_proj);
     }
 
     void RocmAttention::operator()(const StorageView& queries,
@@ -400,7 +400,7 @@ namespace ctranslate2 {
           queries_proj.reshape({queries_proj.dim(0), -1, _d_head});
 
         } else {
-          split_heads(fused_proj, 3 * _num_heads, queries_padder);
+          split_heads(fused_proj, _num_heads + 2 * _num_heads_kv, queries_padder);
           if (_keep_packed_qkv && !cached_keys) { // handle using strides in fa2
             queries_proj = std::move(fused_proj);
             const dim_t batch_size = queries_proj.dim(0);
