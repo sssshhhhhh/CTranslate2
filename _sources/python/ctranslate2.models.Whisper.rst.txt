@@ -1,0 +1,32 @@
+Whisper
+=======
+
+.. autoclass:: ctranslate2.models.Whisper
+    :members:
+    :undoc-members:
+    :inherited-members:
+
+    **Inherits from:** :class:`pybind11_builtins.pybind11_object`
+
+    **Attributes:**
+
+    - :obj:`~ctranslate2.models.Whisper.compute_type`
+    - :obj:`~ctranslate2.models.Whisper.device`
+    - :obj:`~ctranslate2.models.Whisper.device_index`
+    - :obj:`~ctranslate2.models.Whisper.is_multilingual`
+    - :obj:`~ctranslate2.models.Whisper.model_is_loaded`
+    - :obj:`~ctranslate2.models.Whisper.n_mels`
+    - :obj:`~ctranslate2.models.Whisper.num_active_batches`
+    - :obj:`~ctranslate2.models.Whisper.num_languages`
+    - :obj:`~ctranslate2.models.Whisper.num_queued_batches`
+    - :obj:`~ctranslate2.models.Whisper.num_workers`
+    - :obj:`~ctranslate2.models.Whisper.tensor_parallel`
+
+    **Methods:**
+
+    - :obj:`~ctranslate2.models.Whisper.align`
+    - :obj:`~ctranslate2.models.Whisper.detect_language`
+    - :obj:`~ctranslate2.models.Whisper.encode`
+    - :obj:`~ctranslate2.models.Whisper.generate`
+    - :obj:`~ctranslate2.models.Whisper.load_model`
+    - :obj:`~ctranslate2.models.Whisper.unload_model`

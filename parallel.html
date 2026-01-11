@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Multithreading and parallelism &mdash; CTranslate2 4.6.3 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.png"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Memory management" href="memory.html" />
+    <link rel="prev" title="Decoding features" href="decoding.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> CTranslate2
+          </a>
+              <div class="version">
+                4.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Get started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tasks</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="translation.html">Text translation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generation.html">Text generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="encoding.html">Text encoding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="speech_recognition.html">Speech recognition</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer guides</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="conversion.html">Model conversion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quantization.html">Quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="decoding.html">Decoding features</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Multithreading and parallelism</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#intra-op-multithreading-on-cpu">Intra-op multithreading on CPU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data-parallelism">Data parallelism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#model-and-tensor-parallelism">Model and tensor parallelism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#asynchronous-execution">Asynchronous execution</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="memory.html">Memory management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance tips</a></li>
+<li class="toctree-l1"><a class="reference internal" href="environment_variables.html">Environment variables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Framework guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="guides/fairseq.html">Fairseq</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/marian.html">Marian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/opennmt_py.html">OpenNMT-py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/opennmt_tf.html">OpenNMT-tf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/opus_mt.html">OPUS-MT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/transformers.html">Transformers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="python/overview.html">Python</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Other information</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="hardware_support.html">Hardware support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="versioning.html">Versioning</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">CTranslate2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Multithreading and parallelism</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="multithreading-and-parallelism">
+<h1>Multithreading and parallelism<a class="headerlink" href="#multithreading-and-parallelism" title="Permalink to this heading"></a></h1>
+<section id="intra-op-multithreading-on-cpu">
+<h2>Intra-op multithreading on CPU<a class="headerlink" href="#intra-op-multithreading-on-cpu" title="Permalink to this heading"></a></h2>
+<p>Most model operations (matmul, softmax, etc.) are using multiple threads on CPU. The number of threads can be configured with the parameter <code class="docutils literal notranslate"><span class="pre">intra_threads</span></code> (the default value is 4):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">translator</span> <span class="o">=</span> <span class="n">ctranslate2</span><span class="o">.</span><span class="n">Translator</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">,</span> <span class="n">intra_threads</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This multithreading is generally implemented with <a class="reference external" href="https://www.openmp.org/">OpenMP</a> so the threads behavior can also be customized with the different <code class="docutils literal notranslate"><span class="pre">OMP_*</span></code> environment variables.</p>
+<p>When OpenMP is disabled (which is the case for example in the Python ARM64 wheels for macOS), the multithreading is implemented with <a class="reference external" href="https://github.com/bshoshany/thread-pool"><code class="docutils literal notranslate"><span class="pre">BS::thread_pool</span></code></a>.</p>
+</section>
+<section id="data-parallelism">
+<h2>Data parallelism<a class="headerlink" href="#data-parallelism" title="Permalink to this heading"></a></h2>
+<p>Objects running models such as the <a class="reference internal" href="python/ctranslate2.Translator.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">Translator</span></code></span></a> and <a class="reference internal" href="python/ctranslate2.Generator.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">Generator</span></code></span></a> can be configured to process multiple batches in parallel, including on multiple GPUs:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a CPU translator with 4 workers each using 1 intra-op thread:</span>
+<span class="n">translator</span> <span class="o">=</span> <span class="n">ctranslate2</span><span class="o">.</span><span class="n">Translator</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">,</span> <span class="n">inter_threads</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">intra_threads</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># Create a GPU translator with 4 workers each running on a separate GPU:</span>
+<span class="n">translator</span> <span class="o">=</span> <span class="n">ctranslate2</span><span class="o">.</span><span class="n">Translator</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">,</span> <span class="n">device_index</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+
+<span class="c1"># Create a GPU translator with 4 workers each using a different CUDA stream:</span>
+<span class="c1"># (Note: depending on the workload and GPU specifications this may not improve the global throughput.)</span>
+<span class="n">translator</span> <span class="o">=</span> <span class="n">ctranslate2</span><span class="o">.</span><span class="n">Translator</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">,</span> <span class="n">inter_threads</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>When the workers are running on the same device, the model weights are shared to save on memory.</p>
+<p>Multiple batches should be submitted concurrently to enable this parallelization. Parallel executions are enabled in the following cases:</p>
+<ul class="simple">
+<li><p>When calling methods from multiple Python threads.</p></li>
+<li><p>When calling methods multiple times with <code class="docutils literal notranslate"><span class="pre">asynchronous=True</span></code>.</p></li>
+<li><p>When calling file-based or stream-based methods.</p></li>
+<li><p>When setting <code class="docutils literal notranslate"><span class="pre">max_batch_size</span></code>: the input will be split according to <code class="docutils literal notranslate"><span class="pre">max_batch_size</span></code> and each sub-batch will be executed in parallel.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Parallelization with multiple Python threads is possible because all computation methods release the <a class="reference external" href="https://wiki.python.org/moin/GlobalInterpreterLock">Python GIL</a>.</p>
+</div>
+</section>
+<section id="model-and-tensor-parallelism">
+<h2>Model and tensor parallelism<a class="headerlink" href="#model-and-tensor-parallelism" title="Permalink to this heading"></a></h2>
+<p>Models used with <a class="reference internal" href="python/ctranslate2.Translator.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">Translator</span></code></span></a> and <a class="reference internal" href="python/ctranslate2.Generator.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">Generator</span></code></span></a> can be split into multiple GPUs.
+This is very useful when the model is too big to be loaded in only 1 GPU.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">translator</span> <span class="o">=</span> <span class="n">ctranslate2</span><span class="o">.</span><span class="n">Translator</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">,</span> <span class="n">tensor_parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Setup environment:</p>
+<ul class="simple">
+<li><p>Install <a class="reference external" href="https://www.open-mpi.org/">open-mpi</a></p></li>
+<li><p>Configure open-mpi by creating the config file like <code class="docutils literal notranslate"><span class="pre">hostfile</span></code>:</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span>ipaddress<span class="w"> </span>or<span class="w"> </span>dns<span class="o">]</span><span class="w"> </span><span class="nv">slots</span><span class="o">=</span>nbGPU1
+<span class="o">[</span>other<span class="w"> </span>ipaddress<span class="w"> </span>or<span class="w"> </span>dns<span class="o">]</span><span class="w"> </span><span class="nv">slots</span><span class="o">=</span>NbGPU2
+</pre></div>
+</div>
+<p>Run:</p>
+<ul class="simple">
+<li><p>Run the application in multiprocess to use tensor parallel:</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mpirun<span class="w"> </span>-np<span class="w"> </span>nbGPUExpected<span class="w"> </span>-hostfile<span class="w"> </span>hostfile<span class="w"> </span>python3<span class="w"> </span>script
+</pre></div>
+</div>
+<p>If you’re trying to use tensor parallelism in multiple machines, some additional configuration is needed:</p>
+<ul class="simple">
+<li><p>Make sure Master and Slave can connect to each other as a pair with ssh + pubkey</p></li>
+<li><p>Export all necessary environment variables from Master to Slave like the example below:</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mpirun<span class="w"> </span>-x<span class="w"> </span>VIRTUAL_ENV_PROMPT<span class="w"> </span>-x<span class="w"> </span>PATH<span class="w"> </span>-x<span class="w"> </span>VIRTUAL_ENV<span class="w"> </span>-x<span class="w"> </span>_<span class="w"> </span>-x<span class="w"> </span>LD_LIBRARY_PATH<span class="w"> </span>-np<span class="w"> </span>nbGPUExpected<span class="w"> </span>-hostfile<span class="w"> </span>hostfile<span class="w"> </span>python3<span class="w"> </span>script
+</pre></div>
+</div>
+<p>Read more <a class="reference external" href="https://www.open-mpi.org/doc/">open-mpi docs</a> for more information.</p>
+<ul class="simple">
+<li><p>In this mode, the application will run in multiprocess. We can filter out the master process by using:</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">ctranslate2</span><span class="o">.</span><span class="n">MpiInfo</span><span class="o">.</span><span class="n">getCurRank</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Running model in tensor parallel mode in one machine can boost the performance but if the model shared between multiple machines
+could be slower because of the latency in the connectivity.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In mode tensor parallel, <code class="docutils literal notranslate"><span class="pre">inter_threads</span></code> is always supported to run multiple workers. Otherwise, <code class="docutils literal notranslate"><span class="pre">device_index</span></code> no longer has any effect
+because tensor parallel mode will check only for available gpus on the system and the number of gpus you want to use.</p>
+</div>
+</section>
+<section id="asynchronous-execution">
+<h2>Asynchronous execution<a class="headerlink" href="#asynchronous-execution" title="Permalink to this heading"></a></h2>
+<p>Some methods can run asynchronously with <code class="docutils literal notranslate"><span class="pre">asynchronous=True</span></code>. In this mode, the method returns immediately and the result can be retrieved later:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">async_results</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">batch_generator</span><span class="p">():</span>
+    <span class="n">async_results</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">translator</span><span class="o">.</span><span class="n">translate_batch</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">asynchronous</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+
+<span class="k">for</span> <span class="n">async_result</span> <span class="ow">in</span> <span class="n">async_results</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">async_result</span><span class="o">.</span><span class="n">result</span><span class="p">())</span>  <span class="c1"># This method blocks until the result is available.</span>
+</pre></div>
+</div>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>Instances supporting asynchronous execution have a limited queue size by default. When the queue of batches is full, the method will block even with <code class="docutils literal notranslate"><span class="pre">asynchronous=True</span></code>. See the parameter <code class="docutils literal notranslate"><span class="pre">max_queued_batches</span></code> in their constructor to configure the queue size.</p>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="decoding.html" class="btn btn-neutral float-left" title="Decoding features" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="memory.html" class="btn btn-neutral float-right" title="Memory management" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

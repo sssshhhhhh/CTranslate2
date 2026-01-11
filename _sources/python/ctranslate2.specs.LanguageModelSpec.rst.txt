@@ -1,0 +1,34 @@
+LanguageModelSpec
+=================
+
+.. autoclass:: ctranslate2.specs.LanguageModelSpec
+    :members:
+    :undoc-members:
+    :inherited-members:
+
+    **Inherits from:** :class:`ctranslate2.specs.ModelSpec`
+
+    **Extended by:**
+
+    - :class:`ctranslate2.specs.TransformerDecoderModelSpec`
+    - :class:`ctranslate2.specs.TransformerEncoderModelSpec`
+    - :class:`ctranslate2.specs.Wav2Vec2BertSpec`
+    - :class:`ctranslate2.specs.Wav2Vec2Spec`
+    - :class:`ctranslate2.specs.WhisperSpec`
+
+    **Attributes:**
+
+    - :obj:`~ctranslate2.specs.LanguageModelSpec.config`
+    - :obj:`~ctranslate2.specs.LanguageModelSpec.name`
+    - :obj:`~ctranslate2.specs.LanguageModelSpec.revision`
+
+    **Methods:**
+
+    - :obj:`~ctranslate2.specs.LanguageModelSpec.get_default_config`
+    - :obj:`~ctranslate2.specs.LanguageModelSpec.get_vocabulary_size`
+    - :obj:`~ctranslate2.specs.LanguageModelSpec.optimize`
+    - :obj:`~ctranslate2.specs.LanguageModelSpec.register_file`
+    - :obj:`~ctranslate2.specs.LanguageModelSpec.register_vocabulary`
+    - :obj:`~ctranslate2.specs.LanguageModelSpec.save`
+    - :obj:`~ctranslate2.specs.LanguageModelSpec.validate`
+    - :obj:`~ctranslate2.specs.LanguageModelSpec.variables`

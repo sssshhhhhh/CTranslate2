@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Whisper &mdash; CTranslate2 4.6.3 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.png"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="WhisperGenerationResult" href="ctranslate2.models.WhisperGenerationResult.html" />
+    <link rel="prev" title="Wav2Vec2Bert" href="ctranslate2.models.Wav2Vec2Bert.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> CTranslate2
+          </a>
+              <div class="version">
+                4.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Get started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tasks</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../translation.html">Text translation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../generation.html">Text generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../encoding.html">Text encoding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../speech_recognition.html">Speech recognition</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../conversion.html">Model conversion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quantization.html">Quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../decoding.html">Decoding features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parallel.html">Multithreading and parallelism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../memory.html">Memory management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance tips</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../environment_variables.html">Environment variables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Framework guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/fairseq.html">Fairseq</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/marian.html">Marian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/opennmt_py.html">OpenNMT-py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/opennmt_tf.html">OpenNMT-tf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/opus_mt.html">OPUS-MT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/transformers.html">Transformers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="overview.html">Python</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="ctranslate2.html">ctranslate2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ctranslate2.converters.html">ctranslate2.converters</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="ctranslate2.models.html">ctranslate2.models</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="ctranslate2.models.Wav2Vec2.html">Wav2Vec2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctranslate2.models.Wav2Vec2Bert.html">Wav2Vec2Bert</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Whisper</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#ctranslate2.models.Whisper"><code class="docutils literal notranslate"><span class="pre">Whisper</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctranslate2.models.WhisperGenerationResult.html">WhisperGenerationResult</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctranslate2.models.WhisperGenerationResultAsync.html">WhisperGenerationResultAsync</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ctranslate2.specs.html">ctranslate2.specs</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Other information</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../hardware_support.html">Hardware support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../versioning.html">Versioning</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CTranslate2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="overview.html">Python</a> &raquo;</li>
+          <li><a href="ctranslate2.models.html">ctranslate2.models</a> &raquo;</li>
+      <li>Whisper</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="whisper">
+<h1>Whisper<a class="headerlink" href="#whisper" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="ctranslate2.models.Whisper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ctranslate2.models.</span></span><span class="sig-name descname"><span class="pre">Whisper</span></span><a class="headerlink" href="#ctranslate2.models.Whisper" title="Permalink to this definition"></a></dt>
+<dd><p>Implements the Whisper speech recognition model published by OpenAI.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference external" href="https://github.com/openai/whisper">https://github.com/openai/whisper</a></p>
+</div>
+<p><strong>Inherits from:</strong> <code class="xref py py-class docutils literal notranslate"><span class="pre">pybind11_builtins.pybind11_object</span></code></p>
+<p><strong>Attributes:</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#ctranslate2.models.Whisper.compute_type" title="ctranslate2.models.Whisper.compute_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_type</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.models.Whisper.device" title="ctranslate2.models.Whisper.device"><code class="xref py py-obj docutils literal notranslate"><span class="pre">device</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.models.Whisper.device_index" title="ctranslate2.models.Whisper.device_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">device_index</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.models.Whisper.is_multilingual" title="ctranslate2.models.Whisper.is_multilingual"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_multilingual</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.models.Whisper.model_is_loaded" title="ctranslate2.models.Whisper.model_is_loaded"><code class="xref py py-obj docutils literal notranslate"><span class="pre">model_is_loaded</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.models.Whisper.n_mels" title="ctranslate2.models.Whisper.n_mels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_mels</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.models.Whisper.num_active_batches" title="ctranslate2.models.Whisper.num_active_batches"><code class="xref py py-obj docutils literal notranslate"><span class="pre">num_active_batches</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.models.Whisper.num_languages" title="ctranslate2.models.Whisper.num_languages"><code class="xref py py-obj docutils literal notranslate"><span class="pre">num_languages</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.models.Whisper.num_queued_batches" title="ctranslate2.models.Whisper.num_queued_batches"><code class="xref py py-obj docutils literal notranslate"><span class="pre">num_queued_batches</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.models.Whisper.num_workers" title="ctranslate2.models.Whisper.num_workers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">num_workers</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.models.Whisper.tensor_parallel" title="ctranslate2.models.Whisper.tensor_parallel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tensor_parallel</span></code></a></p></li>
+</ul>
+<p><strong>Methods:</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#ctranslate2.models.Whisper.align" title="ctranslate2.models.Whisper.align"><code class="xref py py-obj docutils literal notranslate"><span class="pre">align</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.models.Whisper.detect_language" title="ctranslate2.models.Whisper.detect_language"><code class="xref py py-obj docutils literal notranslate"><span class="pre">detect_language</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.models.Whisper.encode" title="ctranslate2.models.Whisper.encode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">encode</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.models.Whisper.generate" title="ctranslate2.models.Whisper.generate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.models.Whisper.load_model" title="ctranslate2.models.Whisper.load_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_model</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.models.Whisper.unload_model" title="ctranslate2.models.Whisper.unload_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unload_model</span></code></a></p></li>
+</ul>
+<dl class="py method">
+<dt class="sig sig-object py" id="ctranslate2.models.Whisper.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'cpu'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inter_threads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intra_threads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_queued_batches</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flash_attention</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tensor_parallel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">files</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ctranslate2.models.Whisper.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Initializes a Whisper model from a converted model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_path</strong> – Path to the CTranslate2 model directory.</p></li>
+<li><p><strong>device</strong> – Device to use (possible values are: cpu, cuda, auto).</p></li>
+<li><p><strong>device_index</strong> – Device IDs where to place this model on.</p></li>
+<li><p><strong>compute_type</strong> – Model computation type or a dictionary mapping a device name
+to the computation type (possible values are: default, auto, int8, int8_float32,
+int8_float16, int8_bfloat16, int16, float16, bfloat16, float32).</p></li>
+<li><p><strong>inter_threads</strong> – Number of workers to allow executing multiple batches in parallel.</p></li>
+<li><p><strong>intra_threads</strong> – Number of OpenMP threads per worker (0 to use a default value).</p></li>
+<li><p><strong>max_queued_batches</strong> – Maximum numbers of batches in the worker queue (-1 for unlimited,
+0 for an automatic value). When the queue is full, future requests will block
+until a free slot is available.</p></li>
+<li><p><strong>flash_attention</strong> – run model with flash attention 2 for self-attention layer</p></li>
+<li><p><strong>tensor_parallel</strong> – run model with tensor parallel mode</p></li>
+<li><p><strong>files</strong> – Load model files from the memory. This argument is a dictionary mapping
+file names to file contents as file-like or bytes objects. If this is set,
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">model_path</span></code> acts as an identifier for this model.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctranslate2.models.Whisper.align">
+<span class="sig-name descname"><span class="pre">align</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ctranslate2.StorageView.html#ctranslate2.StorageView" title="ctranslate2.StorageView"><span class="pre">StorageView</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_sequence</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_tokens</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_frames</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">median_filter_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">7</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">WhisperAlignmentResult</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#ctranslate2.models.Whisper.align" title="Permalink to this definition"></a></dt>
+<dd><p>Computes the alignments between the text tokens and the audio.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>features</strong> – Mel spectogram of the audio, as a float array with shape
+<code class="docutils literal notranslate"><span class="pre">[batch_size,</span> <span class="pre">n_mels,</span> <span class="pre">chunk_length]</span></code>. This method also accepts the encoded
+features returned by the method <a class="reference internal" href="#ctranslate2.models.Whisper.encode" title="ctranslate2.models.Whisper.encode"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ctranslate2.models.Whisper.encode()</span></code></a>,
+which have shape <code class="docutils literal notranslate"><span class="pre">[batch_size,</span> <span class="pre">chunk_length</span> <span class="pre">//</span> <span class="pre">2,</span> <span class="pre">d_model]</span></code>.</p></li>
+<li><p><strong>start_sequence</strong> – The start sequence tokens.</p></li>
+<li><p><strong>text_tokens</strong> – Batch of text tokens to align.</p></li>
+<li><p><strong>num_frames</strong> – Number of non padding frames in the features.</p></li>
+<li><p><strong>median_filter_width</strong> – Width of the median filter kernel.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A list of alignment results.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctranslate2.models.Whisper.detect_language">
+<span class="sig-name descname"><span class="pre">detect_language</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ctranslate2.StorageView.html#ctranslate2.StorageView" title="ctranslate2.StorageView"><span class="pre">StorageView</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#ctranslate2.models.Whisper.detect_language" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the probability of each language.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>features</strong> – Mel spectogram of the audio, as a float array with shape
+<code class="docutils literal notranslate"><span class="pre">[batch_size,</span> <span class="pre">n_mels,</span> <span class="pre">chunk_length]</span></code>. This method also accepts the encoded
+features returned by the method <a class="reference internal" href="#ctranslate2.models.Whisper.encode" title="ctranslate2.models.Whisper.encode"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ctranslate2.models.Whisper.encode()</span></code></a>,
+which have shape <code class="docutils literal notranslate"><span class="pre">[batch_size,</span> <span class="pre">chunk_length</span> <span class="pre">//</span> <span class="pre">2,</span> <span class="pre">d_model]</span></code>.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>For each batch, a list of pairs (language, probability) ordered from
+best to worst probability.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>RuntimeError</strong> – if the model is not multilingual.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctranslate2.models.Whisper.encode">
+<span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ctranslate2.StorageView.html#ctranslate2.StorageView" title="ctranslate2.StorageView"><span class="pre">StorageView</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_cpu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="ctranslate2.StorageView.html#ctranslate2.StorageView" title="ctranslate2.StorageView"><span class="pre">StorageView</span></a></span></span><a class="headerlink" href="#ctranslate2.models.Whisper.encode" title="Permalink to this definition"></a></dt>
+<dd><p>Encodes the input features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>features</strong> – Mel spectogram of the audio, as a float array with shape
+<code class="docutils literal notranslate"><span class="pre">[batch_size,</span> <span class="pre">n_mels,</span> <span class="pre">chunk_length]</span></code>.</p></li>
+<li><p><strong>to_cpu</strong> – Copy the encoder output to the CPU before returning the value.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The encoder output.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctranslate2.models.Whisper.generate">
+<span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ctranslate2.StorageView.html#ctranslate2.StorageView" title="ctranslate2.StorageView"><span class="pre">StorageView</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asynchronous</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beam_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_hypotheses</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length_penalty</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repetition_penalty</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_repeat_ngram_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">448</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_scores</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_logits_vocab</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_no_speech_prob</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_initial_timestamp_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suppress_blank</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suppress_tokens</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[-1]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_topk</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ctranslate2.models.WhisperGenerationResult.html#ctranslate2.models.WhisperGenerationResult" title="ctranslate2.models.WhisperGenerationResult"><span class="pre">WhisperGenerationResult</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ctranslate2.models.WhisperGenerationResultAsync.html#ctranslate2.models.WhisperGenerationResultAsync" title="ctranslate2.models.WhisperGenerationResultAsync"><span class="pre">WhisperGenerationResultAsync</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#ctranslate2.models.Whisper.generate" title="Permalink to this definition"></a></dt>
+<dd><p>Encodes the input features and generates from the given prompt.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>features</strong> – Mel spectogram of the audio, as a float array with shape
+<code class="docutils literal notranslate"><span class="pre">[batch_size,</span> <span class="pre">n_mels,</span> <span class="pre">chunk_length]</span></code>. This method also accepts the encoded
+features returned by the method <a class="reference internal" href="#ctranslate2.models.Whisper.encode" title="ctranslate2.models.Whisper.encode"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ctranslate2.models.Whisper.encode()</span></code></a>,
+which have shape <code class="docutils literal notranslate"><span class="pre">[batch_size,</span> <span class="pre">chunk_length</span> <span class="pre">//</span> <span class="pre">2,</span> <span class="pre">d_model]</span></code>.</p></li>
+<li><p><strong>prompts</strong> – Batch of initial string tokens or token IDs.</p></li>
+<li><p><strong>asynchronous</strong> – Run the model asynchronously.</p></li>
+<li><p><strong>beam_size</strong> – Beam size (1 for greedy search).</p></li>
+<li><p><strong>patience</strong> – Beam search patience factor, as described in
+<a class="reference external" href="https://arxiv.org/abs/2204.05424">https://arxiv.org/abs/2204.05424</a>. The decoding will continue until
+beam_size*patience hypotheses are finished.</p></li>
+<li><p><strong>num_hypotheses</strong> – Number of hypotheses to return.</p></li>
+<li><p><strong>length_penalty</strong> – Exponential penalty applied to the length during beam search.</p></li>
+<li><p><strong>repetition_penalty</strong> – Penalty applied to the score of previously generated tokens
+(set &gt; 1 to penalize).</p></li>
+<li><p><strong>no_repeat_ngram_size</strong> – Prevent repetitions of ngrams with this size
+(set 0 to disable).</p></li>
+<li><p><strong>max_length</strong> – Maximum generation length.</p></li>
+<li><p><strong>return_scores</strong> – Include the scores in the output.</p></li>
+<li><p><strong>return_logits_vocab</strong> – Include the log probs in the output</p></li>
+<li><p><strong>return_no_speech_prob</strong> – Include the probability of the no speech token in the
+result.</p></li>
+<li><p><strong>max_initial_timestamp_index</strong> – Maximum index of the first predicted timestamp.</p></li>
+<li><p><strong>suppress_blank</strong> – Suppress blank outputs at the beginning of the sampling.</p></li>
+<li><p><strong>suppress_tokens</strong> – List of token IDs to suppress. -1 will suppress a default set
+of symbols as defined in the model <code class="docutils literal notranslate"><span class="pre">config.json</span></code> file.</p></li>
+<li><p><strong>sampling_topk</strong> – Randomly sample predictions from the top K candidates.</p></li>
+<li><p><strong>sampling_temperature</strong> – Sampling temperature to generate more random samples.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A list of generation results.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctranslate2.models.Whisper.load_model">
+<span class="sig-name descname"><span class="pre">load_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keep_cache</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ctranslate2.models.Whisper.load_model" title="Permalink to this definition"></a></dt>
+<dd><p>Loads the model back to the initial device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>keep_cache</strong> – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, the model cache in the CPU memory is not deleted if it exists.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctranslate2.models.Whisper.unload_model">
+<span class="sig-name descname"><span class="pre">unload_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">to_cpu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ctranslate2.models.Whisper.unload_model" title="Permalink to this definition"></a></dt>
+<dd><p>Unloads the model attached to this whisper but keep enough runtime context
+to quickly resume whisper on the initial device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>to_cpu</strong> – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, the model is moved to the CPU memory and not fully unloaded.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ctranslate2.models.Whisper.compute_type">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_type</span></span><a class="headerlink" href="#ctranslate2.models.Whisper.compute_type" title="Permalink to this definition"></a></dt>
+<dd><p>Computation type used by the model.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ctranslate2.models.Whisper.device">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">device</span></span><a class="headerlink" href="#ctranslate2.models.Whisper.device" title="Permalink to this definition"></a></dt>
+<dd><p>Device this model is running on.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ctranslate2.models.Whisper.device_index">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">device_index</span></span><a class="headerlink" href="#ctranslate2.models.Whisper.device_index" title="Permalink to this definition"></a></dt>
+<dd><p>List of device IDs where this model is running on.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ctranslate2.models.Whisper.is_multilingual">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_multilingual</span></span><a class="headerlink" href="#ctranslate2.models.Whisper.is_multilingual" title="Permalink to this definition"></a></dt>
+<dd><p>Returns <code class="docutils literal notranslate"><span class="pre">True</span></code> if this model is multilingual.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ctranslate2.models.Whisper.model_is_loaded">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">model_is_loaded</span></span><a class="headerlink" href="#ctranslate2.models.Whisper.model_is_loaded" title="Permalink to this definition"></a></dt>
+<dd><p>Whether the model is loaded on the initial device and ready to be used.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ctranslate2.models.Whisper.n_mels">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_mels</span></span><a class="headerlink" href="#ctranslate2.models.Whisper.n_mels" title="Permalink to this definition"></a></dt>
+<dd><p>Returns dimension of mel input features.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ctranslate2.models.Whisper.num_active_batches">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_active_batches</span></span><a class="headerlink" href="#ctranslate2.models.Whisper.num_active_batches" title="Permalink to this definition"></a></dt>
+<dd><p>Number of batches waiting to be processed or currently processed.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ctranslate2.models.Whisper.num_languages">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_languages</span></span><a class="headerlink" href="#ctranslate2.models.Whisper.num_languages" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the number of languages supported.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ctranslate2.models.Whisper.num_queued_batches">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_queued_batches</span></span><a class="headerlink" href="#ctranslate2.models.Whisper.num_queued_batches" title="Permalink to this definition"></a></dt>
+<dd><p>Number of batches waiting to be processed.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ctranslate2.models.Whisper.num_workers">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_workers</span></span><a class="headerlink" href="#ctranslate2.models.Whisper.num_workers" title="Permalink to this definition"></a></dt>
+<dd><p>Number of model workers backing this instance.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ctranslate2.models.Whisper.tensor_parallel">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tensor_parallel</span></span><a class="headerlink" href="#ctranslate2.models.Whisper.tensor_parallel" title="Permalink to this definition"></a></dt>
+<dd><p>Run model with tensor parallel mode.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ctranslate2.models.Wav2Vec2Bert.html" class="btn btn-neutral float-left" title="Wav2Vec2Bert" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ctranslate2.models.WhisperGenerationResult.html" class="btn btn-neutral float-right" title="WhisperGenerationResult" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

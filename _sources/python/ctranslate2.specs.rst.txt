@@ -1,0 +1,22 @@
+ctranslate2.specs
+=================
+
+.. automodule:: ctranslate2.specs
+
+.. toctree::
+
+   ctranslate2.specs.Activation
+   ctranslate2.specs.EmbeddingsMerge
+   ctranslate2.specs.LanguageModelSpec
+   ctranslate2.specs.LayerSpec
+   ctranslate2.specs.ModelSpec
+   ctranslate2.specs.RotaryScalingType
+   ctranslate2.specs.SequenceToSequenceModelSpec
+   ctranslate2.specs.TransformerDecoderModelSpec
+   ctranslate2.specs.TransformerDecoderSpec
+   ctranslate2.specs.TransformerEncoderModelSpec
+   ctranslate2.specs.TransformerEncoderSpec
+   ctranslate2.specs.TransformerSpec
+   ctranslate2.specs.Wav2Vec2BertSpec
+   ctranslate2.specs.Wav2Vec2Spec
+   ctranslate2.specs.WhisperSpec

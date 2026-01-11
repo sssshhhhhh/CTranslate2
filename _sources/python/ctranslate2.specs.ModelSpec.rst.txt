@@ -1,0 +1,29 @@
+ModelSpec
+=========
+
+.. autoclass:: ctranslate2.specs.ModelSpec
+    :members:
+    :undoc-members:
+    :inherited-members:
+
+    **Inherits from:** :class:`ctranslate2.specs.LayerSpec`
+
+    **Extended by:**
+
+    - :class:`ctranslate2.specs.LanguageModelSpec`
+    - :class:`ctranslate2.specs.SequenceToSequenceModelSpec`
+
+    **Attributes:**
+
+    - :obj:`~ctranslate2.specs.ModelSpec.config`
+    - :obj:`~ctranslate2.specs.ModelSpec.name`
+    - :obj:`~ctranslate2.specs.ModelSpec.revision`
+
+    **Methods:**
+
+    - :obj:`~ctranslate2.specs.ModelSpec.get_default_config`
+    - :obj:`~ctranslate2.specs.ModelSpec.optimize`
+    - :obj:`~ctranslate2.specs.ModelSpec.register_file`
+    - :obj:`~ctranslate2.specs.ModelSpec.save`
+    - :obj:`~ctranslate2.specs.ModelSpec.validate`
+    - :obj:`~ctranslate2.specs.ModelSpec.variables`

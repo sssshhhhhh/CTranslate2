@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generator &mdash; CTranslate2 4.6.3 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.png"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="MpiInfo" href="ctranslate2.MpiInfo.html" />
+    <link rel="prev" title="GenerationStepResult" href="ctranslate2.GenerationStepResult.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> CTranslate2
+          </a>
+              <div class="version">
+                4.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Get started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tasks</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../translation.html">Text translation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../generation.html">Text generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../encoding.html">Text encoding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../speech_recognition.html">Speech recognition</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../conversion.html">Model conversion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quantization.html">Quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../decoding.html">Decoding features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parallel.html">Multithreading and parallelism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../memory.html">Memory management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance tips</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../environment_variables.html">Environment variables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Framework guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/fairseq.html">Fairseq</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/marian.html">Marian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/opennmt_py.html">OpenNMT-py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/opennmt_tf.html">OpenNMT-tf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/opus_mt.html">OPUS-MT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/transformers.html">Transformers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="overview.html">Python</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="ctranslate2.html">ctranslate2</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="ctranslate2.AsyncGenerationResult.html">AsyncGenerationResult</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctranslate2.AsyncScoringResult.html">AsyncScoringResult</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctranslate2.AsyncTranslationResult.html">AsyncTranslationResult</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctranslate2.DataType.html">DataType</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctranslate2.Device.html">Device</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctranslate2.Encoder.html">Encoder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctranslate2.EncoderForwardOutput.html">EncoderForwardOutput</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctranslate2.ExecutionStats.html">ExecutionStats</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctranslate2.GenerationResult.html">GenerationResult</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctranslate2.GenerationStepResult.html">GenerationStepResult</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Generator</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#ctranslate2.Generator"><code class="docutils literal notranslate"><span class="pre">Generator</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ctranslate2.MpiInfo.html">MpiInfo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctranslate2.ScoringResult.html">ScoringResult</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctranslate2.StorageView.html">StorageView</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctranslate2.TranslationResult.html">TranslationResult</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctranslate2.Translator.html">Translator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctranslate2.contains_model.html">contains_model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctranslate2.get_cuda_device_count.html">get_cuda_device_count</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctranslate2.get_log_level.html">get_log_level</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctranslate2.get_supported_compute_types.html">get_supported_compute_types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctranslate2.set_log_level.html">set_log_level</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ctranslate2.set_random_seed.html">set_random_seed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ctranslate2.converters.html">ctranslate2.converters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ctranslate2.models.html">ctranslate2.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ctranslate2.specs.html">ctranslate2.specs</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Other information</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../hardware_support.html">Hardware support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../versioning.html">Versioning</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CTranslate2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="overview.html">Python</a> &raquo;</li>
+          <li><a href="ctranslate2.html">ctranslate2</a> &raquo;</li>
+      <li>Generator</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="generator">
+<h1>Generator<a class="headerlink" href="#generator" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="ctranslate2.Generator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ctranslate2.</span></span><span class="sig-name descname"><span class="pre">Generator</span></span><a class="headerlink" href="#ctranslate2.Generator" title="Permalink to this definition"></a></dt>
+<dd><p>A text generator.</p>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">generator</span> <span class="o">=</span> <span class="n">ctranslate2</span><span class="o">.</span><span class="n">Generator</span><span class="p">(</span><span class="s2">&quot;model/&quot;</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generator</span><span class="o">.</span><span class="n">generate_batch</span><span class="p">([[</span><span class="s2">&quot;&lt;s&gt;&quot;</span><span class="p">]],</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">sampling_topk</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Inherits from:</strong> <code class="xref py py-class docutils literal notranslate"><span class="pre">pybind11_builtins.pybind11_object</span></code></p>
+<p><strong>Attributes:</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#ctranslate2.Generator.compute_type" title="ctranslate2.Generator.compute_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_type</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.Generator.device" title="ctranslate2.Generator.device"><code class="xref py py-obj docutils literal notranslate"><span class="pre">device</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.Generator.device_index" title="ctranslate2.Generator.device_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">device_index</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.Generator.model_is_loaded" title="ctranslate2.Generator.model_is_loaded"><code class="xref py py-obj docutils literal notranslate"><span class="pre">model_is_loaded</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.Generator.num_active_batches" title="ctranslate2.Generator.num_active_batches"><code class="xref py py-obj docutils literal notranslate"><span class="pre">num_active_batches</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.Generator.num_generators" title="ctranslate2.Generator.num_generators"><code class="xref py py-obj docutils literal notranslate"><span class="pre">num_generators</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.Generator.num_queued_batches" title="ctranslate2.Generator.num_queued_batches"><code class="xref py py-obj docutils literal notranslate"><span class="pre">num_queued_batches</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.Generator.tensor_parallel" title="ctranslate2.Generator.tensor_parallel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tensor_parallel</span></code></a></p></li>
+</ul>
+<p><strong>Methods:</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#ctranslate2.Generator.async_generate_tokens" title="ctranslate2.Generator.async_generate_tokens"><code class="xref py py-obj docutils literal notranslate"><span class="pre">async_generate_tokens</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.Generator.forward_batch" title="ctranslate2.Generator.forward_batch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">forward_batch</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.Generator.generate_batch" title="ctranslate2.Generator.generate_batch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_batch</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.Generator.generate_iterable" title="ctranslate2.Generator.generate_iterable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_iterable</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.Generator.generate_tokens" title="ctranslate2.Generator.generate_tokens"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_tokens</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.Generator.load_model" title="ctranslate2.Generator.load_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_model</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.Generator.score_batch" title="ctranslate2.Generator.score_batch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">score_batch</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.Generator.score_iterable" title="ctranslate2.Generator.score_iterable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">score_iterable</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ctranslate2.Generator.unload_model" title="ctranslate2.Generator.unload_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unload_model</span></code></a></p></li>
+</ul>
+<dl class="py method">
+<dt class="sig sig-object py" id="ctranslate2.Generator.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'cpu'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inter_threads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intra_threads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_queued_batches</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flash_attention</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tensor_parallel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">files</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ctranslate2.Generator.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Initializes the generator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_path</strong> – Path to the CTranslate2 model directory.</p></li>
+<li><p><strong>device</strong> – Device to use (possible values are: cpu, cuda, auto).</p></li>
+<li><p><strong>device_index</strong> – Device IDs where to place this generator on.</p></li>
+<li><p><strong>compute_type</strong> – Model computation type or a dictionary mapping a device name
+to the computation type (possible values are: default, auto, int8, int8_float32,
+int8_float16, int8_bfloat16, int16, float16, bfloat16, float32).</p></li>
+<li><p><strong>inter_threads</strong> – Maximum number of parallel generations.</p></li>
+<li><p><strong>intra_threads</strong> – Number of OpenMP threads per generator (0 to use a default value).</p></li>
+<li><p><strong>max_queued_batches</strong> – Maximum numbers of batches in the queue (-1 for unlimited,
+0 for an automatic value). When the queue is full, future requests will block
+until a free slot is available.</p></li>
+<li><p><strong>flash_attention</strong> – run model with flash attention 2 for self-attention layer</p></li>
+<li><p><strong>tensor_parallel</strong> – run model with tensor parallel mode.</p></li>
+<li><p><strong>files</strong> – Load model files from the memory. This argument is a dictionary mapping
+file names to file contents as file-like or bytes objects. If this is set,
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">model_path</span></code> acts as an identifier for this model.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctranslate2.Generator.async_generate_tokens">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">async_generate_tokens</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prompt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'examples'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">512</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_topk</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_topp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_log_prob</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repetition_penalty</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_repeat_ngram_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disable_unk</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suppress_sequences</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_token</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">static_prompt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_static_prompt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ctranslate2.GenerationStepResult.html#ctranslate2.GenerationStepResult" title="ctranslate2.GenerationStepResult"><span class="pre">GenerationStepResult</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">AsyncIterable</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ctranslate2.GenerationStepResult.html#ctranslate2.GenerationStepResult" title="ctranslate2.GenerationStepResult"><span class="pre">GenerationStepResult</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#ctranslate2.Generator.async_generate_tokens" title="Permalink to this definition"></a></dt>
+<dd><p>Yields tokens asynchronously as they are generated by the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prompt</strong> – Batch of start tokens. If the decoder starts from a
+special start token like &lt;s&gt;, this token should be added to this input.</p></li>
+<li><p><strong>max_batch_size</strong> – The maximum batch size.</p></li>
+<li><p><strong>batch_type</strong> – Whether <code class="xref py py-obj docutils literal notranslate"><span class="pre">max_batch_size</span></code> is the number of “examples” or “tokens”.</p></li>
+<li><p><strong>max_length</strong> – Maximum generation length.</p></li>
+<li><p><strong>min_length</strong> – Minimum generation length.</p></li>
+<li><p><strong>sampling_topk</strong> – Randomly sample predictions from the top K candidates.</p></li>
+<li><p><strong>sampling_topp</strong> – Keep the most probable tokens whose cumulative probability exceeds this value.</p></li>
+<li><p><strong>sampling_temperature</strong> – Sampling temperature to generate more random samples.</p></li>
+<li><p><strong>return_log_prob</strong> – Include the token log probability in the result.</p></li>
+<li><p><strong>repetition_penalty</strong> – Penalty applied to the score of previously generated tokens
+(set &gt; 1 to penalize).</p></li>
+<li><p><strong>no_repeat_ngram_size</strong> – Prevent repetitions of ngrams with this size
+(set 0 to disable).</p></li>
+<li><p><strong>disable_unk</strong> – Disable the generation of the unknown token.</p></li>
+<li><p><strong>suppress_sequences</strong> – Disable the generation of some sequences of tokens.</p></li>
+<li><p><strong>end_token</strong> – Stop the decoding on one of these tokens (defaults to the model EOS token).</p></li>
+<li><p><strong>static_prompt</strong> – If the model expects a static prompt (a.k.a. system prompt)
+it can be set here to simplify the inputs and optionally cache the model
+state for this prompt to accelerate future generations.</p></li>
+<li><p><strong>cache_static_prompt</strong> – Cache the model state after the static prompt and
+reuse it for future generations using the same static prompt.</p></li>
+<li><p><strong>callback</strong> – Optional function that is called for each generated token when
+obj:<cite>beam_size</cite> is 1. If the callback function returns <code class="docutils literal notranslate"><span class="pre">True</span></code>, the
+decoding will stop for this batch index.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>An async generator iterator over <a class="reference internal" href="ctranslate2.GenerationStepResult.html#ctranslate2.GenerationStepResult" title="ctranslate2.GenerationStepResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ctranslate2.GenerationStepResult</span></code></a> instances.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This generation method is not compatible with beam search which requires a complete decoding.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctranslate2.Generator.forward_batch">
+<span class="sig-name descname"><span class="pre">forward_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="ctranslate2.StorageView.html#ctranslate2.StorageView" title="ctranslate2.StorageView"><span class="pre">StorageView</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ctranslate2.StorageView.html#ctranslate2.StorageView" title="ctranslate2.StorageView"><span class="pre">StorageView</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_log_probs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="ctranslate2.StorageView.html#ctranslate2.StorageView" title="ctranslate2.StorageView"><span class="pre">StorageView</span></a></span></span><a class="headerlink" href="#ctranslate2.Generator.forward_batch" title="Permalink to this definition"></a></dt>
+<dd><p>Forwards a batch of sequences in the generator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> – A batch of sequences either as string tokens or token IDs.
+This argument can also be a dense int32 array with shape
+<code class="docutils literal notranslate"><span class="pre">[batch_size,</span> <span class="pre">max_length]</span></code> (e.g. created from a Numpy array or PyTorch tensor).</p></li>
+<li><p><strong>lengths</strong> – The length of each sequence as a int32 array with shape
+<code class="docutils literal notranslate"><span class="pre">[batch_size]</span></code>. Required when <code class="xref py py-obj docutils literal notranslate"><span class="pre">inputs</span></code> is a dense array.</p></li>
+<li><p><strong>return_log_probs</strong> – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, the method returns the log probabilties instead
+of the unscaled logits.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The output logits, or the output log probabilities if <code class="xref py py-obj docutils literal notranslate"><span class="pre">return_log_probs</span></code>
+is enabled.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctranslate2.Generator.generate_batch">
+<span class="sig-name descname"><span class="pre">generate_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_tokens</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'examples'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asynchronous</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beam_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_hypotheses</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length_penalty</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repetition_penalty</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_repeat_ngram_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disable_unk</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suppress_sequences</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_token</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_end_token</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">512</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">static_prompt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_static_prompt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_prompt_in_result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_scores</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_logits_vocab</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_alternatives</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_alternative_expansion_prob</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_topk</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_topp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ctranslate2.GenerationStepResult.html#ctranslate2.GenerationStepResult" title="ctranslate2.GenerationStepResult"><span class="pre">GenerationStepResult</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ctranslate2.GenerationResult.html#ctranslate2.GenerationResult" title="ctranslate2.GenerationResult"><span class="pre">GenerationResult</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ctranslate2.AsyncGenerationResult.html#ctranslate2.AsyncGenerationResult" title="ctranslate2.AsyncGenerationResult"><span class="pre">AsyncGenerationResult</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#ctranslate2.Generator.generate_batch" title="Permalink to this definition"></a></dt>
+<dd><p>Generates from a batch of start tokens.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The way the start tokens are forwarded in the decoder depends on the argument
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">include_prompt_in_result</span></code>:</p>
+<ul class="simple">
+<li><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">include_prompt_in_result</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code> (the default), the decoding loop
+is constrained to generate the start tokens that are then included in the result.</p></li>
+<li><p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">include_prompt_in_result</span></code> is <code class="docutils literal notranslate"><span class="pre">False</span></code>, the start tokens are forwarded
+in the decoder at once to initialize its state (i.e. the KV cache for
+Transformer models). For variable-length inputs, only the tokens up to the
+minimum length in the batch are forwarded at once. The remaining tokens are
+generated in the decoding loop with constrained decoding.</p></li>
+</ul>
+<p>Consider setting <code class="docutils literal notranslate"><span class="pre">include_prompt_in_result=False</span></code> to increase the performance
+for long inputs.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start_tokens</strong> – Batch of start tokens. If the decoder starts from a special
+start token like <code class="docutils literal notranslate"><span class="pre">&lt;s&gt;</span></code>, this token should be added to this input.</p></li>
+<li><p><strong>max_batch_size</strong> – The maximum batch size. If the number of inputs is greater than <code class="xref py py-obj docutils literal notranslate"><span class="pre">max_batch_size</span></code>,
+the inputs are sorted by length and split by chunks of <code class="xref py py-obj docutils literal notranslate"><span class="pre">max_batch_size</span></code> examples
+(or tokens when :obj:<a href="#id1"><span class="problematic" id="id2">`</span></a>batch_type`=”tokens”) so that the number of padding positions
+is minimized.</p></li>
+<li><p><strong>batch_type</strong> – Whether <code class="xref py py-obj docutils literal notranslate"><span class="pre">max_batch_size</span></code> is the number of “examples” or “tokens”.</p></li>
+<li><p><strong>asynchronous</strong> – Run the generation asynchronously.</p></li>
+<li><p><strong>beam_size</strong> – Beam size (1 for greedy search).</p></li>
+<li><p><strong>patience</strong> – Beam search patience factor, as described in
+<a class="reference external" href="https://arxiv.org/abs/2204.05424">https://arxiv.org/abs/2204.05424</a>. The decoding will continue until
+beam_size*patience hypotheses are finished.</p></li>
+<li><p><strong>num_hypotheses</strong> – Number of hypotheses to return.</p></li>
+<li><p><strong>length_penalty</strong> – Exponential penalty applied to the length during beam search.</p></li>
+<li><p><strong>repetition_penalty</strong> – Penalty applied to the score of previously generated tokens
+(set &gt; 1 to penalize).</p></li>
+<li><p><strong>no_repeat_ngram_size</strong> – Prevent repetitions of ngrams with this size
+(set 0 to disable).</p></li>
+<li><p><strong>disable_unk</strong> – Disable the generation of the unknown token.</p></li>
+<li><p><strong>suppress_sequences</strong> – Disable the generation of some sequences of tokens.</p></li>
+<li><p><strong>end_token</strong> – Stop the decoding on one of these tokens (defaults to the model EOS token).</p></li>
+<li><p><strong>return_end_token</strong> – Include the end token in the results.</p></li>
+<li><p><strong>max_length</strong> – Maximum generation length.</p></li>
+<li><p><strong>min_length</strong> – Minimum generation length.</p></li>
+<li><p><strong>static_prompt</strong> – If the model expects a static prompt (a.k.a. system prompt)
+it can be set here to simplify the inputs and optionally cache the model
+state for this prompt to accelerate future generations.</p></li>
+<li><p><strong>cache_static_prompt</strong> – Cache the model state after the static prompt and
+reuse it for future generations using the same static prompt.</p></li>
+<li><p><strong>include_prompt_in_result</strong> – Include the <code class="xref py py-obj docutils literal notranslate"><span class="pre">start_tokens</span></code> in the result.</p></li>
+<li><p><strong>return_scores</strong> – Include the scores in the output.</p></li>
+<li><p><strong>return_logits_vocab</strong> – Include log probs for each token in the output</p></li>
+<li><p><strong>return_alternatives</strong> – Return alternatives at the first unconstrained decoding position.</p></li>
+<li><p><strong>min_alternative_expansion_prob</strong> – Minimum initial probability to expand an alternative.</p></li>
+<li><p><strong>sampling_topk</strong> – Randomly sample predictions from the top K candidates.</p></li>
+<li><p><strong>sampling_topp</strong> – Keep the most probable tokens whose cumulative probability exceeds
+this value.</p></li>
+<li><p><strong>sampling_temperature</strong> – Sampling temperature to generate more random samples.</p></li>
+<li><p><strong>callback</strong> – Optional function that is called for each generated token when
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">beam_size</span></code> is 1. If the callback function returns <code class="docutils literal notranslate"><span class="pre">True</span></code>, the
+decoding will stop for this batch index.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A list of generation results.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference external" href="https://github.com/OpenNMT/CTranslate2/blob/master/include/ctranslate2/generation.h">GenerationOptions</a> structure in the C++ library.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctranslate2.Generator.generate_iterable">
+<span class="sig-name descname"><span class="pre">generate_iterable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_tokens</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'examples'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ctranslate2.GenerationResult.html#ctranslate2.GenerationResult" title="ctranslate2.GenerationResult"><span class="pre">GenerationResult</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#ctranslate2.Generator.generate_iterable" title="Permalink to this definition"></a></dt>
+<dd><p>Generates from an iterable of tokenized prompts.</p>
+<p>This method is built on top of <a class="reference internal" href="#ctranslate2.Generator.generate_batch" title="ctranslate2.Generator.generate_batch"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ctranslate2.Generator.generate_batch()</span></code></a>
+to efficiently run generation on an arbitrarily large stream of data. It enables
+the following optimizations:</p>
+<ul class="simple">
+<li><p>stream processing (the iterable is not fully materialized in memory)</p></li>
+<li><p>parallel generations (if the generator has multiple workers)</p></li>
+<li><p>asynchronous batch prefetching</p></li>
+<li><p>local sorting by length</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start_tokens</strong> – An iterable of tokenized prompts.</p></li>
+<li><p><strong>max_batch_size</strong> – The maximum batch size.</p></li>
+<li><p><strong>batch_type</strong> – Whether <code class="xref py py-obj docutils literal notranslate"><span class="pre">max_batch_size</span></code> is the number of “examples” or “tokens”.</p></li>
+<li><p><strong>**kwargs</strong> – Any generation options accepted by
+<a class="reference internal" href="#ctranslate2.Generator.generate_batch" title="ctranslate2.Generator.generate_batch"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ctranslate2.Generator.generate_batch()</span></code></a>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A generator iterator over <a class="reference internal" href="ctranslate2.GenerationResult.html#ctranslate2.GenerationResult" title="ctranslate2.GenerationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ctranslate2.GenerationResult</span></code></a> instances.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctranslate2.Generator.generate_tokens">
+<span class="sig-name descname"><span class="pre">generate_tokens</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prompt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'examples'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">512</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_topk</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_topp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_log_prob</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repetition_penalty</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_repeat_ngram_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disable_unk</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suppress_sequences</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_token</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">static_prompt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_static_prompt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ctranslate2.GenerationStepResult.html#ctranslate2.GenerationStepResult" title="ctranslate2.GenerationStepResult"><span class="pre">GenerationStepResult</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ctranslate2.GenerationStepResult.html#ctranslate2.GenerationStepResult" title="ctranslate2.GenerationStepResult"><span class="pre">GenerationStepResult</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#ctranslate2.Generator.generate_tokens" title="Permalink to this definition"></a></dt>
+<dd><p>Yields tokens as they are generated by the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prompt</strong> – Batch of start tokens. If the decoder starts from a
+special start token like &lt;s&gt;, this token should be added to this input.</p></li>
+<li><p><strong>max_batch_size</strong> – The maximum batch size.</p></li>
+<li><p><strong>batch_type</strong> – Whether <code class="xref py py-obj docutils literal notranslate"><span class="pre">max_batch_size</span></code> is the number of “examples” or “tokens”.</p></li>
+<li><p><strong>max_length</strong> – Maximum generation length.</p></li>
+<li><p><strong>min_length</strong> – Minimum generation length.</p></li>
+<li><p><strong>sampling_topk</strong> – Randomly sample predictions from the top K candidates.</p></li>
+<li><p><strong>sampling_topp</strong> – Keep the most probable tokens whose cumulative probability exceeds this value.</p></li>
+<li><p><strong>sampling_temperature</strong> – Sampling temperature to generate more random samples.</p></li>
+<li><p><strong>return_log_prob</strong> – Include the token log probability in the result.</p></li>
+<li><p><strong>repetition_penalty</strong> – Penalty applied to the score of previously generated tokens
+(set &gt; 1 to penalize).</p></li>
+<li><p><strong>no_repeat_ngram_size</strong> – Prevent repetitions of ngrams with this size
+(set 0 to disable).</p></li>
+<li><p><strong>disable_unk</strong> – Disable the generation of the unknown token.</p></li>
+<li><p><strong>suppress_sequences</strong> – Disable the generation of some sequences of tokens.</p></li>
+<li><p><strong>end_token</strong> – Stop the decoding on one these tokens (defaults to the model EOS token).</p></li>
+<li><p><strong>static_prompt</strong> – If the model expects a static prompt (a.k.a. system prompt)
+it can be set here to simplify the inputs and optionally cache the model
+state for this prompt to accelerate future generations.</p></li>
+<li><p><strong>cache_static_prompt</strong> – Cache the model state after the static prompt and
+reuse it for future generations using the same static prompt.</p></li>
+<li><p><strong>callback</strong> – Optional function that is called for each generated token when
+obj:<cite>beam_size</cite> is 1. If the callback function returns <code class="docutils literal notranslate"><span class="pre">True</span></code>, the
+decoding will stop for this batch index.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A generator iterator over <a class="reference internal" href="ctranslate2.GenerationStepResult.html#ctranslate2.GenerationStepResult" title="ctranslate2.GenerationStepResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ctranslate2.GenerationStepResult</span></code></a> instances.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This generation method is not compatible with beam search which requires a complete decoding.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctranslate2.Generator.load_model">
+<span class="sig-name descname"><span class="pre">load_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keep_cache</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ctranslate2.Generator.load_model" title="Permalink to this definition"></a></dt>
+<dd><p>Loads the model back to the initial device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>keep_cache</strong> – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, the model cache in the CPU memory is not deleted if it exists.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctranslate2.Generator.score_batch">
+<span class="sig-name descname"><span class="pre">score_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokens</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'examples'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_input_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1024</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asynchronous</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ctranslate2.ScoringResult.html#ctranslate2.ScoringResult" title="ctranslate2.ScoringResult"><span class="pre">ScoringResult</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ctranslate2.AsyncScoringResult.html#ctranslate2.AsyncScoringResult" title="ctranslate2.AsyncScoringResult"><span class="pre">AsyncScoringResult</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#ctranslate2.Generator.score_batch" title="Permalink to this definition"></a></dt>
+<dd><p>Scores a batch of tokens.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tokens</strong> – Batch of tokens to score. If the model expects special start or end tokens,
+they should also be added to this input.</p></li>
+<li><p><strong>max_batch_size</strong> – The maximum batch size. If the number of inputs is greater than
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">max_batch_size</span></code>, the inputs are sorted by length and split by chunks of
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">max_batch_size</span></code> examples so that the number of padding positions is
+minimized.</p></li>
+<li><p><strong>batch_type</strong> – Whether <code class="xref py py-obj docutils literal notranslate"><span class="pre">max_batch_size</span></code> is the number of “examples” or “tokens”.</p></li>
+<li><p><strong>max_input_length</strong> – Truncate inputs after this many tokens (0 to disable).</p></li>
+<li><p><strong>asynchronous</strong> – Run the scoring asynchronously.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A list of scoring results.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctranslate2.Generator.score_iterable">
+<span class="sig-name descname"><span class="pre">score_iterable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokens</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'examples'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ctranslate2.ScoringResult.html#ctranslate2.ScoringResult" title="ctranslate2.ScoringResult"><span class="pre">ScoringResult</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#ctranslate2.Generator.score_iterable" title="Permalink to this definition"></a></dt>
+<dd><p>Scores an iterable of tokenized examples.</p>
+<p>This method is built on top of <a class="reference internal" href="#ctranslate2.Generator.score_batch" title="ctranslate2.Generator.score_batch"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ctranslate2.Generator.score_batch()</span></code></a>
+to efficiently score an arbitrarily large stream of data. It enables
+the following optimizations:</p>
+<ul class="simple">
+<li><p>stream processing (the iterable is not fully materialized in memory)</p></li>
+<li><p>parallel scoring (if the generator has multiple workers)</p></li>
+<li><p>asynchronous batch prefetching</p></li>
+<li><p>local sorting by length</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tokens</strong> – An iterable of tokenized examples.</p></li>
+<li><p><strong>max_batch_size</strong> – The maximum batch size.</p></li>
+<li><p><strong>batch_type</strong> – Whether <code class="xref py py-obj docutils literal notranslate"><span class="pre">max_batch_size</span></code> is the number of “examples” or “tokens”.</p></li>
+<li><p><strong>**kwargs</strong> – Any score options accepted by
+<a class="reference internal" href="#ctranslate2.Generator.score_batch" title="ctranslate2.Generator.score_batch"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ctranslate2.Generator.score_batch()</span></code></a>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A generator iterator over <a class="reference internal" href="ctranslate2.ScoringResult.html#ctranslate2.ScoringResult" title="ctranslate2.ScoringResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ctranslate2.ScoringResult</span></code></a> instances.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ctranslate2.Generator.unload_model">
+<span class="sig-name descname"><span class="pre">unload_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">to_cpu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ctranslate2.Generator.unload_model" title="Permalink to this definition"></a></dt>
+<dd><p>Unloads the model attached to this generator but keep enough runtime context
+to quickly resume generator on the initial device. The model is not guaranteed
+to be unloaded if generations are running concurrently.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>to_cpu</strong> – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, the model is moved to the CPU memory and not fully unloaded.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ctranslate2.Generator.compute_type">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_type</span></span><a class="headerlink" href="#ctranslate2.Generator.compute_type" title="Permalink to this definition"></a></dt>
+<dd><p>Computation type used by the model.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ctranslate2.Generator.device">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">device</span></span><a class="headerlink" href="#ctranslate2.Generator.device" title="Permalink to this definition"></a></dt>
+<dd><p>Device this generator is running on.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ctranslate2.Generator.device_index">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">device_index</span></span><a class="headerlink" href="#ctranslate2.Generator.device_index" title="Permalink to this definition"></a></dt>
+<dd><p>List of device IDs where this generator is running on.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ctranslate2.Generator.model_is_loaded">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">model_is_loaded</span></span><a class="headerlink" href="#ctranslate2.Generator.model_is_loaded" title="Permalink to this definition"></a></dt>
+<dd><p>Whether the model is loaded on the initial device and ready to be used.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ctranslate2.Generator.num_active_batches">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_active_batches</span></span><a class="headerlink" href="#ctranslate2.Generator.num_active_batches" title="Permalink to this definition"></a></dt>
+<dd><p>Number of batches waiting to be processed or currently processed.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ctranslate2.Generator.num_generators">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_generators</span></span><a class="headerlink" href="#ctranslate2.Generator.num_generators" title="Permalink to this definition"></a></dt>
+<dd><p>Number of generators backing this instance.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ctranslate2.Generator.num_queued_batches">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_queued_batches</span></span><a class="headerlink" href="#ctranslate2.Generator.num_queued_batches" title="Permalink to this definition"></a></dt>
+<dd><p>Number of batches waiting to be processed.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ctranslate2.Generator.tensor_parallel">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tensor_parallel</span></span><a class="headerlink" href="#ctranslate2.Generator.tensor_parallel" title="Permalink to this definition"></a></dt>
+<dd><p>Run model with tensor parallel mode.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ctranslate2.GenerationStepResult.html" class="btn btn-neutral float-left" title="GenerationStepResult" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ctranslate2.MpiInfo.html" class="btn btn-neutral float-right" title="MpiInfo" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

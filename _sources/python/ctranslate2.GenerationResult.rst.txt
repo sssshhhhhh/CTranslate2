@@ -1,0 +1,16 @@
+GenerationResult
+================
+
+.. autoclass:: ctranslate2.GenerationResult
+    :members:
+    :undoc-members:
+    :inherited-members:
+
+    **Inherits from:** :class:`pybind11_builtins.pybind11_object`
+
+    **Attributes:**
+
+    - :obj:`~ctranslate2.GenerationResult.logits`
+    - :obj:`~ctranslate2.GenerationResult.scores`
+    - :obj:`~ctranslate2.GenerationResult.sequences`
+    - :obj:`~ctranslate2.GenerationResult.sequences_ids`

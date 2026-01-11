@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transformers &mdash; CTranslate2 4.6.3 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.png"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Python" href="../python/overview.html" />
+    <link rel="prev" title="OPUS-MT" href="opus_mt.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> CTranslate2
+          </a>
+              <div class="version">
+                4.6
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Get started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tasks</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../translation.html">Text translation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../generation.html">Text generation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../encoding.html">Text encoding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../speech_recognition.html">Speech recognition</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer guides</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../conversion.html">Model conversion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quantization.html">Quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../decoding.html">Decoding features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parallel.html">Multithreading and parallelism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../memory.html">Memory management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance tips</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../environment_variables.html">Environment variables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Framework guides</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="fairseq.html">Fairseq</a></li>
+<li class="toctree-l1"><a class="reference internal" href="marian.html">Marian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="opennmt_py.html">OpenNMT-py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="opennmt_tf.html">OpenNMT-tf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="opus_mt.html">OPUS-MT</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Transformers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#special-tokens-in-translation">Special tokens in translation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bart">BART</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bert">BERT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bloom">BLOOM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#distilbert">DistilBERT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#falcon">Falcon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gemma-3-text-only">Gemma 3 (text only)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#llama-2">Llama 2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#marianmt">MarianMT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#m2m-100">M2M-100</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mpt">MPT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#nllb">NLLB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gpt-2">GPT-2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gptbigcode">GPTBigCode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gpt-j">GPT-J</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gpt-neox">GPT-NeoX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#opt">OPT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#qwen-3">Qwen 3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#t5">T5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#t5gemma">T5Gemma</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#whisper">Whisper</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../python/overview.html">Python</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Other information</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../hardware_support.html">Hardware support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../versioning.html">Versioning</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CTranslate2</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Transformers</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="transformers">
+<h1>Transformers<a class="headerlink" href="#transformers" title="Permalink to this heading"></a></h1>
+<p>CTranslate2 supports selected models from Hugging Face’s <a class="reference external" href="https://github.com/huggingface/transformers">Transformers</a>. The following models are currently supported:</p>
+<ul class="simple">
+<li><p>BART</p></li>
+<li><p>BERT</p></li>
+<li><p>BLOOM</p></li>
+<li><p>CodeGen</p></li>
+<li><p>DistilBERT</p></li>
+<li><p>Falcon</p></li>
+<li><p>Gemma 2</p></li>
+<li><p>Gemma 3 (text only)</p></li>
+<li><p>Llama</p></li>
+<li><p>M2M100</p></li>
+<li><p>MarianMT</p></li>
+<li><p>MBART</p></li>
+<li><p>MPT</p></li>
+<li><p>NLLB</p></li>
+<li><p>OpenAI GPT2</p></li>
+<li><p>GPTBigCode</p></li>
+<li><p>GPT-J</p></li>
+<li><p>GPT-NeoX</p></li>
+<li><p>OPT</p></li>
+<li><p>Pegasus</p></li>
+<li><p>Qwen 2.5</p></li>
+<li><p>Qwen 3</p></li>
+<li><p>T5</p></li>
+<li><p>T5Gemma</p></li>
+<li><p>Whisper</p></li>
+<li><p>XLM-RoBERTa</p></li>
+</ul>
+<p>The converter takes as argument the pretrained model name or the path to a model directory:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>transformers<span class="o">[</span>torch<span class="o">]</span>
+ct2-transformers-converter<span class="w"> </span>--model<span class="w"> </span>facebook/m2m100_418M<span class="w"> </span>--output_dir<span class="w"> </span>ct2_model
+</pre></div>
+</div>
+<section id="special-tokens-in-translation">
+<h2>Special tokens in translation<a class="headerlink" href="#special-tokens-in-translation" title="Permalink to this heading"></a></h2>
+<p>For other frameworks, the <code class="docutils literal notranslate"><span class="pre">Translator</span></code> methods implicitly add special tokens to the source input when required. For example, models converted from Fairseq or Marian will implicitly append <code class="docutils literal notranslate"><span class="pre">&lt;/s&gt;</span></code> to the source tokens.</p>
+<p>However, these special tokens are not implicitly added for Transformers models since they are already returned by the corresponding tokenizer:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">transformers</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tokenizer</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;Helsinki-NLP/opus-mt-en-de&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_ids_to_tokens</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;Hello world!&quot;</span><span class="p">))</span>
+<span class="go">[&#39;▁Hello&#39;, &#39;▁world&#39;, &#39;!&#39;, &#39;&lt;/s&gt;&#39;]</span>
+</pre></div>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>If you are not using the Hugging Face tokenizers, make sure to add these special tokens when required.</p>
+</div>
+</section>
+<section id="bart">
+<h2>BART<a class="headerlink" href="#bart" title="Permalink to this heading"></a></h2>
+<p>This example uses the <a class="reference external" href="https://huggingface.co/facebook/bart-large-cnn">BART</a> model that was fine-tuned on CNN Daily Mail for text summarization.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ct2-transformers-converter<span class="w"> </span>--model<span class="w"> </span>facebook/bart-large-cnn<span class="w"> </span>--output_dir<span class="w"> </span>bart-large-cnn
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ctranslate2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">transformers</span>
+
+<span class="n">translator</span> <span class="o">=</span> <span class="n">ctranslate2</span><span class="o">.</span><span class="n">Translator</span><span class="p">(</span><span class="s2">&quot;bart-large-cnn&quot;</span><span class="p">)</span>
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;facebook/bart-large-cnn&quot;</span><span class="p">)</span>
+
+<span class="n">text</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">&quot;PG&amp;E stated it scheduled the blackouts in response to forecasts for high winds &quot;</span>
+    <span class="s2">&quot;amid dry conditions. &quot;</span>
+    <span class="s2">&quot;The aim is to reduce the risk of wildfires. &quot;</span>
+    <span class="s2">&quot;Nearly 800 thousand customers were scheduled to be affected by the shutoffs which &quot;</span>
+    <span class="s2">&quot;were expected to last through at least midday tomorrow.&quot;</span>
+<span class="p">)</span>
+
+<span class="n">source</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_ids_to_tokens</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">translator</span><span class="o">.</span><span class="n">translate_batch</span><span class="p">([</span><span class="n">source</span><span class="p">])</span>
+<span class="n">target</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">hypotheses</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_tokens_to_ids</span><span class="p">(</span><span class="n">target</span><span class="p">),</span> <span class="n">skip_special_tokens</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+<section id="bert">
+<h2>BERT<a class="headerlink" href="#bert" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://huggingface.co/docs/transformers/model_doc/bert">BERT</a> is a pretrained model on English language using a masked language modeling objective.</p>
+<p>CTranslate2 only implements the <code class="docutils literal notranslate"><span class="pre">BertModel</span></code> class from Transformers which includes the Transformer encoder and the pooling layer. Task-specific layers should be run with PyTorch as shown in the example below.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ct2-transformers-converter<span class="w"> </span>--model<span class="w"> </span>textattack/bert-base-uncased-yelp-polarity<span class="w"> </span>--output_dir<span class="w"> </span>bert-base-uncased-yelp-polarity
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ctranslate2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">transformers</span>
+
+<span class="n">device</span> <span class="o">=</span> <span class="s2">&quot;cuda&quot;</span>
+<span class="n">encoder</span> <span class="o">=</span> <span class="n">ctranslate2</span><span class="o">.</span><span class="n">Encoder</span><span class="p">(</span><span class="s2">&quot;bert-base-uncased-yelp-polarity&quot;</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+
+<span class="n">model_name</span> <span class="o">=</span> <span class="s2">&quot;textattack/bert-base-uncased-yelp-polarity&quot;</span>
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">model_name</span><span class="p">)</span>
+<span class="n">classifier</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">AutoModelForSequenceClassification</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">model_name</span><span class="p">)</span><span class="o">.</span><span class="n">classifier</span>
+<span class="n">classifier</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="n">classifier</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+
+<span class="n">inputs</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;It was good!&quot;</span><span class="p">,</span> <span class="s2">&quot;Worst experience in my life.&quot;</span><span class="p">,</span> <span class="s2">&quot;It was not good.&quot;</span><span class="p">]</span>
+<span class="n">tokens</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span><span class="o">.</span><span class="n">input_ids</span>
+
+<span class="n">output</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">forward_batch</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+<span class="n">pooler_output</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">pooler_output</span>
+
+<span class="k">if</span> <span class="n">device</span> <span class="o">==</span> <span class="s2">&quot;cuda&quot;</span><span class="p">:</span>
+    <span class="n">pooler_output</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">pooler_output</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">pooler_output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pooler_output</span><span class="p">)</span>
+    <span class="n">pooler_output</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">pooler_output</span><span class="p">)</span>
+
+<span class="n">logits</span> <span class="o">=</span> <span class="n">classifier</span><span class="p">(</span><span class="n">pooler_output</span><span class="p">)</span>
+<span class="n">predicted_class_ids</span> <span class="o">=</span> <span class="n">logits</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">predicted_class_ids</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="bloom">
+<h2>BLOOM<a class="headerlink" href="#bloom" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://huggingface.co/docs/transformers/model_doc/bloom">BLOOM</a> is a collection of multilingual language models trained by the <a class="reference external" href="https://bigscience.huggingface.co/">BigScience workshop</a>.</p>
+<p>This example uses the smallest model with 560M parameters.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ct2-transformers-converter<span class="w"> </span>--model<span class="w"> </span>bigscience/bloom-560m<span class="w"> </span>--output_dir<span class="w"> </span>bloom-560m
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ctranslate2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">transformers</span>
+
+<span class="n">generator</span> <span class="o">=</span> <span class="n">ctranslate2</span><span class="o">.</span><span class="n">Generator</span><span class="p">(</span><span class="s2">&quot;bloom-560m&quot;</span><span class="p">)</span>
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;bigscience/bloom-560m&quot;</span><span class="p">)</span>
+
+<span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Hello, I am&quot;</span>
+<span class="n">start_tokens</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_ids_to_tokens</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">generate_batch</span><span class="p">([</span><span class="n">start_tokens</span><span class="p">],</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">sampling_topk</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sequences_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+</pre></div>
+</div>
+</section>
+<section id="distilbert">
+<h2>DistilBERT<a class="headerlink" href="#distilbert" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://huggingface.co/docs/transformers/model_doc/distilbert">DistilBERT</a> is a small, fast, cheap and light Transformer Encoder model trained by distilling BERT base.</p>
+<p>CTranslate2 only implements the <code class="docutils literal notranslate"><span class="pre">DistilBertModel</span></code> class from Transformers which includes the Transformer encoder. Task-specific layers should be run with PyTorch, similar to the example for <a class="reference internal" href="#bert"><span class="std std-ref">BERT</span></a>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ct2-transformers-converter<span class="w"> </span>--model<span class="w"> </span>distilbert-base-uncased<span class="w"> </span>--output_dir<span class="w"> </span>distilbert-base-uncased
+</pre></div>
+</div>
+</section>
+<section id="falcon">
+<h2>Falcon<a class="headerlink" href="#falcon" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://huggingface.co/tiiuae/falcon-7b">Falcon</a> is a collection of generative language models trained by <a class="reference external" href="https://www.tii.ae/">TII</a>. The example below uses “Falcon-7B-Instruct” which is based on “Falcon-7B” and finetuned on a mixture of chat/instruct datasets.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ct2-transformers-converter<span class="w"> </span>--model<span class="w"> </span>tiiuae/falcon-7b-instruct<span class="w"> </span>--quantization<span class="w"> </span>float16<span class="w"> </span>--output_dir<span class="w"> </span>falcon-7b-instruct<span class="w"> </span>--trust_remote_code
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ctranslate2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">transformers</span>
+
+<span class="n">generator</span> <span class="o">=</span> <span class="n">ctranslate2</span><span class="o">.</span><span class="n">Generator</span><span class="p">(</span><span class="s2">&quot;falcon-7b-instruct&quot;</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">)</span>
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;tiiuae/falcon-7b-instruct&quot;</span><span class="p">)</span>
+
+<span class="n">prompt</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">&quot;Girafatron is obsessed with giraffes, the most glorious animal on the face of this Earth. &quot;</span>
+    <span class="s2">&quot;Giraftron believes all other animals are irrelevant when compared to the glorious majesty &quot;</span>
+    <span class="s2">&quot;of the giraffe.</span><span class="se">\n</span><span class="s2">Daniel: Hello, Girafatron!</span><span class="se">\n</span><span class="s2">Girafatron:&quot;</span>
+<span class="p">)</span>
+
+<span class="n">tokens</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_ids_to_tokens</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">prompt</span><span class="p">))</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">generate_batch</span><span class="p">([</span><span class="n">tokens</span><span class="p">],</span> <span class="n">sampling_topk</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">include_prompt_in_result</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sequences_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="gemma-3-text-only">
+<h2>Gemma 3 (text only)<a class="headerlink" href="#gemma-3-text-only" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://ai.google.dev/gemma/docs/core">Gemma 3</a> is Google’s latest family of lightweight, open-weight AI models, built on the same technology as Gemini.</p>
+<p>Gemma models come in two flavors: instruction tuned (it) models and base models.</p>
+<p>Instruction tuned models expect a specific <a class="reference external" href="https://ai.google.dev/gemma/docs/core/prompt-structure">prompt template format</a> which you should use.</p>
+<p>When converting an instruction-tuned model, CTranslate sets <code class="docutils literal notranslate"><span class="pre">&lt;end_of_turn&gt;</span></code> as the default end-of-sequence token.</p>
+<p>To convert a model:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ct2-transformers-converter<span class="w"> </span>--model<span class="w"> </span>google/gemma-3-1b-it<span class="w"> </span>--output_dir<span class="w"> </span>gemma-3-1b-it
+</pre></div>
+</div>
+<p>Gemma 3 usage sample:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">transformers</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoTokenizer</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ctranslate2</span>
+
+<span class="n">tok</span> <span class="o">=</span> <span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;google/gemma-3-1b-it&quot;</span><span class="p">)</span>
+<span class="n">gen</span> <span class="o">=</span> <span class="n">ctranslate2</span><span class="o">.</span><span class="n">Generator</span><span class="p">(</span><span class="s2">&quot;gemma-3-1b-it&quot;</span><span class="p">)</span>
+
+<span class="n">prompt</span> <span class="o">=</span> <span class="s2">&quot;&lt;start_of_turn&gt;user</span><span class="se">\n</span><span class="s2">Generate a 200 word text talking about George Orwell.&lt;end_of_turn&gt;</span><span class="se">\n</span><span class="s2">&lt;start_of_turn&gt;model</span><span class="se">\n</span><span class="s2">&quot;</span>
+<span class="n">tokens</span> <span class="o">=</span> <span class="n">tok</span><span class="o">.</span><span class="n">convert_ids_to_tokens</span><span class="p">(</span><span class="n">tok</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">prompt</span><span class="p">))</span>
+
+<span class="n">res</span> <span class="o">=</span> <span class="n">gen</span><span class="o">.</span><span class="n">generate_batch</span><span class="p">([</span><span class="n">tokens</span><span class="p">],</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">2048</span><span class="p">,</span> <span class="n">sampling_temperature</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">include_prompt_in_result</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">tok</span><span class="o">.</span><span class="n">convert_tokens_to_string</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sequences</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+</pre></div>
+</div>
+</section>
+<section id="llama-2">
+<h2>Llama 2<a class="headerlink" href="#llama-2" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://ai.meta.com/llama/">Llama 2</a> is a collection of pretrained and fine-tuned generative text models ranging in scale from 7 billion to 70 billion parameters.</p>
+<p>The models with the suffix “-hf” such as <a class="reference external" href="https://huggingface.co/meta-llama/Llama-2-7b-chat-hf">meta-llama/Llama-2-7b-chat-hf</a> can be converted with the Transformers converter. For example:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ct2-transformers-converter<span class="w"> </span>--model<span class="w"> </span>meta-llama/Llama-2-7b-chat-hf<span class="w"> </span>--quantization<span class="w"> </span>float16<span class="w"> </span>--output_dir<span class="w"> </span>llama-2-7b-chat-ct2
+</pre></div>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>You need to request an access to the Llama 2 models before you can download them from the Hugging Face Hub. See the instructions on the <a class="reference external" href="https://huggingface.co/meta-llama/Llama-2-7b-chat-hf">model page</a>. Once you have access to the model, you should login with <code class="docutils literal notranslate"><span class="pre">huggingface-cli</span> <span class="pre">login</span></code> before running the conversion command.</p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>The example <a class="reference external" href="https://github.com/OpenNMT/CTranslate2/tree/master/examples/llama2">Chat with Llama 2</a> which demonstrates how to implement an interactive chat session using CTranslate2.</p>
+</div>
+</section>
+<section id="marianmt">
+<h2>MarianMT<a class="headerlink" href="#marianmt" title="Permalink to this heading"></a></h2>
+<p>This example uses the English-German model from <a class="reference external" href="https://huggingface.co/docs/transformers/model_doc/marian">MarianMT</a>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ct2-transformers-converter<span class="w"> </span>--model<span class="w"> </span>Helsinki-NLP/opus-mt-en-de<span class="w"> </span>--output_dir<span class="w"> </span>opus-mt-en-de
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ctranslate2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">transformers</span>
+
+<span class="n">translator</span> <span class="o">=</span> <span class="n">ctranslate2</span><span class="o">.</span><span class="n">Translator</span><span class="p">(</span><span class="s2">&quot;opus-mt-en-de&quot;</span><span class="p">)</span>
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;Helsinki-NLP/opus-mt-en-de&quot;</span><span class="p">)</span>
+
+<span class="n">source</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_ids_to_tokens</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;Hello world!&quot;</span><span class="p">))</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">translator</span><span class="o">.</span><span class="n">translate_batch</span><span class="p">([</span><span class="n">source</span><span class="p">])</span>
+<span class="n">target</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">hypotheses</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_tokens_to_ids</span><span class="p">(</span><span class="n">target</span><span class="p">)))</span>
+</pre></div>
+</div>
+</section>
+<section id="m2m-100">
+<h2>M2M-100<a class="headerlink" href="#m2m-100" title="Permalink to this heading"></a></h2>
+<p>This example uses the <a class="reference external" href="https://huggingface.co/docs/transformers/model_doc/m2m_100">M2M-100</a> multilingual model.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ct2-transformers-converter<span class="w"> </span>--model<span class="w"> </span>facebook/m2m100_418M<span class="w"> </span>--output_dir<span class="w"> </span>m2m100_418
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ctranslate2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">transformers</span>
+
+<span class="n">translator</span> <span class="o">=</span> <span class="n">ctranslate2</span><span class="o">.</span><span class="n">Translator</span><span class="p">(</span><span class="s2">&quot;m2m100_418&quot;</span><span class="p">)</span>
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;facebook/m2m100_418M&quot;</span><span class="p">)</span>
+<span class="n">tokenizer</span><span class="o">.</span><span class="n">src_lang</span> <span class="o">=</span> <span class="s2">&quot;en&quot;</span>
+
+<span class="n">source</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_ids_to_tokens</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;Hello world!&quot;</span><span class="p">))</span>
+<span class="n">target_prefix</span> <span class="o">=</span> <span class="p">[</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">lang_code_to_token</span><span class="p">[</span><span class="s2">&quot;de&quot;</span><span class="p">]]</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">translator</span><span class="o">.</span><span class="n">translate_batch</span><span class="p">([</span><span class="n">source</span><span class="p">],</span> <span class="n">target_prefix</span><span class="o">=</span><span class="p">[</span><span class="n">target_prefix</span><span class="p">])</span>
+<span class="n">target</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">hypotheses</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_tokens_to_ids</span><span class="p">(</span><span class="n">target</span><span class="p">)))</span>
+</pre></div>
+</div>
+</section>
+<section id="mpt">
+<h2>MPT<a class="headerlink" href="#mpt" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://huggingface.co/mosaicml/mpt-7b">MPT-7B</a> is a decoder-style transformer pretrained from scratch on 1T tokens of English text and code. This model was trained by <a class="reference external" href="https://www.mosaicml.com/">MosaicML</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The code is included in the model so you should pass <code class="docutils literal notranslate"><span class="pre">--trust_remote_code</span></code> to the conversion command.</p>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ct2-transformers-converter<span class="w"> </span>--model<span class="w"> </span>mosaicml/mpt-7b<span class="w"> </span>--output_dir<span class="w"> </span>mpt-7b<span class="w"> </span>--quantization<span class="w"> </span>int8_float16<span class="w"> </span>--trust_remote_code
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ctranslate2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">transformers</span>
+
+<span class="n">generator</span> <span class="o">=</span> <span class="n">ctranslate2</span><span class="o">.</span><span class="n">Generator</span><span class="p">(</span><span class="s2">&quot;mpt-7b&quot;</span><span class="p">)</span>
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;EleutherAI/gpt-neox-20b&quot;</span><span class="p">)</span>
+
+<span class="n">prompt</span> <span class="o">=</span> <span class="s2">&quot;In a shocking finding, scientists&quot;</span>
+<span class="n">tokens</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_ids_to_tokens</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">prompt</span><span class="p">))</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">generate_batch</span><span class="p">([</span><span class="n">tokens</span><span class="p">],</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">sampling_topk</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">text</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sequences_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="nllb">
+<h2>NLLB<a class="headerlink" href="#nllb" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://huggingface.co/docs/transformers/model_doc/nllb">NLLB</a> is a collection of multilingual models trained by Meta and supporting 200 languages. See <a class="reference external" href="https://github.com/facebookresearch/flores/blob/main/flores200/README.md#languages-in-flores-200">here</a> for the list of accepted language codes.</p>
+<p>The example below uses the smallest version with 600M parameters.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Converting NLLB models requires <code class="docutils literal notranslate"><span class="pre">transformers&gt;=4.21.0</span></code>.</p>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ct2-transformers-converter<span class="w"> </span>--model<span class="w"> </span>facebook/nllb-200-distilled-600M<span class="w"> </span>--output_dir<span class="w"> </span>nllb-200-distilled-600M
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ctranslate2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">transformers</span>
+
+<span class="n">src_lang</span> <span class="o">=</span> <span class="s2">&quot;eng_Latn&quot;</span>
+<span class="n">tgt_lang</span> <span class="o">=</span> <span class="s2">&quot;fra_Latn&quot;</span>
+
+<span class="n">translator</span> <span class="o">=</span> <span class="n">ctranslate2</span><span class="o">.</span><span class="n">Translator</span><span class="p">(</span><span class="s2">&quot;nllb-200-distilled-600M&quot;</span><span class="p">)</span>
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;facebook/nllb-200-distilled-600M&quot;</span><span class="p">,</span> <span class="n">src_lang</span><span class="o">=</span><span class="n">src_lang</span><span class="p">)</span>
+
+<span class="n">source</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_ids_to_tokens</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;Hello world!&quot;</span><span class="p">))</span>
+<span class="n">target_prefix</span> <span class="o">=</span> <span class="p">[</span><span class="n">tgt_lang</span><span class="p">]</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">translator</span><span class="o">.</span><span class="n">translate_batch</span><span class="p">([</span><span class="n">source</span><span class="p">],</span> <span class="n">target_prefix</span><span class="o">=</span><span class="p">[</span><span class="n">target_prefix</span><span class="p">])</span>
+<span class="n">target</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">hypotheses</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_tokens_to_ids</span><span class="p">(</span><span class="n">target</span><span class="p">)))</span>
+</pre></div>
+</div>
+</section>
+<section id="gpt-2">
+<h2>GPT-2<a class="headerlink" href="#gpt-2" title="Permalink to this heading"></a></h2>
+<p>This example uses the small <a class="reference external" href="https://huggingface.co/docs/transformers/model_doc/gpt2">GPT-2</a> model.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ct2-transformers-converter<span class="w"> </span>--model<span class="w"> </span>gpt2<span class="w"> </span>--output_dir<span class="w"> </span>gpt2_ct2
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ctranslate2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">transformers</span>
+
+<span class="n">generator</span> <span class="o">=</span> <span class="n">ctranslate2</span><span class="o">.</span><span class="n">Generator</span><span class="p">(</span><span class="s2">&quot;gpt2_ct2&quot;</span><span class="p">)</span>
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;gpt2&quot;</span><span class="p">)</span>
+
+<span class="c1"># Unconditional generation.</span>
+<span class="n">start_tokens</span> <span class="o">=</span> <span class="p">[</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">bos_token</span><span class="p">]</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">generate_batch</span><span class="p">([</span><span class="n">start_tokens</span><span class="p">],</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">sampling_topk</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sequences_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+<span class="c1"># Conditional generation.</span>
+<span class="n">start_tokens</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_ids_to_tokens</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;It is&quot;</span><span class="p">))</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">generate_batch</span><span class="p">([</span><span class="n">start_tokens</span><span class="p">],</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">sampling_topk</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sequences_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+</pre></div>
+</div>
+</section>
+<section id="gptbigcode">
+<h2>GPTBigCode<a class="headerlink" href="#gptbigcode" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://huggingface.co/docs/transformers/model_doc/gpt_bigcode">GPTBigCode</a> model was first proposed in SantaCoder: don’t reach for the stars, and used by models like StarCoder.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ct2-transformers-converter<span class="w"> </span>--model<span class="w"> </span>bigcode/starcoder<span class="w"> </span>--revision<span class="w"> </span>main<span class="w"> </span>--quantization<span class="w"> </span>float16<span class="w"> </span>--output_dir<span class="w"> </span>starcoder_ct2
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ctranslate2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">transformers</span>
+
+<span class="n">generator</span> <span class="o">=</span> <span class="n">ctranslate2</span><span class="o">.</span><span class="n">Generator</span><span class="p">(</span><span class="s2">&quot;starcoder_ct2&quot;</span><span class="p">)</span>
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;bigcode/starcoder&quot;</span><span class="p">)</span>
+
+<span class="n">prompt</span> <span class="o">=</span> <span class="s2">&quot;&lt;fim_prefix&gt;def print_hello_world():</span><span class="se">\n</span><span class="s2">    &lt;fim_suffix&gt;</span><span class="se">\n</span><span class="s2">    print(&#39;Hello world!&#39;)&lt;fim_middle&gt;&quot;</span>
+<span class="n">tokens</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_ids_to_tokens</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">prompt</span><span class="p">))</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">generate_batch</span><span class="p">([</span><span class="n">tokens</span><span class="p">],</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">include_prompt_in_result</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="n">text</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sequences_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="gpt-j">
+<h2>GPT-J<a class="headerlink" href="#gpt-j" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://huggingface.co/docs/transformers/model_doc/gptj">GPT-J</a> is a GPT-2-like language model trained on the Pile dataset. The example below uses the version with 6B parameters:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ct2-transformers-converter<span class="w"> </span>--model<span class="w"> </span>EleutherAI/gpt-j-6B<span class="w"> </span>--revision<span class="w"> </span>float16<span class="w"> </span>--quantization<span class="w"> </span>float16<span class="w"> </span>--output_dir<span class="w"> </span>gptj_ct2
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>To reduce the memory usage during conversion, the command above uses the <a class="reference external" href="https://huggingface.co/EleutherAI/gpt-j-6b/tree/float16">float16 branch</a> of the model and saves the weights in FP16. Still, the conversion will use up to 24GB of memory.</p>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ctranslate2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">transformers</span>
+
+<span class="n">generator</span> <span class="o">=</span> <span class="n">ctranslate2</span><span class="o">.</span><span class="n">Generator</span><span class="p">(</span><span class="s2">&quot;gptj_ct2&quot;</span><span class="p">)</span>
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;EleutherAI/gpt-j-6B&quot;</span><span class="p">)</span>
+
+<span class="n">prompt</span> <span class="o">=</span> <span class="s2">&quot;In a shocking finding, scientists&quot;</span>
+<span class="n">tokens</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_ids_to_tokens</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">prompt</span><span class="p">))</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">generate_batch</span><span class="p">([</span><span class="n">tokens</span><span class="p">],</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">sampling_topk</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">text</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sequences_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="gpt-neox">
+<h2>GPT-NeoX<a class="headerlink" href="#gpt-neox" title="Permalink to this heading"></a></h2>
+<p>The <a class="reference external" href="https://huggingface.co/docs/transformers/model_doc/gpt_neox">GPT-NeoX</a> architecture was first introduced by EleutherAI with “GPT-NeoX-20B”, a 20 billion parameter autoregressive language model trained on the Pile.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ct2-transformers-converter<span class="w"> </span>--model<span class="w"> </span>EleutherAI/gpt-neox-20b<span class="w"> </span>--quantization<span class="w"> </span>float16<span class="w"> </span>--output_dir<span class="w"> </span>gpt_neox_ct2
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ctranslate2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">transformers</span>
+
+<span class="n">generator</span> <span class="o">=</span> <span class="n">ctranslate2</span><span class="o">.</span><span class="n">Generator</span><span class="p">(</span><span class="s2">&quot;gpt_neox_ct2&quot;</span><span class="p">)</span>
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;EleutherAI/gpt-neox-20b&quot;</span><span class="p">)</span>
+
+<span class="n">prompt</span> <span class="o">=</span> <span class="s2">&quot;GPTNeoX20B is a 20B-parameter autoregressive Transformer model developed by EleutherAI.&quot;</span>
+<span class="n">tokens</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_ids_to_tokens</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">prompt</span><span class="p">))</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">generate_batch</span><span class="p">(</span>
+    <span class="p">[</span><span class="n">tokens</span><span class="p">],</span>
+    <span class="n">max_length</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+    <span class="n">sampling_topk</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+    <span class="n">sampling_temperature</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">text</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sequences_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="opt">
+<h2>OPT<a class="headerlink" href="#opt" title="Permalink to this heading"></a></h2>
+<p>This example uses Meta’s <a class="reference external" href="https://huggingface.co/docs/transformers/model_doc/opt">OPT</a> model with 350M parameters. The usage is similar to GPT-2 but all inputs should start with the special token <code class="docutils literal notranslate"><span class="pre">&lt;/s&gt;</span></code> which is automatically added by <code class="docutils literal notranslate"><span class="pre">GPT2Tokenizer</span></code>.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Converting OPT models requires <code class="docutils literal notranslate"><span class="pre">transformers&gt;=4.20.1</span></code>.</p>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>If you plan to <a class="reference internal" href="../quantization.html"><span class="doc std std-doc">quantize</span></a> OPT models to 8-bit, it is recommended to download the corresponding activation scales from the <a class="reference external" href="https://github.com/mit-han-lab/smoothquant/tree/main/act_scales">SmoothQuant repository</a> and pass them to the converter option <code class="docutils literal notranslate"><span class="pre">--activation_scales</span></code>. Some weights will be rescaled to smooth the intermediate activations and improve the quantization accuracy.</p>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ct2-transformers-converter<span class="w"> </span>--model<span class="w"> </span>facebook/opt-350m<span class="w"> </span>--output_dir<span class="w"> </span>opt-350m-ct2
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ctranslate2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">transformers</span>
+
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">GPT2Tokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;facebook/opt-350m&quot;</span><span class="p">)</span>
+<span class="n">generator</span> <span class="o">=</span> <span class="n">ctranslate2</span><span class="o">.</span><span class="n">Generator</span><span class="p">(</span><span class="s2">&quot;opt-350m-ct2&quot;</span><span class="p">)</span>
+
+<span class="n">prompt</span> <span class="o">=</span> <span class="s2">&quot;Hey, are you conscious? Can you talk to me?&quot;</span>
+<span class="n">start_tokens</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_ids_to_tokens</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">prompt</span><span class="p">))</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">generate_batch</span><span class="p">([</span><span class="n">start_tokens</span><span class="p">],</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+
+<span class="n">output</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sequences_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="qwen-3">
+<h2>Qwen 3<a class="headerlink" href="#qwen-3" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://github.com/QwenLM/Qwen3">Qwen 3</a> are a collection of large language models developed by the Alibaba Group. A key feature is allows switching between “thinking mode” for complex reasoning and a “non-thinking mode” for efficient general chat.</p>
+<p>To convert a model:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ct2-transformers-converter<span class="w"> </span>--model<span class="w"> </span>Qwen/Qwen3-4B<span class="w"> </span>--quantization<span class="w"> </span>float16<span class="w"> </span>--output_dir<span class="w"> </span>qwen3-4b-ct2
+</pre></div>
+</div>
+<p>Usage Sample</p>
+<p>You can use the converted model for text generation with ctranslate2.Generator. For Qwen 3 instruction-tuned models, you should use the Hugging Face tokenizer’s apply_chat_template method to correctly format your prompts, especially when dealing with the optional “thinking mode”. Currently MoE models variants are not supported.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ctranslate2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">transformers</span>
+
+<span class="n">generator</span> <span class="o">=</span> <span class="n">ctranslate2</span><span class="o">.</span><span class="n">Generator</span><span class="p">(</span><span class="s2">&quot;qwen3-4b-ct2&quot;</span><span class="p">)</span>
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;Qwen/Qwen3-4B&quot;</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">generate</span><span class="p">(</span><span class="n">prompt</span><span class="p">):</span>
+    <span class="n">tokens</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_ids_to_tokens</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span> <span class="n">add_special_tokens</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">generate_batch</span><span class="p">([</span><span class="n">tokens</span><span class="p">],</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">2048</span><span class="p">,</span> <span class="n">sampling_temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">include_prompt_in_result</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sequences_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+<span class="n">prompt_base</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;&lt;|im_start|&gt;user</span>
+<span class="s2">A train leaves Station A at 60 mph heading towards Station B, 300 miles away. At the same time, another train leaves Station B at 40 mph heading towards Station A. When will they meet and how far from Station A?</span>
+<span class="s2">&lt;|im_end|&gt;</span>
+<span class="s2">&lt;|im_start|&gt;assistant&quot;&quot;&quot;</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Non-thinking:</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;-&quot;</span><span class="o">*</span><span class="mi">60</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">generate</span><span class="p">(</span><span class="n">prompt_base</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&lt;think&gt;&lt;/think&gt;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">))</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Thinking:</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span><span class="o">*</span><span class="mi">60</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">generate</span><span class="p">(</span><span class="n">prompt_base</span><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+<section id="t5">
+<h2>T5<a class="headerlink" href="#t5" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://huggingface.co/docs/transformers/model_doc/t5">T5</a> is an encoder-decoder model pre-trained on a multi-task mixture of unsupervised and supervised tasks and for which each task is converted into a text-to-text format.</p>
+<p>The example below uses the <code class="docutils literal notranslate"><span class="pre">t5-small</span></code> and machine translation input.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The variants T5v1.1, mT5, and FLAN-T5 are also supported.</p>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ct2-transformers-converter<span class="w"> </span>--model<span class="w"> </span>t5-small<span class="w"> </span>--output_dir<span class="w"> </span>t5-small-ct2
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ctranslate2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">transformers</span>
+
+<span class="n">translator</span> <span class="o">=</span> <span class="n">ctranslate2</span><span class="o">.</span><span class="n">Translator</span><span class="p">(</span><span class="s2">&quot;t5-small-ct2&quot;</span><span class="p">)</span>
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;t5-small&quot;</span><span class="p">)</span>
+
+<span class="n">input_text</span> <span class="o">=</span> <span class="s2">&quot;translate English to German: The house is wonderful.&quot;</span>
+<span class="n">input_tokens</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_ids_to_tokens</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">input_text</span><span class="p">))</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">translator</span><span class="o">.</span><span class="n">translate_batch</span><span class="p">([</span><span class="n">input_tokens</span><span class="p">])</span>
+
+<span class="n">output_tokens</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">hypotheses</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">output_text</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_tokens_to_ids</span><span class="p">(</span><span class="n">output_tokens</span><span class="p">))</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">output_text</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="t5gemma">
+<h2>T5Gemma<a class="headerlink" href="#t5gemma" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://deepmind.google/models/gemma/t5gemma/">T5Gemma</a> is collection of Google encoder-decoder models that provide a strong quality-inference efficiency tradeoff.</p>
+<p>To convert a model:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ct2-transformers-converter<span class="w"> </span>--model<span class="w"> </span>google/t5gemma-b-b-prefixlm-it<span class="w"> </span>--output_dir<span class="w"> </span>t5gemma_b_b_prefixlm_it.ct2
+</pre></div>
+</div>
+<p>Usage:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ctranslate2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">transformers</span>
+
+<span class="n">translator</span> <span class="o">=</span> <span class="n">ctranslate2</span><span class="o">.</span><span class="n">Translator</span><span class="p">(</span><span class="s2">&quot;t5gemma_b_b_prefixlm_it.ct2&quot;</span><span class="p">)</span>
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;google/t5gemma-b-b-prefixlm-it&quot;</span><span class="p">)</span>
+
+<span class="n">sentences</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Question: Why is the sky blue? Answer:&quot;</span><span class="p">]</span>
+
+<span class="c1"># Tokenize each sentence</span>
+<span class="n">tokenized_sentences</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_ids_to_tokens</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">sentence</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">sentence</span> <span class="ow">in</span> <span class="n">sentences</span>
+<span class="p">]</span>
+
+<span class="n">translated_batches</span> <span class="o">=</span> <span class="n">translator</span><span class="o">.</span><span class="n">translate_batch</span><span class="p">(</span><span class="n">tokenized_sentences</span><span class="p">,</span> <span class="n">beam_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">repetition_penalty</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span> <span class="n">max_decoding_length</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+
+
+<span class="c1"># Decode results</span>
+<span class="n">translations</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_tokens_to_ids</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">hypotheses</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">translated_batches</span>
+<span class="p">]</span>
+<span class="n">final_translation</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">translations</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">final_translation</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="whisper">
+<h2>Whisper<a class="headerlink" href="#whisper" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://huggingface.co/docs/transformers/model_doc/whisper">Whisper</a> is a multilingual speech recognition model published by OpenAI.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Converting Whisper models requires <code class="docutils literal notranslate"><span class="pre">transformers&gt;=4.23.0</span></code>.</p>
+</div>
+<p>The example below uses the smallest model with 39M parameters. Consider using a <a class="reference external" href="https://huggingface.co/models?other=whisper">larger model</a> to get better results.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ct2-transformers-converter<span class="w"> </span>--model<span class="w"> </span>openai/whisper-tiny<span class="w"> </span>--output_dir<span class="w"> </span>whisper-tiny-ct2
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ctranslate2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">librosa</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">transformers</span>
+
+<span class="c1"># Load and resample the audio file.</span>
+<span class="n">audio</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">librosa</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;audio.wav&quot;</span><span class="p">,</span> <span class="n">sr</span><span class="o">=</span><span class="mi">16000</span><span class="p">,</span> <span class="n">mono</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Compute the features of the first 30 seconds of audio.</span>
+<span class="n">processor</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">WhisperProcessor</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;openai/whisper-tiny&quot;</span><span class="p">)</span>
+<span class="n">inputs</span> <span class="o">=</span> <span class="n">processor</span><span class="p">(</span><span class="n">audio</span><span class="p">,</span> <span class="n">return_tensors</span><span class="o">=</span><span class="s2">&quot;np&quot;</span><span class="p">,</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="mi">16000</span><span class="p">)</span>
+<span class="n">features</span> <span class="o">=</span> <span class="n">ctranslate2</span><span class="o">.</span><span class="n">StorageView</span><span class="o">.</span><span class="n">from_array</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">input_features</span><span class="p">)</span>
+
+<span class="c1"># Load the model on CPU.</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ctranslate2</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Whisper</span><span class="p">(</span><span class="s2">&quot;whisper-tiny-ct2&quot;</span><span class="p">)</span>
+
+<span class="c1"># Detect the language.</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">detect_language</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
+<span class="n">language</span><span class="p">,</span> <span class="n">probability</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Detected language </span><span class="si">%s</span><span class="s2"> with probability </span><span class="si">%f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">language</span><span class="p">,</span> <span class="n">probability</span><span class="p">))</span>
+
+<span class="c1"># Describe the task in the prompt.</span>
+<span class="c1"># See the prompt format in https://github.com/openai/whisper.</span>
+<span class="n">prompt</span> <span class="o">=</span> <span class="n">processor</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">convert_tokens_to_ids</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;&lt;|startoftranscript|&gt;&quot;</span><span class="p">,</span>
+        <span class="n">language</span><span class="p">,</span>
+        <span class="s2">&quot;&lt;|transcribe|&gt;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;&lt;|notimestamps|&gt;&quot;</span><span class="p">,</span>  <span class="c1"># Remove this token to generate timestamps.</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># Run generation for the 30-second window.</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="p">[</span><span class="n">prompt</span><span class="p">])</span>
+<span class="n">transcription</span> <span class="o">=</span> <span class="n">processor</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sequences_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">transcription</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This example only transcribes the first 30 seconds of audio. To transcribe longer files, you need to call <code class="docutils literal notranslate"><span class="pre">generate</span></code> on each 30-second window and aggregate the results. See the project <a class="reference external" href="https://github.com/guillaumekln/faster-whisper">faster-whisper</a> for a complete transcription example using CTranslate2.</p>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="opus_mt.html" class="btn btn-neutral float-left" title="OPUS-MT" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../python/overview.html" class="btn btn-neutral float-right" title="Python" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

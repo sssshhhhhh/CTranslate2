@@ -1,0 +1,26 @@
+Encoder
+=======
+
+.. autoclass:: ctranslate2.Encoder
+    :members:
+    :undoc-members:
+    :inherited-members:
+
+    **Inherits from:** :class:`pybind11_builtins.pybind11_object`
+
+    **Attributes:**
+
+    - :obj:`~ctranslate2.Encoder.compute_type`
+    - :obj:`~ctranslate2.Encoder.device`
+    - :obj:`~ctranslate2.Encoder.device_index`
+    - :obj:`~ctranslate2.Encoder.model_is_loaded`
+    - :obj:`~ctranslate2.Encoder.num_active_batches`
+    - :obj:`~ctranslate2.Encoder.num_encoders`
+    - :obj:`~ctranslate2.Encoder.num_queued_batches`
+    - :obj:`~ctranslate2.Encoder.tensor_parallel`
+
+    **Methods:**
+
+    - :obj:`~ctranslate2.Encoder.forward_batch`
+    - :obj:`~ctranslate2.Encoder.load_model`
+    - :obj:`~ctranslate2.Encoder.unload_model`

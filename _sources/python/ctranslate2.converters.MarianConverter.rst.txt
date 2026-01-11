@@ -1,0 +1,19 @@
+MarianConverter
+===============
+
+.. autoclass:: ctranslate2.converters.MarianConverter
+    :members:
+    :undoc-members:
+    :inherited-members:
+
+    **Inherits from:** :class:`ctranslate2.converters.Converter`
+
+    **Extended by:**
+
+    - :class:`ctranslate2.converters.OpusMTConverter`
+
+    **Methods:**
+
+    - :obj:`~ctranslate2.converters.MarianConverter.convert`
+    - :obj:`~ctranslate2.converters.MarianConverter.convert_from_args`
+    - :obj:`~ctranslate2.converters.MarianConverter.declare_arguments`
