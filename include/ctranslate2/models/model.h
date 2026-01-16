@@ -80,6 +80,14 @@ namespace ctranslate2 {
         return _effective_compute_type;
       }
 
+      DataType weight_type() const {
+        return get_default_weight_type(_effective_compute_type);
+      }
+
+      DataType float_type() const {
+        return get_default_float_type(_effective_compute_type);
+      }
+
       dim_t preferred_size_multiple() const {
         return _preferred_size_multiple;
       }
@@ -180,9 +188,6 @@ namespace ctranslate2 {
       void ensure_dtype(const std::string& name,
                         StorageView& variable,
                         const DataType target_dtype);
-      void quantize_lowp(const std::string& name,
-                         StorageView& variable,
-                         const DataType target_dtype);
       ComputeType infer_compute_type() const;
 
       Device _device = Device::CPU;

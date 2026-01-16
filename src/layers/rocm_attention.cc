@@ -372,11 +372,12 @@ namespace ctranslate2 {
       StorageView queries_proj(dtype, device);
       StorageView keys_proj(dtype, device);
       StorageView values_proj(dtype, device);
+      StorageView proj_input(_linear[0].input_type(), device);
 
       const StorageView* q = &queries;
       if (_layer_norm && _pre_norm) {
-        (*_layer_norm)(queries, queries_proj);
-        q = &queries_proj;
+        (*_layer_norm)(queries, proj_input);
+        q = &proj_input;
       }
 
       _linear[0](*q, fused_proj);
@@ -545,7 +546,13 @@ namespace ctranslate2 {
       } else {
         combine_heads(context, _num_heads, queries_padder, beam_size);
       }
-      _linear.back()(context, output, _layer_norm ? &queries : nullptr);
+
+      const StorageView* a = &context;
+      if (dtype != _linear.back().input_type()) {
+        context.to(proj_input);
+        a = &proj_input;
+      }
+      _linear.back()(*a, output, _layer_norm ? &queries : nullptr);
 
       if (_tensor_parallel) {
         Shape shape = output.shape();

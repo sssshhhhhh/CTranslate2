@@ -37,9 +37,24 @@ namespace ctranslate2 {
         break;
       }
 
+      case DataType::FLOAT8:
+      case DataType::BFLOAT8: {
+        if (input.device() != Device::CPU)
+          throw std::invalid_argument("FP8 dequantization is only supported on CPU");
+        const dim_t batch_size = input.size() / input.dim(-1);
+        if (!scale.is_scalar() && scale.size() != batch_size)
+          throw std::invalid_argument("FP8 dequantization expects scalar or per-batch scales");
+
+        if (output.dtype() == DataType::FLOAT8)
+          dequantize<Device::CPU, float8_t, float>(input, scale, output);
+        else
+          dequantize<Device::CPU, bfloat8_t, float>(input, scale, output);
+        break;
+      }
+
       default:
         throw std::invalid_argument("Dequantize: invalid quantized type " + dtype_name(input.dtype())
-                                    + ", expected int8 or int16");
+                                    + ", expected int8, int16, float8, or bfloat8");
       }
     }
 

@@ -129,6 +129,7 @@ namespace ctranslate2 {
             const std::string& scope,
             const ops::ActivationType* activation_type = nullptr,
             const bool is_layer_out = false);
+      DataType input_type() const;
       DataType output_type() const override;
       dim_t output_size() const override;
       void operator()(const StorageView& input, StorageView& output, const StorageView* residual = nullptr) const;
@@ -144,6 +145,7 @@ namespace ctranslate2 {
       StorageView _partial_bias;
       StorageView _partial_qscale;
       StorageView _partial_u8_shift_compensation;
+      const DataType _input_type;
       const DataType _output_type;
       const models::QUANTIZATION_TYPE _quant_method;
       const bool _quantized_gemm;

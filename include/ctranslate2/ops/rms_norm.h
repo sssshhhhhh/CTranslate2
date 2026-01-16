@@ -14,7 +14,7 @@ namespace ctranslate2 {
                       StorageView& output) const;
 
     private:
-      template <Device D, typename T>
+      template <Device D, typename In, typename Out>
       void compute(const StorageView& gamma,
                    const StorageView& input,
                    StorageView& output) const;

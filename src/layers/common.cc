@@ -48,7 +48,7 @@ namespace ctranslate2 {
 
     Embeddings::Embeddings(const models::Model& model, const std::string& scope)
       : _embeddings(model.get_variable(scope + "/weight"))
-      , _output_type(get_default_float_type(model.effective_compute_type()))
+      , _output_type(model.float_type())
       , _qscale(model.get_variable_if_exists(scope + "/weight_scale"))
     {
     }
@@ -281,7 +281,8 @@ namespace ctranslate2 {
       , _partial_bias(_weight.device(), _bias ? _bias->dtype() : DataType::FLOAT32)
       , _partial_qscale(_weight.device(), DataType::FLOAT32)
       , _partial_u8_shift_compensation(_weight.device(), DataType::INT32)
-      , _output_type(get_default_float_type(model.effective_compute_type()))
+      , _input_type(is_lowp_type(model.weight_type()) ? model.weight_type() : model.float_type())
+      , _output_type(model.float_type())
       , _quant_method(model.quant_method())
       , _quantized_gemm(_weight.dtype() == DataType::INT16 || _weight.dtype() == DataType::INT8)
       , _gemm_op(/*alpha=*/1,
@@ -300,6 +301,10 @@ namespace ctranslate2 {
       , _activation_type(activation_type)
       , _is_layer_out(is_layer_out)
     {
+    }
+
+    DataType Dense::input_type() const {
+      return _input_type;
     }
 
     DataType Dense::output_type() const {

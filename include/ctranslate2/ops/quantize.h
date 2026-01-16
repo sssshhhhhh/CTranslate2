@@ -21,13 +21,15 @@ namespace ctranslate2 {
 
       void operator()(const StorageView& input,
                       StorageView& output,
-                      StorageView& scale) const;
+                      StorageView& scale,
+                      const ScaleType* scale_type = nullptr) const;
 
     private:
       template <Device D, typename InT, typename OutT>
       void quantize(const StorageView& input,
                     StorageView& output,
-                    StorageView& scale) const;
+                    StorageView& scale,
+                    const ScaleType scale_type = ScaleType::PER_LAYER) const;
 
       const ScaleType _int16_scale_type;
       const bool _shift_to_uint8;

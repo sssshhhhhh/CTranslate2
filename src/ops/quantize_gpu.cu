@@ -87,7 +87,8 @@ namespace ctranslate2 {
     template <Device D, typename InT, typename OutT>
     void Quantize::quantize(const StorageView& input,
                             StorageView& output,
-                            StorageView& scale) const {
+                            StorageView& scale,
+                            const ScaleType) const {
       if (_shift_to_uint8)
         throw std::invalid_argument("Shift to uin8_t is not defined on CUDA");
 
@@ -108,7 +109,8 @@ namespace ctranslate2 {
     template void                                                       \
     Quantize::quantize<Device::CUDA, T, int8_t>(const StorageView&,     \
                                                 StorageView&,           \
-                                                StorageView&) const;
+                                                StorageView&,           \
+                                                const ScaleType) const;
 
     DECLARE_IMPL(float)
     DECLARE_IMPL(float16_t)

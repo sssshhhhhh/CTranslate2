@@ -214,6 +214,21 @@ namespace ctranslate2 {
     cuda::binary_transform(a, b, c, size, cuda::multiplies<cuda::device_type<T>>());
   }
 
+  template <typename In, typename Out>
+  struct multiplies {
+    __device__ Out operator()(const In& lhs, const In& rhs) const {
+      return lhs * rhs;
+    }
+  };
+
+  template<>
+  template <typename In, typename Out>
+  void primitives<Device::CUDA>::mul(const In* a, const In* b, Out* c, dim_t size) {
+    using DeviceIn = cuda::device_type<In>;
+    using DeviceOut = cuda::device_type<Out>;
+    cuda::binary_transform(a, b, c, size, multiplies<DeviceIn, DeviceOut>());
+  }
+
   template<>
   template <typename T>
   void primitives<Device::CUDA>::mul_batch_broadcast(const T* a, const T* b, T* c,
@@ -769,6 +784,8 @@ namespace ctranslate2 {
   template void primitives<Device::CUDA>::max(const T*, const T*, T*, dim_t);           \
   template void primitives<Device::CUDA>::mul(T, const T*, T*, dim_t);                  \
   template void primitives<Device::CUDA>::mul(const T*, const T*, T*, dim_t);           \
+  template void primitives<Device::CUDA>::mul(const T*, const T*, float8_t*, dim_t);    \
+  template void primitives<Device::CUDA>::mul(const T*, const T*, bfloat8_t*, dim_t);   \
   template void primitives<Device::CUDA>::mul_batch_broadcast(const T*, const T*, T*,   \
                                                               dim_t, dim_t);            \
   template void primitives<Device::CUDA>::penalize_previous_tokens(T*, const T*,        \

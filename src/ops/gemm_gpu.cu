@@ -11,7 +11,7 @@ namespace ctranslate2 {
   namespace ops {
 
     template <typename T>
-    constexpr hipDataType get_hip_data_type() {
+    constexpr hipDataType hip_data_type() {
       if constexpr (std::is_same_v<T, float>)
         return HIP_R_32F;
       else if constexpr (std::is_same_v<T, float16_t>)
@@ -24,13 +24,12 @@ namespace ctranslate2 {
         return HIP_R_8F_E5M2;
     }
 
-    // c = _activation_type(scale_a(a) @ scale_b(b) + bias + residual)
-    // scale_a/b is supported with 2 modes:
-    // - FP8 scalar applied to the whole tensor
-    // - FP8 vector outer-dim len (m/n) [m,k]@[k,n]=[m,n] for each row/col
-    // Find supported solutions in msgpack hipblaslt/library/TensileLibrary_lazy_gfx0000.dat
-    // e.g. gfx1201 vector scale on both a/b only supported with bf16 output
-    template <Device D, typename In, typename Out>
+    template <typename T>
+    constexpr bool is_lowp() {
+      return std::is_same_v<T, float8_t> || std::is_same_v<T, bfloat8_t>;
+    }
+
+    template <Device D, typename In, typename Out, typename Bias>
     void Gemm::compute(const StorageView& a,
                        const StorageView& b,
                        StorageView& c,
@@ -39,6 +38,14 @@ namespace ctranslate2 {
                        const StorageView* residual,
                        const StorageView* scale_a,
                        const StorageView* scale_b) const {
+      // c = _activation_type(_alpha * (scale_a * a) @ (scale_b * b) + bias + residual)
+      // If _beta != 0, c = _activation_type(_alpha * (scale_a * a) @ (scale_b * b) + bias + _beta * c) + residual
+      // scale_a/b is supported with 2 modes:
+      // - FP8 scalar applied to the whole tensor
+      // - FP8 vector outer-dim len (m/n) [m,k]@[k,n]=[m,n] for each row/col
+      // Find supported solutions in msgpack hipblaslt/library/TensileLibrary_lazy_gfx0000.dat
+      // e.g. gfx1201 vector scale on b only supported with bf16 output
+
       const dim_t k = a.dim(_trans_a ? -2 : -1);
       const dim_t n = b.dim(_trans_b ? -2 : -1);
       const dim_t m = a.size() / k;  // Collapse leading dimensions.
@@ -63,14 +70,14 @@ namespace ctranslate2 {
         hipblasOperation_t trans_a = _trans_b ? HIPBLAS_OP_T : HIPBLAS_OP_N;
         hipblasOperation_t trans_b = _trans_a ? HIPBLAS_OP_T : HIPBLAS_OP_N;
 
-        hipDataType in_type = get_hip_data_type<In>();
-        hipDataType out_type = get_hip_data_type<Out>();
+        constexpr hipDataType in_type = hip_data_type<In>();
+        constexpr hipDataType out_type = hip_data_type<Out>();
+        constexpr hipDataType bias_type = hip_data_type<Bias>();
 
-        hipblasLtMatrixLayout_t mat_a, mat_b, mat_c, mat_d;
+        hipblasLtMatrixLayout_t mat_a, mat_b, mat_c;
         CUBLAS_CHECK(hipblasLtMatrixLayoutCreate(&mat_a, in_type, ldb, _trans_b ? n : k, ldb));
         CUBLAS_CHECK(hipblasLtMatrixLayoutCreate(&mat_b, in_type, lda, _trans_a ? k : m, lda));
         CUBLAS_CHECK(hipblasLtMatrixLayoutCreate(&mat_c, out_type, n, m, ldc));
-        CUBLAS_CHECK(hipblasLtMatrixLayoutCreate(&mat_d, out_type, n, m, ldc));
 
         hipblasLtMatmulDesc_t matmul;
         CUBLAS_CHECK(hipblasLtMatmulDescCreate(&matmul, HIPBLAS_COMPUTE_32F, HIP_R_32F));
@@ -83,50 +90,97 @@ namespace ctranslate2 {
                                                      &trans_b,
                                                      sizeof(int32_t)));
 
-        // Maybe could fuse act, note CUBLASLT_EPILOGUE_GELU_BIAS is tanh approx
-        hipblasLtEpilogue_t epilogue = bias ? HIPBLASLT_EPILOGUE_BIAS : HIPBLASLT_EPILOGUE_DEFAULT;
-        CUBLAS_CHECK(hipblasLtMatmulDescSetAttribute(matmul,
-                                                     HIPBLASLT_MATMUL_DESC_EPILOGUE,
-                                                     &epilogue,
-                                                     sizeof(epilogue)));
+        bool act_fused = true;
         if (bias) {
+          hipblasLtEpilogue_t epilogue = HIPBLASLT_EPILOGUE_BIAS;
+          if (_activation_type) {
+            switch (*_activation_type) {
+            case ActivationType::ReLU:
+              epilogue = HIPBLASLT_EPILOGUE_RELU_BIAS;
+              break;
+            case ActivationType::GELU:
+            case ActivationType::GELUTanh:
+            case ActivationType::GELUSigmoid: // only approx in low precision
+              if (*_activation_type == ActivationType::GELUTanh || is_lowp<In>())
+                epilogue = HIPBLASLT_EPILOGUE_GELU_BIAS;
+              else
+                act_fused = false;
+              break;
+            case ActivationType::Swish:
+              epilogue = HIPBLASLT_EPILOGUE_SWISH_BIAS_EXT;
+              break;
+            default:
+              act_fused = false;
+            }
+          }
+
+          CUBLAS_CHECK(hipblasLtMatmulDescSetAttribute(matmul,
+                                                       HIPBLASLT_MATMUL_DESC_EPILOGUE,
+                                                       &epilogue,
+                                                       sizeof(epilogue)));
           CUBLAS_CHECK(hipblasLtMatmulDescSetAttribute(matmul,
                                                        HIPBLASLT_MATMUL_DESC_BIAS_DATA_TYPE,
-                                                       &out_type,
-                                                       sizeof(out_type)));
-          const Out* d_bias = bias->data<Out>();
+                                                       &bias_type,
+                                                       sizeof(bias_type)));
+          const Bias* d_bias = bias->data<Bias>();
           CUBLAS_CHECK(hipblasLtMatmulDescSetAttribute(matmul,
                                                        HIPBLASLT_MATMUL_DESC_BIAS_POINTER,
                                                        &d_bias,
                                                        sizeof(void*)));
+        } else if (_activation_type) {
+          hipblasLtEpilogue_t epilogue;
+          switch (*_activation_type) {
+          case ActivationType::ReLU:
+            epilogue = HIPBLASLT_EPILOGUE_RELU;
+            break;
+          case ActivationType::GELU:
+          case ActivationType::GELUTanh:
+          case ActivationType::GELUSigmoid:
+            if (*_activation_type == ActivationType::GELUTanh || is_lowp<In>())
+              epilogue = HIPBLASLT_EPILOGUE_GELU;
+            else
+              act_fused = false;
+            break;
+          case ActivationType::Swish:
+            epilogue = HIPBLASLT_EPILOGUE_SWISH_EXT;
+            break;
+          default:
+            act_fused = false;
+          }
         }
+
+        float scale = 1.0f; // scalars are on cpu
         if (scale_a) {
-          hipblasLtMatmulMatrixScale_t mode = scale_a->size() == 1
-                                              ? HIPBLASLT_MATMUL_MATRIX_SCALE_SCALAR_32F
-                                              : HIPBLASLT_MATMUL_MATRIX_SCALE_OUTER_VEC_32F;
-          CUBLAS_CHECK(hipblasLtMatmulDescSetAttribute(matmul,
-                                                       HIPBLASLT_MATMUL_DESC_A_SCALE_MODE,
-                                                       &mode,
-                                                       sizeof(uint32_t)));
-          const float* d_scale_a = scale_a->data<float>();
-          CUBLAS_CHECK(hipblasLtMatmulDescSetAttribute(matmul,
-                                                       HIPBLASLT_MATMUL_DESC_A_SCALE_POINTER,
-                                                       &d_scale_a,
-                                                       sizeof(float*)));
+          if (scale_a->is_scalar()) {
+            scale *= scale_a->as_scalar<float>();
+          } else {
+            hipblasLtMatmulMatrixScale_t mode = HIPBLASLT_MATMUL_MATRIX_SCALE_OUTER_VEC_32F;
+            CUBLAS_CHECK(hipblasLtMatmulDescSetAttribute(matmul,
+                                                         HIPBLASLT_MATMUL_DESC_B_SCALE_MODE,
+                                                         &mode,
+                                                         sizeof(uint32_t)));
+            const float* d_scale_a = scale_a->data<float>();
+            CUBLAS_CHECK(hipblasLtMatmulDescSetAttribute(matmul,
+                                                         HIPBLASLT_MATMUL_DESC_B_SCALE_POINTER,
+                                                         &d_scale_a,
+                                                         sizeof(float*)));
+          }
         }
         if (scale_b) {
-          hipblasLtMatmulMatrixScale_t mode = scale_b->size() == 1
-                                              ? HIPBLASLT_MATMUL_MATRIX_SCALE_SCALAR_32F
-                                              : HIPBLASLT_MATMUL_MATRIX_SCALE_OUTER_VEC_32F;
-          CUBLAS_CHECK(hipblasLtMatmulDescSetAttribute(matmul,
-                                                       HIPBLASLT_MATMUL_DESC_B_SCALE_MODE,
-                                                       &mode,
-                                                       sizeof(uint32_t)));
-          const float* d_scale_b = scale_b->data<float>();
-          CUBLAS_CHECK(hipblasLtMatmulDescSetAttribute(matmul,
-                                                       HIPBLASLT_MATMUL_DESC_B_SCALE_POINTER,
-                                                       &d_scale_b,
-                                                       sizeof(float*)));
+          if (scale_b->is_scalar()) {
+            scale *= scale_b->as_scalar<float>();
+          } else {
+            hipblasLtMatmulMatrixScale_t mode = HIPBLASLT_MATMUL_MATRIX_SCALE_OUTER_VEC_32F;
+            CUBLAS_CHECK(hipblasLtMatmulDescSetAttribute(matmul,
+                                                         HIPBLASLT_MATMUL_DESC_A_SCALE_MODE,
+                                                         &mode,
+                                                         sizeof(uint32_t)));
+            const float* d_scale_b = scale_b->data<float>();
+            CUBLAS_CHECK(hipblasLtMatmulDescSetAttribute(matmul,
+                                                         HIPBLASLT_MATMUL_DESC_A_SCALE_POINTER,
+                                                         &d_scale_b,
+                                                         sizeof(float*)));
+          }
         }
 
         hipblasLtMatmulPreference_t pref;
@@ -143,14 +197,14 @@ namespace ctranslate2 {
                                                      mat_a,
                                                      mat_b,
                                                      mat_c,
-                                                     mat_d,
+                                                     mat_c,
                                                      pref,
                                                      request_solutions,
                                                      heuristic_result,
                                                      &returned_algo_count));
 
         if (returned_algo_count > 0) {
-          const float alpha = _alpha;
+          const float alpha = _alpha * scale;
           const float beta = residual && _beta == 0.f ? 1.f : _beta;
           using DeviceIn = cuda::device_type<In>;
           using DeviceOut = cuda::device_type<Out>;
@@ -170,7 +224,7 @@ namespace ctranslate2 {
                                        d_c,
                                        mat_c,
                                        d_d,
-                                       mat_d,
+                                       mat_c,
                                        &heuristic_result[0].algo,
                                        workspace,
                                        cuda::max_workspace_size,
@@ -179,13 +233,13 @@ namespace ctranslate2 {
         CUBLAS_CHECK(hipblasLtMatrixLayoutDestroy(mat_a));
         CUBLAS_CHECK(hipblasLtMatrixLayoutDestroy(mat_b));
         CUBLAS_CHECK(hipblasLtMatrixLayoutDestroy(mat_c));
-        CUBLAS_CHECK(hipblasLtMatrixLayoutDestroy(mat_d));
         CUBLAS_CHECK(hipblasLtMatmulDescDestroy(matmul));
         CUBLAS_CHECK(hipblasLtMatmulPreferenceDestroy(pref));
         if (returned_algo_count > 0) {
-          if (residual && _beta != 0.f || _activation_type) {
+          if (residual && _beta != 0.f || !act_fused) {
             const StorageView* post_residual = _beta == 0.f ? nullptr : residual;
-            apply_bias_and_activation(c, nullptr, _activation_type, post_residual);
+            const ActivationType* post_act = act_fused ? nullptr : _activation_type;
+            apply_bias_and_activation(c, nullptr, post_act, post_residual);
           }
           return;
         }
@@ -194,7 +248,7 @@ namespace ctranslate2 {
         return;
       }
 #endif
-      if constexpr (std::is_same_v<In, float8_t> || std::is_same_v<In, bfloat8_t>)
+      if constexpr (is_lowp<In>())
         throw std::invalid_argument("FP8 not supported");
 
       primitives<D>::gemm(_a_is_packed, _b_is_packed,
@@ -209,27 +263,33 @@ namespace ctranslate2 {
       apply_bias_and_activation(c, bias, _activation_type, residual);
     }
 
-#define DECLARE_IMPL(In, Out)                                                       \
-    template void                                                                   \
-    Gemm::compute<Device::CUDA, In, Out>(const StorageView& a,                      \
-                                         const StorageView& b,                      \
-                                         StorageView& c,                            \
-                                         const StorageView* a_shift_compensation,   \
-                                         const StorageView* bias,                   \
-                                         const StorageView* residual,               \
-                                         const StorageView* scale_a,                \
-                                         const StorageView* scale_b) const;
+#define DECLARE_IMPL(In, Out, Bias)                                                     \
+    template void                                                                       \
+    Gemm::compute<Device::CUDA, In, Out, Bias>(const StorageView& a,                    \
+                                               const StorageView& b,                    \
+                                               StorageView& c,                          \
+                                               const StorageView* a_shift_compensation, \
+                                               const StorageView* bias,                 \
+                                               const StorageView* residual,             \
+                                               const StorageView* scale_a,              \
+                                               const StorageView* scale_b) const;
 
-    DECLARE_IMPL(int8_t, int32_t)
-    DECLARE_IMPL(float, float)
-    DECLARE_IMPL(float16_t, float16_t)
-    DECLARE_IMPL(bfloat16_t, bfloat16_t)
-    DECLARE_IMPL(float8_t, float)
-    DECLARE_IMPL(float8_t, float16_t)
-    DECLARE_IMPL(float8_t, bfloat16_t)
-    DECLARE_IMPL(bfloat8_t, float)
-    DECLARE_IMPL(bfloat8_t, float16_t)
-    DECLARE_IMPL(bfloat8_t, bfloat16_t)
+    DECLARE_IMPL(int8_t, int32_t, int32_t)
+    DECLARE_IMPL(float, float, float)
+    DECLARE_IMPL(float16_t, float16_t, float16_t)
+    DECLARE_IMPL(bfloat16_t, bfloat16_t, bfloat16_t)
+    DECLARE_IMPL(float8_t, float, float)
+    DECLARE_IMPL(float8_t, float16_t, float16_t)
+    DECLARE_IMPL(float8_t, bfloat16_t, bfloat16_t)
+    DECLARE_IMPL(float8_t, float8_t, float)
+    DECLARE_IMPL(float8_t, float8_t, float16_t)
+    DECLARE_IMPL(float8_t, float8_t, bfloat16_t)
+    DECLARE_IMPL(bfloat8_t, float, float)
+    DECLARE_IMPL(bfloat8_t, float16_t, float16_t)
+    DECLARE_IMPL(bfloat8_t, bfloat16_t, bfloat16_t)
+    DECLARE_IMPL(bfloat8_t, bfloat8_t, float)
+    DECLARE_IMPL(bfloat8_t, bfloat8_t, float16_t)
+    DECLARE_IMPL(bfloat8_t, bfloat8_t, bfloat16_t)
 
   }
 }

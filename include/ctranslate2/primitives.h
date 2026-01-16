@@ -141,6 +141,9 @@ namespace ctranslate2 {
       mul(x, y, y, size);
     }
 
+    template <typename In, typename Out>
+    static void mul(const In* a, const In* x, Out* y, dim_t size);
+
     template <typename T>
     static void penalize_previous_tokens(T* scores,
                                          const T* previous_scores,

@@ -11,7 +11,8 @@ namespace ctranslate2 {
     template<>
     void Quantize::quantize<Device::CPU, float, int8_t>(const StorageView& input,
                                                         StorageView& output,
-                                                        StorageView& scale) const {
+                                                        StorageView& scale,
+                                                        const ScaleType) const {
       // INT8 quantization rescales based on the per batch absolute maximum.
       const dim_t batch_size = scale.size();
       const dim_t depth = input.dim(-1);
@@ -43,7 +44,8 @@ namespace ctranslate2 {
     template<>
     void Quantize::quantize<Device::CPU, float, int16_t>(const StorageView& input,
                                                          StorageView& output,
-                                                         StorageView& scale) const {
+                                                         StorageView& scale,
+                                                         const ScaleType) const {
       // INT16 quantization simply rescales by a constant.
 
       const dim_t size = input.size();
@@ -65,6 +67,63 @@ namespace ctranslate2 {
       else
         quantize_s16_kernel(input_data, scale_value, output_data, size, cpu::identity());
     }
+
+    template <typename T>
+    static float quantize_lowp_kernel(const float* x,
+                                           T* y,
+                                           dim_t depth) {
+      constexpr float fmax = std::is_same_v<T, float8_t> ? 448 : 57344;
+      const float amax = primitives<Device::CPU>::amax(x, depth);
+      const float scale = amax != 0.f ? amax / fmax : 1.f;
+      const float r_scale = 1.0f / scale;
+      cpu::parallel_unary_transform(
+        x, y, depth, /*work_size=*/4,
+        [r_scale](float v) {
+          return v * r_scale;
+        });
+      return scale;
+    }
+
+    template <Device D, typename, typename T>
+    void Quantize::quantize(const StorageView& input,
+                            StorageView& output,
+                            StorageView& scale,
+                            const ScaleType scale_type) const {
+      // Low precision FP quantization rescales on per batch/layer absolute maximum
+      // Scale has opposite semantics to int variants
+
+      const float* input_data = input.data<float>();
+      T* output_data = output.data<T>();
+      float* scale_data = scale.data<float>();
+
+      switch (scale_type) {
+      case ScaleType::PER_LAYER: {
+        scale_data[0] = quantize_lowp_kernel(input_data, output_data, input.size());
+        break;
+      }
+      case ScaleType::PER_ROW: {
+        const dim_t batch_size = scale.size();
+        const dim_t depth = input.size() / batch_size;
+
+        cpu::parallel_for(0, batch_size, 1, [&](dim_t begin, dim_t end) {
+          for (dim_t i = begin; i < end; ++i) {
+            const dim_t offset = i * depth;
+            const float* src = input_data + offset;
+            T* dst = output_data + offset;
+            scale_data[i] = quantize_lowp_kernel(src, dst, depth);
+          }
+        });
+        break;
+      }
+      default:
+        throw std::invalid_argument("Low precision quantization only supports PER_LAYER and PER_ROW scales");
+      }
+    }
+
+    template void Quantize::quantize<Device::CPU, float, float8_t>(
+        const StorageView&, StorageView&, StorageView&, const ScaleType) const;
+    template void Quantize::quantize<Device::CPU, float, bfloat8_t>(
+        const StorageView&, StorageView&, StorageView&, const ScaleType) const;
 
   }
 }

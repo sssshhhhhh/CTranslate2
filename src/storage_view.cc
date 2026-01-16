@@ -117,31 +117,38 @@ namespace ctranslate2 {
     }
   }
 
+  void StorageView::to(StorageView& out) const {
+    if (_device != out._device || _device_index != out._device_index)
+      throw std::invalid_argument("out StorageView must have the same device");
+    out.resize(_shape);
+    switch (out.dtype()) {
+    case DataType::FLOAT32:
+      convert<float>(*this, out);
+      break;
+    case DataType::FLOAT16:
+      convert<float16_t>(*this, out);
+      break;
+    case DataType::BFLOAT16:
+      convert<bfloat16_t>(*this, out);
+      break;
+    case DataType::FLOAT8:
+      convert<float8_t>(*this, out);
+      break;
+    case DataType::BFLOAT8:
+      convert<bfloat8_t>(*this, out);
+      break;
+    default:
+      // TODO: support other conversions.
+      throw std::invalid_argument("Conversion from " + dtype_name(_dtype) + " to "
+                                  + dtype_name(out.dtype()) + " is not yet implemented");
+    }
+  }
+
   StorageView StorageView::to(DataType dtype) const {
     if (_dtype == dtype)
       return *this;
     StorageView converted(_shape, dtype, _device);
-    switch (dtype) {
-    case DataType::FLOAT32:
-      convert<float>(*this, converted);
-      break;
-    case DataType::FLOAT16:
-      convert<float16_t>(*this, converted);
-      break;
-    case DataType::BFLOAT16:
-      convert<bfloat16_t>(*this, converted);
-      break;
-    case DataType::FLOAT8:
-      convert<float8_t>(*this, converted);
-      break;
-    case DataType::BFLOAT8:
-      convert<bfloat8_t>(*this, converted);
-      break;
-    default:
-      // TODO: support other conversions.
-      throw std::invalid_argument("Conversion from " + dtype_name(_dtype)
-                                  + " to " + dtype_name(dtype) + " is not yet implemented");
-    }
+    to(converted);
     return converted;
   }
 

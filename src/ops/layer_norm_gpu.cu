@@ -7,22 +7,22 @@ namespace at {
   namespace native {
 
     // Forward declaration of the CUDA kernels.
-    template <typename T, typename SizeT>
+    template <typename In, typename Out, typename SizeT>
     __global__ void LayerNormForwardCUDAKernel(SizeT N,
                                                float eps,
-                                               const T* X,
-                                               const T* gamma,
-                                               const T* beta,
-                                               T* Y);
+                                               const In* X,
+                                               const In* gamma,
+                                               const In* beta,
+                                               Out* Y);
 
-    template <typename T, typename SizeT>
+    template <typename In, typename Out, typename SizeT>
     __global__ void LayerNormAxisForwardCUDAKernel(SizeT N,
                                                    SizeT inner,
                                                    float eps,
-                                                   const T* X,
-                                                   const T* gamma,
-                                                   const T* beta,
-                                                   T* Y);
+                                                   const In* X,
+                                                   const In* gamma,
+                                                   const In* beta,
+                                                   Out* Y);
 
   }
 }
@@ -32,7 +32,7 @@ namespace ctranslate2 {
 
 #define CUDA_NUM_THREADS 512
 
-    template <Device D, typename T>
+    template <Device D, typename In, typename Out>
     void LayerNorm::compute(const StorageView* beta,
                             const StorageView* gamma,
                             const StorageView& input,
@@ -42,42 +42,48 @@ namespace ctranslate2 {
                             const dim_t inner_size,
                             StorageView& output) const {
       if (axis == input.rank() - 1) {
-        at::native::LayerNormForwardCUDAKernel<cuda::device_type<T>, cuda::index_t>
+        at::native::LayerNormForwardCUDAKernel
           <<<outer_size, CUDA_NUM_THREADS, 0, cuda::get_cuda_stream()>>>(
             axis_size,
             _epsilon,
-            cuda::device_cast(input.data<T>()),
-            gamma ? cuda::device_cast(gamma->data<T>()) : nullptr,
-            beta ? cuda::device_cast(beta->data<T>()) : nullptr,
-            cuda::device_cast(output.data<T>()));
+            cuda::device_cast(input.data<In>()),
+            gamma ? cuda::device_cast(gamma->data<In>()) : nullptr,
+            beta ? cuda::device_cast(beta->data<In>()) : nullptr,
+            cuda::device_cast(output.data<Out>()));
       } else {
         const dim_t blocks = std::min(outer_size * inner_size, cuda::max_blocks);
-        at::native::LayerNormAxisForwardCUDAKernel<cuda::device_type<T>, cuda::index_t>
+        at::native::LayerNormAxisForwardCUDAKernel
           <<<blocks, CUDA_NUM_THREADS, 0, cuda::get_cuda_stream()>>>(
             axis_size,
             inner_size,
             _epsilon,
-            cuda::device_cast(input.data<T>()),
-            gamma ? cuda::device_cast(gamma->data<T>()) : nullptr,
-            beta ? cuda::device_cast(beta->data<T>()) : nullptr,
-            cuda::device_cast(output.data<T>()));
+            cuda::device_cast(input.data<In>()),
+            gamma ? cuda::device_cast(gamma->data<In>()) : nullptr,
+            beta ? cuda::device_cast(beta->data<In>()) : nullptr,
+            cuda::device_cast(output.data<Out>()));
       }
     }
 
-#define DECLARE_IMPL(T)                                                 \
+#define DECLARE_IMPL(In, Out)                                           \
     template void                                                       \
-    LayerNorm::compute<Device::CUDA, T>(const StorageView* beta,        \
-                                        const StorageView* gamma,       \
-                                        const StorageView& input,       \
-                                        const dim_t axis,               \
-                                        const dim_t outer_size,         \
-                                        const dim_t axis_size,          \
-                                        const dim_t inner_size,         \
-                                        StorageView& output) const;
+    LayerNorm::compute<Device::CUDA, In, Out>(const StorageView* beta,  \
+                                              const StorageView* gamma, \
+                                              const StorageView& input, \
+                                              const dim_t axis,         \
+                                              const dim_t outer_size,   \
+                                              const dim_t axis_size,    \
+                                              const dim_t inner_size,   \
+                                              StorageView& output) const;
 
-    DECLARE_IMPL(float)
-    DECLARE_IMPL(float16_t)
-    DECLARE_IMPL(bfloat16_t)
+    DECLARE_IMPL(float, float)
+    DECLARE_IMPL(float16_t, float16_t)
+    DECLARE_IMPL(bfloat16_t, bfloat16_t)
+    DECLARE_IMPL(float, float8_t)
+    DECLARE_IMPL(float16_t, float8_t)
+    DECLARE_IMPL(bfloat16_t, float8_t)
+    DECLARE_IMPL(float, bfloat8_t)
+    DECLARE_IMPL(float16_t, bfloat8_t)
+    DECLARE_IMPL(bfloat16_t, bfloat8_t)
 
   }
 }
@@ -185,13 +191,13 @@ namespace ctranslate2 {
 namespace at {
   namespace native {
 
-    template <typename T, typename SizeT>
+    template <typename In, typename Out, typename SizeT>
     __global__ void LayerNormForwardCUDAKernel(SizeT N,
                                                float eps,
-                                               const T* X,
-                                               const T* gamma,
-                                               const T* beta,
-                                               T* Y) {
+                                               const In* X,
+                                               const In* gamma,
+                                               const In* beta,
+                                               Out* Y) {
       typedef cub::BlockReduce<float, CUDA_NUM_THREADS> BlockReduce;
       __shared__ typename BlockReduce::TempStorage m_temp_storage;
       __shared__ typename BlockReduce::TempStorage v_temp_storage;
@@ -223,18 +229,18 @@ namespace at {
         const SizeT index = i * N + j;
         const float gamma_v = gamma == nullptr ? float(1) : float(gamma[j]);
         const float beta_v = beta == nullptr ? float(0) : float(beta[j]);
-        Y[index] = T((float(X[index]) - s_mean) * s_variance * gamma_v + beta_v);
+        Y[index] = (float(X[index]) - s_mean) * s_variance * gamma_v + beta_v;
       }
     }
 
-    template <typename T, typename SizeT>
+    template <typename In, typename Out, typename SizeT>
     __global__ void LayerNormAxisForwardCUDAKernel(SizeT N,
                                                    SizeT inner_size,
                                                    float eps,
-                                                   const T* X,
-                                                   const T* gamma,
-                                                   const T* beta,
-                                                   T* Y) {
+                                                   const In* X,
+                                                   const In* gamma,
+                                                   const In* beta,
+                                                   Out* Y) {
       typedef cub::BlockReduce<float, CUDA_NUM_THREADS> BlockReduce;
       __shared__ typename BlockReduce::TempStorage m_temp_storage;
       __shared__ typename BlockReduce::TempStorage v_temp_storage;
@@ -267,7 +273,7 @@ namespace at {
         const SizeT index = (i * N + k) * inner_size + j;
         const float gamma_v = gamma == nullptr ? float(1) : float(gamma[j]);
         const float beta_v = beta == nullptr ? float(0) : float(beta[j]);
-        Y[index] = T((float(X[index]) - s_mean) * s_variance * gamma_v + beta_v);
+        Y[index] = (float(X[index]) - s_mean) * s_variance * gamma_v + beta_v;
       }
     }
 

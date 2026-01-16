@@ -5,25 +5,25 @@
 namespace ctranslate2 {
   namespace ops {
 
-    template <Device D, typename T>
+    template <Device D, typename In, typename Out>
     void RMSNorm::compute(const StorageView& gamma,
                           const StorageView& input,
                           StorageView& output) const {
       const dim_t depth = input.dim(-1);
       const dim_t batch_size = input.size() / depth;
-      CPU_ISA_DISPATCH((cpu::rms_norm<ISA>(input.data<T>(),
-                                           gamma.data<T>(),
-                                           output.data<T>(),
+      CPU_ISA_DISPATCH((cpu::rms_norm<ISA>(input.data<In>(),
+                                           gamma.data<In>(),
+                                           output.data<Out>(),
                                            batch_size,
                                            depth,
                                            _epsilon,
                                            _use_residual)));
     }
 
-#define DECLARE_IMPL(T)                                                 \
-    template void RMSNorm::compute<Device::CPU, T>(const StorageView&,  \
-                                                   const StorageView&,  \
-                                                   StorageView&) const;
+#define DECLARE_IMPL(T)                                                   \
+    template void RMSNorm::compute<Device::CPU, T, T>(const StorageView&, \
+                                                      const StorageView&, \
+                                                      StorageView&) const;
 
     DECLARE_IMPL(float)
 

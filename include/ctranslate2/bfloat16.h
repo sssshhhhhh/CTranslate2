@@ -13,8 +13,6 @@ namespace ctranslate2 {
 
   class bfloat16_t {
   public:
-    uint16_t _bits;
-
     constexpr bfloat16_t(uint16_t bits, bool) : _bits(bits) {}
 
     bfloat16_t() = default;
@@ -55,6 +53,9 @@ namespace ctranslate2 {
       std::array<uint16_t, 2> iraw = {{0, _bits}};
       return bit_cast<float>(iraw);
     }
+
+  private:
+    uint16_t _bits;
   };
 
 }

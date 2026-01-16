@@ -6,54 +6,58 @@
 
 using namespace ctranslate2;
 
-void benchmark_gather(Device device) {
-  StorageView data({512, 512}, DataType::FLOAT32, device);
+void benchmark_gather(Device device, DataType dtype) {
+  StorageView data({512, 512}, dtype, device);
   std::vector<int32_t> input_v(250);
   std::iota(input_v.begin(), input_v.end(), 0);
   StorageView input({static_cast<dim_t>(input_v.size())}, input_v, device);
-  StorageView output(device);
+  StorageView output(dtype, device);
   const ops::Gather gather_op;
   BENCHMARK(gather_op(data, input, output), 100000);
 }
 
-void benchmark_transpose(Device device) {
-  StorageView x({64, 48, 8, 64}, DataType::FLOAT32, device);
-  StorageView y(device);
+void benchmark_transpose(Device device, DataType dtype) {
+  StorageView x({64, 48, 8, 64}, dtype, device);
+  StorageView y(dtype, device);
   const ops::Transpose transpose_op({0, 2, 1, 3});
   BENCHMARK(transpose_op(x, y), 1000);
 }
 
-void benchmark_split(Device device) {
-  StorageView x({64, 512*3}, DataType::FLOAT32, device);
-  StorageView a(device);
-  StorageView b(device);
-  StorageView c(device);
+void benchmark_split(Device device, DataType dtype) {
+  StorageView x({64, 512*3}, dtype, device);
+  StorageView a(dtype, device);
+  StorageView b(dtype, device);
+  StorageView c(dtype, device);
   const ops::Split split_op(-1);
   BENCHMARK(split_op(x, a, b, c), 10000);
 }
 
-void benchmark_layer_norm(Device device) {
+void benchmark_layer_norm(Device device, DataType dtype) {
   std::vector<float> gamma_ = rand_vector(512);
   std::vector<float> beta_ = rand_vector(512);
   std::vector<float> x_ = rand_vector(100 * 512);
 
   StorageView gamma({512}, gamma_, device);
+  gamma = gamma.to(dtype);
   StorageView beta({512}, beta_, device);
+  beta = beta.to(dtype);
   StorageView x({100, 512}, x_, device);
-  StorageView y(x.device());
+  x = x.to(dtype);
+  StorageView y(dtype, device);
   const ops::LayerNorm layer_norm_op{};
   BENCHMARK(layer_norm_op(beta, gamma, x, y), 10000);
 }
 
-void benchmark_softmax(Device device) {
+void benchmark_softmax(Device device, DataType dtype) {
   std::vector<float> x_ = rand_vector(100 * 512);
   StorageView x({100, 512}, x_, device);
-  StorageView y(x.device());
+  x = x.to(dtype);
+  StorageView y(dtype, device);
   const ops::SoftMax softmax_op{};
   BENCHMARK(softmax_op(x, y), 10000);
 }
 
-void benchmark_masked_softmax(Device device) {
+void benchmark_masked_softmax(Device device, DataType dtype) {
   const dim_t batch_size = 32;
   const dim_t num_heads = 8;
   const dim_t max_source = 24;
@@ -62,25 +66,27 @@ void benchmark_masked_softmax(Device device) {
   StorageView x({batch_size, num_heads, max_source, max_target},
                 rand_vector(batch_size * num_heads * max_source * max_target),
                 device);
-  StorageView y(x.device());
+  x = x.to(dtype);
+  StorageView y(dtype, device);
   const ops::SoftMax softmax_op{};
   BENCHMARK(softmax_op(x, lengths, y), 10000);
 }
 
-void benchmark_topk(Device device) {
+void benchmark_topk(Device device, DataType dtype) {
   const size_t k = 4;
   const size_t batch_size = 8;
   const size_t vocab_size = 32000;
   std::vector<float> x = rand_vector(batch_size * k * vocab_size);
   StorageView input({batch_size, k * vocab_size}, x, device);
-  StorageView values(input.dtype(), device);
-  StorageView indices(DataType::INT32,  device);
+  input = input.to(dtype);
+  StorageView values(dtype, device);
+  StorageView indices(DataType::INT32, device);
   const ops::TopK op(k);
   BENCHMARK(op(input, values, indices), 2000);
 }
 
 void benchmark_gemm(Device device, DataType dtype) {
-  DataType output_dtype = dtype != DataType::FLOAT32 ? DataType::INT32 : dtype;
+  DataType output_dtype = is_float_type(dtype) ? dtype : DataType::INT32;
   StorageView a({32 * 32, 512}, dtype, device);
   StorageView b({2048, 512}, dtype, device);
   StorageView c(output_dtype, device);
@@ -96,8 +102,8 @@ void benchmark_quantize(Device device, DataType dtype) {
   BENCHMARK(quantize_op(x, y, scale), 10000);
 }
 
-void benchmark_dequantize(Device device) {
-  StorageView x({64, 8192}, DataType::INT32, device);
+void benchmark_dequantize(Device device, DataType dtype) {
+  StorageView x({64, 8192}, dtype, device);
   StorageView input_scale({32}, DataType::FLOAT32, device);
   StorageView weight_scale({8192}, DataType::FLOAT32, device);
   StorageView bias({8192}, DataType::FLOAT32, device);
@@ -107,20 +113,21 @@ void benchmark_dequantize(Device device) {
   BENCHMARK(dequantize_op(x, input_scale, weight_scale, false, true, y, &bias), 10000);
 }
 
-void benchmark_conv1d(Device device) {
-  StorageView x({1, 768, 3000}, DataType::FLOAT32, device);
-  StorageView weight({768, 768, 3}, DataType::FLOAT32, device);
-  StorageView bias({768}, DataType::FLOAT32, device);
-  StorageView y(device);
+void benchmark_conv1d(Device device, DataType dtype) {
+  StorageView x({1, 768, 3000}, dtype, device);
+  StorageView weight({768, 768, 3}, dtype, device);
+  StorageView bias({768}, dtype, device);
+  StorageView y(dtype, device);
   const ops::Conv1D conv_op{2, 1};
   BENCHMARK(conv_op(x, weight, bias, y), 100);
 }
 
-void benchmark_median_filter(Device device) {
+void benchmark_median_filter(Device device, DataType dtype) {
   const dim_t width = 5;
   std::vector<float> x_ = rand_vector(100 * 512);
   StorageView x({100, 512}, x_, device);
-  StorageView y(device);
+  x = x.to(dtype);
+  StorageView y(dtype, device);
   const ops::MedianFilter median_filter_op(width);
   BENCHMARK(median_filter_op(x, y), 10000);
 }
@@ -134,36 +141,35 @@ int main(int argc, char* argv[]) {
   std::string op = argv[1];
   Device device = std::string(argv[2]) == "cuda" ? Device::CUDA : Device::CPU;
   std::string dtype_str = argc > 3 ? argv[3] : "float32";
-  DataType dtype = DataType::FLOAT32;
-  if (dtype_str == "int16")
-    dtype = DataType::INT16;
-  else if (dtype_str == "int8")
-    dtype = DataType::INT8;
+  ComputeType ctype = str_to_compute_type(dtype_str);
+  ctype = resolve_compute_type(ctype, ComputeType::FLOAT32, device);
+  DataType dtype = compute_type_to_data_type(ctype).first;
 
-  if (op == "gather")
-    benchmark_gather(device);
-  else if (op == "transpose")
-    benchmark_transpose(device);
-  else if (op == "split")
-    benchmark_split(device);
-  else if (op == "layer_norm")
-    benchmark_layer_norm(device);
-  else if (op == "softmax")
-    benchmark_softmax(device);
-  else if (op == "masked_softmax")
-    benchmark_masked_softmax(device);
-  else if (op == "topk")
-    benchmark_topk(device);
-  else if (op == "gemm")
-    benchmark_gemm(device, dtype);
-  else if (op == "quantize")
-    benchmark_quantize(device, dtype);
-  else if (op == "dequantize")
-    benchmark_dequantize(device);
-  else if (op == "conv1d")
-    benchmark_conv1d(device);
-  else if (op == "median_filter")
-    benchmark_median_filter(device);
-
+  for (int i = 0; i < 5; ++i) {
+    if (op == "gather")
+      benchmark_gather(device, dtype);
+    else if (op == "transpose")
+      benchmark_transpose(device, dtype);
+    else if (op == "split")
+      benchmark_split(device, dtype);
+    else if (op == "layer_norm")
+      benchmark_layer_norm(device, dtype);
+    else if (op == "softmax")
+      benchmark_softmax(device, dtype);
+    else if (op == "masked_softmax")
+      benchmark_masked_softmax(device, dtype);
+    else if (op == "topk")
+      benchmark_topk(device, dtype);
+    else if (op == "gemm")
+      benchmark_gemm(device, dtype);
+    else if (op == "quantize")
+      benchmark_quantize(device, dtype);
+    else if (op == "dequantize")
+      benchmark_dequantize(device, dtype);
+    else if (op == "conv1d")
+      benchmark_conv1d(device, dtype);
+    else if (op == "median_filter")
+      benchmark_median_filter(device, dtype);
+  }
   return 0;
 }

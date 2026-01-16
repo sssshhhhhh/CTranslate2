@@ -257,7 +257,7 @@ namespace ctranslate2 {
     case ComputeType::FLOAT8: {
       const DataType float_type = compute_type_to_data_type(model_compute_type).second;
       ComputeType actual_compute_type = ComputeType::FLOAT8_FLOAT16;
-      
+
       switch (float_type) {
       case DataType::FLOAT32:
         actual_compute_type = ComputeType::FLOAT8_FLOAT32;
@@ -286,7 +286,7 @@ namespace ctranslate2 {
     case ComputeType::BFLOAT8: {
       const DataType float_type = compute_type_to_data_type(model_compute_type).second;
       ComputeType actual_compute_type = ComputeType::BFLOAT8_FLOAT16;
-      
+
       switch (float_type) {
       case DataType::FLOAT32:
         actual_compute_type = ComputeType::BFLOAT8_FLOAT32;
@@ -510,6 +510,10 @@ namespace ctranslate2 {
     default:
       return ComputeType::FLOAT32;
     }
+  }
+
+  DataType get_default_weight_type(const ComputeType compute_type) {
+    return compute_type_to_data_type(compute_type).first;
   }
 
   DataType get_default_float_type(const ComputeType compute_type) {

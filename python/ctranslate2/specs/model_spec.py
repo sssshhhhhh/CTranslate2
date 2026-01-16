@@ -268,9 +268,9 @@ class LayerSpec(FrozenAttr, metaclass=FrozenMeta):
                         case "bfloat8":
                             torch_dtype = torch.float8_e5m2
                     fmax = torch.finfo(torch_dtype).max
-                    amax = value.abs().max(dim=1)
+                    amax = value.abs().amax()  # scalar for compatability
                     scale = torch.where(amax == 0, 1, amax / fmax)
-                    value /= scale[None, :]
+                    value /= scale
                     match weight_dtype:
                         case "float8":
                             value = value.to(torch.float8_e4m3fn)

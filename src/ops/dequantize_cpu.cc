@@ -49,6 +49,37 @@ namespace ctranslate2 {
       });
     }
 
+    template <Device D, typename T, typename>
+    void Dequantize::dequantize(const StorageView& input,
+                                const StorageView& scale,
+                                StorageView& output) const {
+      // Low precision float dequantize, has opposite scale semantics to int variants
+      const dim_t batch_size = scale.size();
+      const dim_t depth = input.size() / batch_size;
+
+      const T* input_data = input.data<T>();
+      const float* scale_data = scale.data<float>();
+      float* output_data = output.data<float>();
+
+      cpu::parallel_for(0, batch_size, 1, [&](dim_t begin, dim_t end) {
+        for (dim_t i = begin; i < end; ++i) {
+          const dim_t offset = i * depth;
+          const T* src = input_data + offset;
+          const float scale = scale_data[i];
+          float* dst = output_data + offset;
+          cpu::parallel_unary_transform(src, dst, depth, /*work_size=*/4,
+                                        [scale](T v) {
+                                          return v * scale;
+                                        });
+        }
+      });
+    }
+
+    template void Dequantize::dequantize<Device::CPU, float8_t, float>(
+        const StorageView&, const StorageView&, StorageView&) const;
+    template void Dequantize::dequantize<Device::CPU, bfloat8_t, float>(
+        const StorageView&, const StorageView&, StorageView&) const;
+
     template<>
     void Dequantize::dequantize_gemm_output<Device::CPU, float>(const StorageView& c,
                                                                 const StorageView& a_scale,

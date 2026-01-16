@@ -14,7 +14,7 @@ namespace ctranslate2 {
         std::ostringstream oss;
         ctranslate2::dump_profiling(oss);
         return oss.str();
-    });
+      });
 
     }
 

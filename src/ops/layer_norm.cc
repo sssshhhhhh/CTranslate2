@@ -26,6 +26,30 @@ namespace ctranslate2 {
       operator()(nullptr, nullptr, input, output);
     }
 
+#define LOWP_CASE(T)                                                                    \
+      case DataTypeToEnum<T>::value: {                                                  \
+        if (output.device() == Device::CPU)                                             \
+          throw std::invalid_argument("LayerNorm only supports FP32 on CPU");           \
+        switch (input.dtype()) {                                                        \
+        case DataType::FLOAT32:                                                         \
+          compute<Device::CUDA, float, T>(beta, gamma, input, axis, outer_size,         \
+                                          axis_size, inner_size, output);               \
+          break;                                                                        \
+        case DataType::FLOAT16:                                                         \
+          compute<Device::CUDA, float16_t, T>(beta, gamma, input, axis, outer_size,     \
+                                              axis_size, inner_size, output);           \
+          break;                                                                        \
+        case DataType::BFLOAT16:                                                        \
+          compute<Device::CUDA, bfloat16_t, T>(beta, gamma, input, axis, outer_size,    \
+                                          axis_size, inner_size, output);               \
+          break;                                                                        \
+        default:                                                                        \
+          throw std::invalid_argument("LayerNorm unsupported input type "               \
+                                      + dtype_name(input.dtype()));                     \
+        }                                                                               \
+        break;                                                                          \
+      }
+
     void LayerNorm::operator()(const StorageView* beta,
                                const StorageView* gamma,
                                const StorageView& input,
@@ -43,15 +67,28 @@ namespace ctranslate2 {
       for (dim_t i = axis + 1; i < input.rank(); ++i)
         inner_size *= input.dim(i);
 
-      DEVICE_AND_FLOAT_DISPATCH("LayerNorm", input.device(), input.dtype(),
-                                (compute<D, T>(beta,
-                                               gamma,
-                                               input,
-                                               axis,
-                                               outer_size,
-                                               axis_size,
-                                               inner_size,
-                                               output)));
+      switch (output.dtype()) {
+      case DataType::FLOAT32:
+        DEVICE_DISPATCH(output.device(), (compute<D, float, float>(beta, gamma, input, axis, outer_size,
+                                                  axis_size, inner_size, output)));
+        break;
+      case DataType::FLOAT16:
+        if (output.device() == Device::CPU)
+          throw std::invalid_argument("LayerNorm only supports FP32 on CPU");
+        compute<Device::CUDA, float16_t, float16_t>(beta, gamma, input, axis, outer_size,
+                                                    axis_size, inner_size, output);
+        break;
+      case DataType::BFLOAT16:
+        if (output.device() == Device::CPU)
+          throw std::invalid_argument("LayerNorm only supports FP32 on CPU");
+        compute<Device::CUDA, bfloat16_t, bfloat16_t>(beta, gamma, input, axis, outer_size,
+                                                      axis_size, inner_size, output);
+        break;
+      LOWP_CASE(float8_t)
+      LOWP_CASE(bfloat8_t)
+      default:
+        throw std::invalid_argument("LayerNorm only supports float types" + dtype_name(output.dtype()) + dtype_name(input.dtype()));
+      }
     }
 
   }

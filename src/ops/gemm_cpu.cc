@@ -5,7 +5,7 @@
 namespace ctranslate2 {
   namespace ops {
 
-    template <Device D, typename In, typename Out>
+    template <Device D, typename In, typename Out, typename Bias>
     void Gemm::compute(const StorageView& a,
                        const StorageView& b,
                        StorageView& c,
@@ -41,16 +41,16 @@ namespace ctranslate2 {
       apply_bias_and_activation(c, bias, _activation_type, residual);
     }
 
-#define DECLARE_IMPL(In, Out)                                                       \
-    template void                                                                   \
-    Gemm::compute<Device::CPU, In, Out>(const StorageView& a,                       \
-                                        const StorageView& b,                       \
-                                        StorageView& c,                             \
-                                        const StorageView* a_shift_compensation,    \
-                                        const StorageView* bias,                    \
-                                        const StorageView* residual,                \
-                                        const StorageView* scale_a,                 \
-                                        const StorageView* scale_b) const;
+#define DECLARE_IMPL(In, Out)                                                           \
+    template void                                                                       \
+    Gemm::compute<Device::CPU, In, Out, Out>(const StorageView& a,                      \
+                                             const StorageView& b,                      \
+                                             StorageView& c,                            \
+                                             const StorageView* a_shift_compensation,   \
+                                             const StorageView* bias,                   \
+                                             const StorageView* residual,               \
+                                             const StorageView* scale_a,                \
+                                             const StorageView* scale_b) const;
 
     DECLARE_IMPL(int8_t, int32_t)
     DECLARE_IMPL(int16_t, int32_t)

@@ -16,10 +16,10 @@ namespace ctranslate2 {
 
     constexpr dim_t num_threads = 512;
 
-    template <typename T>
-    __global__ void rms_norm_kernel(const T* input,
-                                    const T* gamma,
-                                    T* output,
+    template <typename In, typename Out>
+    __global__ void rms_norm_kernel(const In* input,
+                                    const In* gamma,
+                                    Out* output,
                                     cuda::index_t depth,
                                     float epsilon,
                                     bool use_residual) {
@@ -47,29 +47,35 @@ namespace ctranslate2 {
           output[i] = float(input[i]) * s_inv_rms * float(gamma[i]);
     }
 
-    template <Device D, typename T>
+    template <Device D, typename In, typename Out>
     void RMSNorm::compute(const StorageView& gamma,
                           const StorageView& input,
                           StorageView& output) const {
       const dim_t depth = input.dim(-1);
       const dim_t batch_size = input.size() / depth;
       rms_norm_kernel<<<batch_size, num_threads, 0, cuda::get_cuda_stream()>>>(
-        cuda::device_cast(input.data<T>()),
-        cuda::device_cast(gamma.data<T>()),
-        cuda::device_cast(output.data<T>()),
+        cuda::device_cast(input.data<In>()),
+        cuda::device_cast(gamma.data<In>()),
+        cuda::device_cast(output.data<Out>()),
         depth,
         _epsilon,
         _use_residual);
     }
 
-#define DECLARE_IMPL(T)                                                 \
-    template void RMSNorm::compute<Device::CUDA, T>(const StorageView&, \
-                                                    const StorageView&, \
-                                                    StorageView&) const;
+#define DECLARE_IMPL(In, Out)                                                 \
+    template void RMSNorm::compute<Device::CUDA, In, Out>(const StorageView&, \
+                                                          const StorageView&, \
+                                                          StorageView&) const;
 
-    DECLARE_IMPL(float)
-    DECLARE_IMPL(float16_t)
-    DECLARE_IMPL(bfloat16_t)
+    DECLARE_IMPL(float, float)
+    DECLARE_IMPL(float16_t, float16_t)
+    DECLARE_IMPL(bfloat16_t, bfloat16_t)
+    DECLARE_IMPL(float, float8_t)
+    DECLARE_IMPL(float16_t, float8_t)
+    DECLARE_IMPL(bfloat16_t, float8_t)
+    DECLARE_IMPL(float, bfloat8_t)
+    DECLARE_IMPL(float16_t, bfloat8_t)
+    DECLARE_IMPL(bfloat16_t, bfloat8_t)
 
   }
 }

@@ -3,14 +3,16 @@
 #include <cstdint>
 #include <string>
 
-#include "float16.h"
+#include <half_float/half.hpp>
+
 #include "bfloat16.h"
 #include "float8.h"
 #include "devices.h"
 
 namespace ctranslate2 {
 
-  using dim_t = int64_t;  // This type should be signed.
+  using dim_t = int64_t;  // This type should be signed.  using dim_t = int64_t;  // This type should be signed.
+  using float16_t = half_float::half;
 
   enum class DataType {
     FLOAT32,
@@ -68,6 +70,8 @@ namespace ctranslate2 {
   ComputeType data_type_to_compute_type(const DataType weight_type, const DataType float_type);
   std::pair<DataType, DataType> compute_type_to_data_type(const ComputeType compute_type);
 
+  // Gets the default weight type for the given compute type.
+  DataType get_default_weight_type(const ComputeType compute_type);
   // Gets the default floating point type for the given compute type.
   DataType get_default_float_type(const ComputeType compute_type);
 

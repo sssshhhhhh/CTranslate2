@@ -45,22 +45,44 @@ namespace ctranslate2 {
 
 #define LOWP_CASE(T)                                                                    \
       case DataTypeToEnum<T>::value: {                                                  \
+        if (a.device() != Device::CUDA)                                                 \
+          throw std::invalid_argument("Low precision gemm is only supported on GPU");   \
         const StorageView a_lowp = a.to(DataTypeToEnum<T>::value);                      \
         switch (c.dtype()) {                                                            \
         case DataType::FLOAT32:                                                         \
-          compute<Device::CUDA, T, float>(a_lowp, b, c, nullptr, bias,                  \
-                                          residual, scale_a, scale_b);                  \
+          compute<Device::CUDA, T, float, float>(a_lowp, b, c, nullptr, bias,           \
+                                                 residual, scale_a, scale_b);           \
           break;                                                                        \
         case DataType::FLOAT16:                                                         \
-          compute<Device::CUDA, T, float16_t>(a_lowp, b, c, nullptr, bias,              \
+          compute<Device::CUDA, T, float16_t, float16_t>(a_lowp, b, c, nullptr, bias,   \
                                               residual, scale_a, scale_b);              \
           break;                                                                        \
         case DataType::BFLOAT16:                                                        \
-          compute<Device::CUDA, T, bfloat16_t>(a_lowp, b, c, nullptr, bias,             \
+          compute<Device::CUDA, T, bfloat16_t, bfloat16_t>(a_lowp, b, c, nullptr, bias, \
                                                residual, scale_a, scale_b);             \
           break;                                                                        \
+        case DataTypeToEnum<T>::value:                                                  \
+          switch (bias ? bias->dtype() : DataType::FLOAT32) {                           \
+          case DataType::FLOAT32:                                                       \
+            compute<Device::CUDA, T, T, float>(a_lowp, b, c, nullptr, bias,             \
+                                               residual, scale_a, scale_b);             \
+            break;                                                                      \
+          case DataType::FLOAT16:                                                       \
+            compute<Device::CUDA, T, T, float16_t>(a_lowp, b, c, nullptr, bias,         \
+                                                   residual, scale_a, scale_b);         \
+            break;                                                                      \
+          case DataType::BFLOAT16:                                                      \
+            compute<Device::CUDA, T, T, bfloat16_t>(a_lowp, b, c, nullptr, bias,        \
+                                                    residual, scale_a, scale_b);        \
+            break;                                                                      \
+          default:                                                                      \
+            throw std::invalid_argument("Gemm unsupported bias type "                   \
+                                        + dtype_name(bias->dtype()));                   \
+            break;                                                                      \
+          }                                                                             \
+          break;                                                                        \
         default:                                                                        \
-          throw std::invalid_argument("Low precision GEMM: unsupported output type "    \
+          throw std::invalid_argument("Gemm unsupported output type "                   \
                                       + dtype_name(c.dtype()));                         \
         }                                                                               \
         break;                                                                          \
@@ -79,20 +101,20 @@ namespace ctranslate2 {
       switch (b.dtype()) {
       case DataType::INT8:
         DEVICE_DISPATCH(a.device(),
-                        (compute<D, int8_t, int32_t>(a, b, c, a_shift_compensation, bias, residual)));
+                        (compute<D, int8_t, int32_t, int32_t>(a, b, c, a_shift_compensation, bias, residual)));
         break;
 
       case DataType::INT16:
         if (a.device() != Device::CPU)
           throw std::invalid_argument("INT16 GEMM is only supported on CPU");
-        compute<Device::CPU, int16_t, int32_t>(a, b, c, a_shift_compensation, bias, residual);
+        compute<Device::CPU, int16_t, int32_t, int32_t>(a, b, c, a_shift_compensation, bias, residual);
         break;
 
       case DataType::FLOAT32:
       case DataType::FLOAT16:
       case DataType::BFLOAT16: {
         DEVICE_AND_FLOAT_DISPATCH("Gemm", a.device(), a.dtype(),
-                                  (compute<D, T, T>(a, b, c, a_shift_compensation, bias, residual)));
+                                  (compute<D, T, T, T>(a, b, c, a_shift_compensation, bias, residual)));
         break;
       }
 

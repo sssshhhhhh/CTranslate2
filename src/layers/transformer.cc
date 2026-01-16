@@ -19,24 +19,29 @@ namespace ctranslate2 {
     }
 
     void FeedForwardNetwork::operator()(const StorageView& input, StorageView& output) const {
-      const StorageView* x = &input;
-      if (_layer_norm && _pre_norm) {
-        (*_layer_norm)(input, output);
-        x = &output;
-      }
-
       const Device device = input.device();
       const DataType dtype = input.dtype();
 
-      StorageView inner(dtype, device);
+      StorageView ff_input(_ff1.input_type(), device);
+      const StorageView* x = &input;
+      if (_layer_norm && _pre_norm) {
+        (*_layer_norm)(input, ff_input);
+        x = &ff_input;
+      }
+
+      // For low precision quantize ff2 input in ff1, or Mul for GLU
+      StorageView inner(_ff1_noact ? dtype : _ff2.input_type(), device);
       _ff1(*x, inner);
+      StorageView* y = &inner;
       if (_ff1_noact) {
         StorageView linear(dtype, device);
         (*_ff1_noact)(*x, linear);
-        ops::Mul()(linear, inner, inner);
+        if (is_lowp_type(_ff2.input_type()))
+          y = &ff_input;
+        ops::Mul()(linear, inner, *y);
       }
 
-      _ff2(inner, output, _layer_norm ? &input : nullptr);
+      _ff2(*y, output, _layer_norm ? &input : nullptr);
 
       if (_tensor_parallel) {
         Shape shape = output.shape();

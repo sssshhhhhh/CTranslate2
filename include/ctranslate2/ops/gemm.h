@@ -53,19 +53,10 @@ namespace ctranslate2 {
       bool _a_is_packed;
       bool _b_is_packed;
 
-      template <typename T>
-      void compute_lowp(const StorageView& a,
-                        const StorageView& b,
-                        StorageView& c,
-                        const StorageView* bias,
-                        const StorageView* residual,
-                        const StorageView* scale_a,
-                        const StorageView* scale_b);
-
     protected:
       const ActivationType* _activation_type;
 
-      template <Device D, typename In, typename Out>
+      template <Device D, typename In, typename Out, typename Bias>
       void compute(const StorageView& a,
                    const StorageView& b,
                    StorageView& c,

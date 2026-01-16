@@ -343,12 +343,11 @@ namespace ctranslate2 {
         variable = std::move(dequantized);
       }
 
-      if (is_float_type(target_dtype)) {
-        // TODO: low precision scale
+      if (is_float_type(target_dtype) && !is_lowp) {
         target_variable = variable.to(target_dtype);
 
       } else {
-        // Quantize float
+        // Quantize float to int8/int16/float8/bfloat8
         StorageView scale;
         quantize_op(variable.to_float32(), target_variable, scale);
         register_variable(scale_name, std::move(scale));
