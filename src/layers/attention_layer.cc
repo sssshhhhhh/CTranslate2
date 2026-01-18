@@ -215,10 +215,11 @@ namespace ctranslate2 {
       const DataType dtype = x.dtype();
       const dim_t max_time = _transpose ? x.dim(-2) : x.dim(-3);
       const dim_t dim = _dim == 0 ? x.dim(-1) : _dim;
+      const dim_t seq_len = offset + max_time;
 
-      if (!_sin || offset + max_time > _sin.dim(0)) {
+      if (!_sin || seq_len > _sin.dim(0)) {
         const dim_t cur_num_positions = _sin ? _sin.dim(0) : 0;
-        const dim_t new_num_positions = std::max(offset + max_time, cur_num_positions + _num_initial_positions);
+        const dim_t new_num_positions = std::max(seq_len, cur_num_positions + _num_initial_positions);
         initialize(new_num_positions, dim, device, dtype);
         if (fa2) {
           if (!_sin_half)
@@ -229,8 +230,6 @@ namespace ctranslate2 {
           const ops::Slide slide_op(1, 0, dim / 2);
           slide_op(_cos, *_cos_half);
           slide_op(_sin, *_sin_half);
-          if (offset != 0)
-            return;
         }
       }
       if (offset != 0 && fa2)
@@ -254,7 +253,7 @@ namespace ctranslate2 {
                                       const Device device,
                                       const DataType dtype) {
       StorageView inv_freq({1, dim / 2});
-      if (_scaling_type == RotaryScalingType::Su) {
+      if (_scaling_type == RotaryScalingType::LongRoPE) {
         StorageView* scaling_factor;
         for (dim_t i = 0; i < inv_freq.size(); ++i) {
           if (num_positions > _original_max_position_embeddings)
@@ -268,13 +267,14 @@ namespace ctranslate2 {
       else {
         for (dim_t i = 0; i < inv_freq.size(); ++i)
           inv_freq.at<float>(i) = 1.f / std::pow(_base, float(i * 2) / float(dim));
+
         if (_scaling_type == RotaryScalingType::Llama3) {
           StorageView new_freqs = inv_freq.sync_copy();
 
           const auto factor = _scaling_factor;
           const float low_freq_factor = _rotary_low_freq_factor;
           const float high_freq_factor = _rotary_high_freq_factor;
-          const auto old_context_len = static_cast< float >(_original_max_position_embeddings);
+          const auto old_context_len = static_cast<float>(_original_max_position_embeddings);
 
           float low_freq_wavelen = old_context_len / low_freq_factor;
           float high_freq_wavelen = old_context_len / high_freq_factor;
@@ -329,7 +329,7 @@ namespace ctranslate2 {
       else
         _cos = cos.to(dtype);
 
-      if (_original_max_position_embeddings != 0 && _max_position_embeddings != 0 && _scaling_type != RotaryScalingType::Llama3) {
+      if (_scaling_type == RotaryScalingType::LongRoPE && _original_max_position_embeddings != 0) {
         StorageView scaling_factor;
         float scale = _max_position_embeddings / _original_max_position_embeddings;
         if (scale <= 1)

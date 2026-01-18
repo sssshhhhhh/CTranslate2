@@ -8,13 +8,32 @@ def fuse_linear(spec, layers):
     if isinstance(layers[0].weight, np.ndarray):
         concatenate = np.concatenate
         zeros = np.zeros
+        ones = np.ones
     else:
         import torch
 
         concatenate = torch.cat
         zeros = torch.zeros
+        ones = torch.ones
 
     spec.weight = concatenate([layer.weight for layer in layers])
+
+    scale_dtype = None
+    for layer in layers:
+        if layer.has_scale():
+            scale_dtype = layer.weight_scale.dtype
+            break
+
+    if scale_dtype is not None:
+        scales = []
+        for layer in layers:
+            if not layer.has_scale():
+                scales.append(ones([layer.weight.shape[0]], dtype=scale_dtype))
+            elif layer.weight_scale.ndim == 0:  # scalar scale
+                scales.append(layer.weight_scale.repeat(layer.weight.shape[0]))
+            else:  # outer vec scale
+                scales.append(layer.weight_scale)
+        spec.weight_scale = concatenate(scales)
 
     bias_dtype = None
     for layer in layers:

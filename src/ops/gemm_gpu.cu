@@ -128,14 +128,14 @@ namespace ctranslate2 {
                                                        &d_bias,
                                                        sizeof(void*)));
         } else if (_activation_type) {
-          hipblasLtEpilogue_t epilogue;
+          hipblasLtEpilogue_t epilogue = HIPBLASLT_EPILOGUE_DEFAULT;
           switch (*_activation_type) {
           case ActivationType::ReLU:
             epilogue = HIPBLASLT_EPILOGUE_RELU;
             break;
           case ActivationType::GELU:
           case ActivationType::GELUTanh:
-          case ActivationType::GELUSigmoid:
+          case ActivationType::GELUSigmoid: // only approx in low precision
             if (*_activation_type == ActivationType::GELUTanh || is_lowp<In>())
               epilogue = HIPBLASLT_EPILOGUE_GELU;
             else
@@ -147,6 +147,10 @@ namespace ctranslate2 {
           default:
             act_fused = false;
           }
+          CUBLAS_CHECK(hipblasLtMatmulDescSetAttribute(matmul,
+                                                       HIPBLASLT_MATMUL_DESC_EPILOGUE,
+                                                       &epilogue,
+                                                       sizeof(epilogue)));
         }
 
         float scale = 1.0f; // scalars are on cpu

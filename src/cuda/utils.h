@@ -97,7 +97,7 @@ namespace ctranslate2 {
 
     const char* cublasGetStatusName(cublasStatus_t status);
 
-    constexpr size_t max_workspace_size = 32 * 1024 * 1024;
+    constexpr size_t max_workspace_size = 4 * 1024 * 1024;
     cudaStream_t get_cuda_stream();
     cublasHandle_t get_cublas_handle();
     void* get_cublas_workspace();

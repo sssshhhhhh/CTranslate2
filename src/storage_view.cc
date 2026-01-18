@@ -470,30 +470,50 @@ namespace ctranslate2 {
     return os;
   }
 
+  template <typename T>
+  void print_row(std::ostream& os, const T* values, const dim_t start, const dim_t size) {
+      const dim_t end = start + size;
+      if (size <= PRINT_MAX_VALUES) {
+        for (dim_t i = start; i < end; ++i) {
+          os << ' ';
+          print_value(os, values[i]);
+        }
+      }
+      else {
+        for (dim_t i = start; i < start + PRINT_MAX_VALUES / 2; ++i) {
+          os << ' ';
+          print_value(os, values[i]);
+        }
+        os << " ...";
+        for (dim_t i = end - PRINT_MAX_VALUES / 2; i < end; ++i) {
+          os << ' ';
+          print_value(os, values[i]);
+        }
+      }
+      os << std::endl;
+  }
+
   std::ostream& operator<<(std::ostream& os, const StorageView& storage) {
     StorageView printable(storage.dtype());
     printable.copy_from(storage);
     TYPE_DISPATCH(
       printable.dtype(),
       const auto* values = printable.data<T>();
-      if (printable.size() <= PRINT_MAX_VALUES) {
-        for (dim_t i = 0; i < printable.size(); ++i) {
-          os << ' ';
-          print_value(os, values[i]);
-        }
-      }
-      else {
-        for (dim_t i = 0; i < PRINT_MAX_VALUES / 2; ++i) {
-          os << ' ';
-          print_value(os, values[i]);
-        }
-        os << " ...";
-        for (dim_t i = printable.size() - (PRINT_MAX_VALUES / 2); i < printable.size(); ++i) {
-          os << ' ';
-          print_value(os, values[i]);
-        }
-      }
-      os << std::endl);
+      if (printable.rank() <= 1) {
+        print_row(os, values, 0, printable.size());
+      } else if (printable.dim(-2) <= PRINT_MAX_VALUES) {
+        const dim_t depth = printable.dim(-1);
+        for (dim_t i = 0; i < printable.dim(-2); ++i)
+          print_row(os, values, i * depth, depth);
+      } else {
+        const dim_t depth = printable.dim(-1);
+        for (dim_t i = 0; i < PRINT_MAX_VALUES / 2; ++i)
+          print_row(os, values, i * depth, depth);
+        os << " ..." << std::endl;
+        const dim_t rows = printable.size() / depth;
+        for (dim_t i = rows - PRINT_MAX_VALUES / 2; i < rows; ++i)
+          print_row(os, values, i * depth, depth);
+      });
     os << "[" << device_to_str(storage.device(), storage.device_index())
        << " " << dtype_name(storage.dtype()) << " storage viewed as ";
     if (storage.is_scalar())

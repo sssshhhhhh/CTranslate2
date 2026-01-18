@@ -216,6 +216,15 @@ _TRANSFORMERS_GENERATION_TESTS = [
         "<|im_start|> user Ċ What Ġis Ġthe Ġcapital Ġof ĠPortugal ? Ġ/ no _th ink Ċ <|im_end|> Ċ "
         "<|im_start|> assistant Ċ <think> ĊĊ </think> ĊĊ The Ġcapital Ġof ĠPortugal Ġis ĠLisbon .",
     ),
+    (
+        "tencent/HY-MT1.5-1.8B",
+        "<｜hy_begin▁of▁sentence｜> <｜hy_User｜> Translate Ġthe Ġfollowing Ġsegment Ġinto ĠGerman , "
+        "Ġwithout Ġadditional Ġexplanation .ĊĊ It âĢĻ s Ġon Ġthe Ġhouse . <｜hy_place▁holder▁no▁8｜>",
+        10,
+        "<｜hy_begin▁of▁sentence｜> <｜hy_User｜> Translate Ġthe Ġfollowing Ġsegment Ġinto ĠGerman , "
+        "Ġwithout Ġadditional Ġexplanation .ĊĊ It âĢĻ s Ġon Ġthe Ġhouse . <｜hy_place▁holder▁no▁8｜> "
+        "Es Ġist Ġk osten los .",
+    ),
 ]
 
 

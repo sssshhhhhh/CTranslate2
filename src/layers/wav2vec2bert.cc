@@ -15,6 +15,7 @@ namespace ctranslate2 {
       , _self_attention(init_attention_layer(model,
                                              scope + "/enc_attn",
                                              use_flash_attention,
+                                             false, // optional
                                              _num_heads,
                                              true, // self_attention
                                              pre_norm))
@@ -106,6 +107,7 @@ namespace ctranslate2 {
       , _self_attention(init_attention_layer(model,
                                              scope + "/adpt_attn_layer",
                                              use_flash_attention,
+                                             false, // optional
                                              _num_heads,
                                              true, // self_attention
                                              pre_norm))

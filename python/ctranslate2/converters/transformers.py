@@ -41,9 +41,9 @@ _SUPPORTED_ACTIVATIONS = {
 
 _SUPPORTED_ROPE_SCALING = {
     "linear": attention_spec.RotaryScalingType.Linear,
-    "su": attention_spec.RotaryScalingType.Su,
+    "su": attention_spec.RotaryScalingType.LongRoPE,
     "llama3": attention_spec.RotaryScalingType.Llama3,
-    "longrope": attention_spec.RotaryScalingType.Su,
+    "longrope": attention_spec.RotaryScalingType.LongRoPE,
 }
 
 _SUPPORTED_QUANTIZATION = {
@@ -229,6 +229,8 @@ class ModelLoader(abc.ABC):
     def set_linear(self, spec, module, quant_type=common_spec.Quantization.CT2):
         if quant_type == common_spec.Quantization.CT2:
             spec.weight = module.weight
+            if hasattr(module, "weight_scale"):  # compressed-tensors
+                spec.weight_scale = module.weight_scale.squeeze().float()
         else:
             spec.weight = module.qweight
             spec.weight_scale = module.scales
@@ -1691,7 +1693,10 @@ class LlamaLoader(ModelLoader):
             rotary_scaling_factor = 1
 
         quantization_config = getattr(model.config, "quantization_config", None)
-        if quantization_config:
+        if (
+            quantization_config
+            and quantization_config.quant_method != "compressed-tensors"
+        ):
             quant_type = None
             if quantization_config.quant_method == "awq":
                 quant_type = _SUPPORTED_QUANTIZATION.get(quantization_config.version)
@@ -1820,6 +1825,180 @@ class LlamaLoader(ModelLoader):
             gc.collect()
 
 
+@register_loader("HunYuanDenseV1Config")
+class HunYuanDenseV1Loader(ModelLoader):
+    @property
+    def architecture_name(self):
+        return "HunYuanDenseV1ForCausalLM"
+
+    def get_model_spec(self, model):
+        num_layers = model.config.num_hidden_layers
+
+        num_heads = model.config.num_attention_heads
+        num_heads_kv = getattr(model.config, "num_key_value_heads", num_heads)
+        if num_heads_kv == num_heads:
+            num_heads_kv = None
+
+        rope_scaling = getattr(model.config, "rope_scaling", None)
+        rotary_base = getattr(model.config, "rope_theta", 10000)
+        if rope_scaling:
+            rope_type = rope_scaling.get("type", rope_scaling.get("rope_type"))
+        else:
+            rope_type = "default"
+
+        # DynamicNTKAlphaRotary
+        if rope_type == "dynamic" and rope_scaling.get("alpha"):
+            rotary_base *= rope_scaling["alpha"] ** (
+                model.config.head_dim / (model.config.head_dim - 2)
+            )
+            rotary_scaling_type = None
+            rotary_scaling_factor = 1
+        elif rope_scaling:
+            rotary_scaling_type = _SUPPORTED_ROPE_SCALING.get(rope_type)
+            rotary_scaling_factor = rope_scaling["factor"]
+
+            if rotary_scaling_type is None:
+                raise NotImplementedError(
+                    "RoPE scaling type '%s' is not yet implemented. "
+                    "The following RoPE scaling types are currently supported: %s"
+                    % (rope_scaling["type"], ", ".join(_SUPPORTED_ROPE_SCALING.keys()))
+                )
+        else:
+            rotary_scaling_type = None
+            rotary_scaling_factor = 1
+
+        quantization_config = getattr(model.config, "quantization_config", None)
+        if (
+            quantization_config
+            and quantization_config.quant_method != "compressed-tensors"
+        ):
+            quant_type = None
+            if quantization_config.quant_method == "awq":
+                quant_type = _SUPPORTED_QUANTIZATION.get(quantization_config.version)
+            if quant_type is None:
+                raise NotImplementedError(
+                    "Quantization type '%s' is not yet implemented. "
+                    "The following Quantization types are currently supported: %s"
+                    % (
+                        quantization_config.quant_method,
+                        ", ".join(_SUPPORTED_QUANTIZATION.keys()),
+                    )
+                )
+            quant_group_size = quantization_config.group_size
+            quant_bits = quantization_config.bits
+        else:
+            quant_type = common_spec.Quantization.CT2
+            quant_group_size = None
+            quant_bits = None
+
+        spec = transformer_spec.TransformerDecoderModelSpec.from_config(
+            num_layers,
+            num_heads,
+            activation=common_spec.Activation.SWISH,
+            pre_norm=True,
+            ffn_glu=True,
+            rms_norm=True,
+            rotary_dim=0,
+            rotary_interleave=False,
+            rotary_scaling_type=rotary_scaling_type,
+            rotary_scaling_factor=rotary_scaling_factor,
+            rotary_base=rotary_base,
+            num_heads_kv=num_heads_kv,
+            quant_type=quant_type,
+            quant_group_size=quant_group_size,
+            quant_bits=quant_bits,
+            qk_norm=True,
+            qk_norm_post_rope=True,
+        )
+
+        self.set_decoder(spec.decoder, model.model, quant_type)
+        self.set_linear(spec.decoder.projection, model.lm_head)
+        return spec
+
+    def get_vocabulary(self, model, tokenizer):
+        tokens = super().get_vocabulary(model, tokenizer)
+
+        extra_ids = model.config.vocab_size - len(tokens)
+        for i in range(extra_ids):
+            tokens.append("<extra_id_%d>" % i)
+        if model.config.vocab_size < len(tokens):
+            tokens = tokens[: model.config.vocab_size]
+
+        return tokens
+
+    def set_vocabulary(self, spec, tokens):
+        spec.register_vocabulary(tokens)
+
+    def set_config(self, config, model, tokenizer):
+        config.bos_token = tokenizer.bos_token
+        config.eos_token = tokenizer.eos_token
+        config.unk_token = (
+            tokenizer.unk_token if tokenizer.unk_token is not None else ""
+        )
+        config.layer_norm_epsilon = model.config.rms_norm_eps
+
+    def set_layer_norm(self, spec, layer_norm):
+        spec.gamma = layer_norm.weight
+
+    def set_decoder(self, spec, module, quant_type=common_spec.Quantization.CT2):
+        spec.scale_embeddings = False
+        self.set_embeddings(spec.embeddings, module.embed_tokens)
+        self.set_layer_norm(spec.layer_norm, module.norm)
+
+        for layer_spec, layer in zip(spec.layer, module.layers):
+            self.set_layer_norm(
+                layer_spec.self_attention.layer_norm, layer.input_layernorm
+            )
+            self.set_layer_norm(
+                layer_spec.ffn.layer_norm, layer.post_attention_layernorm
+            )
+
+            self.set_layer_norm(
+                layer_spec.self_attention.q_norm, layer.self_attn.query_layernorm
+            )
+            self.set_layer_norm(
+                layer_spec.self_attention.k_norm, layer.self_attn.key_layernorm
+            )
+
+            split_layers = [common_spec.LinearSpec() for _ in range(3)]
+            self.set_linear(
+                split_layers[0], layer.self_attn.q_proj, quant_type=quant_type
+            )
+            self.set_linear(
+                split_layers[1], layer.self_attn.k_proj, quant_type=quant_type
+            )
+            self.set_linear(
+                split_layers[2], layer.self_attn.v_proj, quant_type=quant_type
+            )
+
+            if quant_type == common_spec.Quantization.CT2:
+                utils.fuse_linear(layer_spec.self_attention.linear[0], split_layers)
+            else:
+                cc_dim = 1 if quant_type == common_spec.Quantization.AWQ_GEMM else 0
+                utils.fuse_linear_prequant(
+                    layer_spec.self_attention.linear[0], split_layers, cc_dim
+                )
+            self.set_linear(
+                layer_spec.self_attention.linear[1],
+                layer.self_attn.o_proj,
+                quant_type=quant_type,
+            )
+
+            self.set_linear(
+                layer_spec.ffn.linear_0, layer.mlp.gate_proj, quant_type=quant_type
+            )
+            self.set_linear(
+                layer_spec.ffn.linear_0_noact, layer.mlp.up_proj, quant_type=quant_type
+            )
+            self.set_linear(
+                layer_spec.ffn.linear_1, layer.mlp.down_proj, quant_type=quant_type
+            )
+
+            delattr(layer, "self_attn")
+            delattr(layer, "mlp")
+            gc.collect()
+
+
 @register_loader("Gemma3TextConfig")
 @register_loader("Gemma3Config")
 class Gemma3Loader(ModelLoader):
@@ -1851,7 +2030,10 @@ class Gemma3Loader(ModelLoader):
         layer_types = getattr(model.config, "layer_types", None)
 
         quantization_config = getattr(model.config, "quantization_config", None)
-        if quantization_config:
+        if (
+            quantization_config
+            and quantization_config.quant_method != "compressed-tensors"
+        ):
             if quantization_config.quant_method == "awq":
                 quant_type = _SUPPORTED_QUANTIZATION.get(quantization_config.version)
             if quant_type is None:
@@ -1859,8 +2041,12 @@ class Gemma3Loader(ModelLoader):
                     "Quantization type '%s' is not yet implemented."
                     % quantization_config.quant_method
                 )
+            quant_group_size = quantization_config.group_size
+            quant_bits = quantization_config.bits
         else:
             quant_type = common_spec.Quantization.CT2
+            quant_group_size = None
+            quant_bits = None
 
         # Create base spec using from_config
         spec = transformer_spec.TransformerDecoderModelSpec.from_config(
@@ -1881,6 +2067,9 @@ class Gemma3Loader(ModelLoader):
             head_dim=head_dim,
             sliding_window=sliding_window,  # Default to local sliding window
             pre_post_layer_norm=True,
+            quant_type=quant_type,
+            quant_group_size=quant_group_size,
+            quant_bits=quant_bits,
             qk_norm=True,
         )
 
@@ -1933,7 +2122,8 @@ class Gemma3Loader(ModelLoader):
             config.eos_token = tokenizer.eos_token
 
     def set_layer_norm(self, spec, layer_norm):
-        spec.gamma = layer_norm.weight + 1.0
+        spec.gamma = layer_norm.weight
+        spec.layer_norm_use_residual = True
 
     def set_decoder(self, spec, module, quant_type=common_spec.Quantization.CT2):
         spec.scale_embeddings = True
@@ -2038,7 +2228,10 @@ class MistralLoader(ModelLoader):
             rotary_scaling_factor = 1
 
         quantization_config = getattr(model.config, "quantization_config", None)
-        if quantization_config:
+        if (
+            quantization_config
+            and quantization_config.quant_method != "compressed-tensors"
+        ):
             if quantization_config.quant_method == "awq":
                 quant_type = _SUPPORTED_QUANTIZATION.get(quantization_config.version)
             if quant_type is None:
@@ -2185,7 +2378,10 @@ class Qwen2Loader(ModelLoader):
 
         # Check for AWQ quantization config
         quantization_config = getattr(model.config, "quantization_config", None)
-        if quantization_config:
+        if (
+            quantization_config
+            and quantization_config.quant_method != "compressed-tensors"
+        ):
             quant_type = None
             if quantization_config.quant_method == "awq":
                 quant_type = _SUPPORTED_QUANTIZATION.get(quantization_config.version)
@@ -2340,7 +2536,10 @@ class Qwen3Loader(ModelLoader):
 
         # Check for AWQ quantization config
         quantization_config = getattr(model.config, "quantization_config", None)
-        if quantization_config:
+        if (
+            quantization_config
+            and quantization_config.quant_method != "compressed-tensors"
+        ):
             quant_type = None
             if quantization_config.quant_method == "awq":
                 quant_type = _SUPPORTED_QUANTIZATION.get(quantization_config.version)
@@ -2608,7 +2807,10 @@ class Phi3Loader(ModelLoader):
 
         # Check for AWQ quantization config
         quantization_config = getattr(model.config, "quantization_config", None)
-        if quantization_config:
+        if (
+            quantization_config
+            and quantization_config.quant_method != "compressed-tensors"
+        ):
             quant_type = None
             if quantization_config.quant_method == "awq":
                 quant_type = _SUPPORTED_QUANTIZATION.get(quantization_config.version)

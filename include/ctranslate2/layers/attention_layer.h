@@ -72,7 +72,7 @@ namespace ctranslate2 {
     enum class RotaryScalingType {
       None = -1,
       Linear,
-      Su,
+      LongRoPE,
       Llama3,
     };
 

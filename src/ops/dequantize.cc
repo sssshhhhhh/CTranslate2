@@ -45,7 +45,7 @@ namespace ctranslate2 {
         if (!scale.is_scalar() && scale.size() != batch_size)
           throw std::invalid_argument("FP8 dequantization expects scalar or per-batch scales");
 
-        if (output.dtype() == DataType::FLOAT8)
+        if (input.dtype() == DataType::FLOAT8)
           dequantize<Device::CPU, float8_t, float>(input, scale, output);
         else
           dequantize<Device::CPU, bfloat8_t, float>(input, scale, output);

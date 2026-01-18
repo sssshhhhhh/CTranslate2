@@ -333,7 +333,7 @@ namespace ctranslate2 {
       const bool is_lowp = is_lowp_type(target_dtype);
 
       if (saved_scale) {
-        if (is_lowp)
+        if (is_lowp_type(variable.dtype()))
           spdlog::warn("Dequantizing low precision variable " + name + " to convert from "
                        + dtype_name(variable.dtype()) + " to " + dtype_name(target_dtype));
         // Dequantize back to float
@@ -343,7 +343,7 @@ namespace ctranslate2 {
         variable = std::move(dequantized);
       }
 
-      if (is_float_type(target_dtype) && !is_lowp) {
+      if (!is_lowp && is_float_type(target_dtype)) {
         target_variable = variable.to(target_dtype);
 
       } else {

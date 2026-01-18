@@ -55,11 +55,11 @@ namespace ctranslate2 {
           break;                                                                        \
         case DataType::FLOAT16:                                                         \
           compute<Device::CUDA, T, float16_t, float16_t>(a_lowp, b, c, nullptr, bias,   \
-                                              residual, scale_a, scale_b);              \
+                                                         residual, scale_a, scale_b);   \
           break;                                                                        \
         case DataType::BFLOAT16:                                                        \
           compute<Device::CUDA, T, bfloat16_t, bfloat16_t>(a_lowp, b, c, nullptr, bias, \
-                                               residual, scale_a, scale_b);             \
+                                                           residual, scale_a, scale_b); \
           break;                                                                        \
         case DataTypeToEnum<T>::value:                                                  \
           switch (bias ? bias->dtype() : DataType::FLOAT32) {                           \

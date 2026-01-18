@@ -211,6 +211,12 @@ class LayerSpec(FrozenAttr, metaclass=FrozenMeta):
             if not quantization:
                 setattr(spec, key, value)
                 return
+            if value.dtype in ("float8_e4m3fn", "float8_e5m2"):
+                raise ValueError(
+                    "Re-quantization from %s to %s is not supported, "
+                    "remove --quantization to convert directly"
+                    % (value.dtype(), quantization)
+                )
 
             weight_dtype = quantization.split("_")[0]
             float_dtype = quantization.split("_")[-1]
@@ -324,15 +330,10 @@ def _dtype_to_type_id(object_dtype):
         "int32",
         "float16",
         "bfloat16",
-        "float8",
-        "float8_float32",
-        "float8_float16",
-        "float8_bfloat16",
-        "bfloat8",
-        "bfloat8_float32",
-        "bfloat8_float16",
-        "bfloat8_bfloat16",
+        "float8_e4m3fn",
+        "float8_e5m2",
     )
+
     try:
         return dtypes.index(object_dtype)
     except ValueError:

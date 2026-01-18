@@ -51,6 +51,9 @@ class LinearSpec(model_spec.LayerSpec):
     def has_bias(self):
         return not isinstance(self.bias, str)
 
+    def has_scale(self):
+        return not isinstance(self.weight_scale, str)
+
 
 class Conv1DSpec(model_spec.LayerSpec):
     def __init__(self):

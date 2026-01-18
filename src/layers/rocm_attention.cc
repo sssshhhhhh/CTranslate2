@@ -275,6 +275,7 @@ namespace ctranslate2 {
       , _cache_time_dim(_flash_attention || _merge_time_and_head_dims ? 1 : 2)
       , _q_norm(build_optional_layer<LayerNorm>(model, scope + "/q_norm"))
       , _k_norm(build_optional_layer<LayerNorm>(model, scope + "/k_norm"))
+      , _qk_norm_post_rope(model.get_flag_with_default(scope + "/qk_norm_post_rope", false))
       , _keep_packed_qkv(_flash_attention
                          && _num_heads == _num_heads_kv
                          && !_q_norm && !_k_norm
@@ -416,16 +417,18 @@ namespace ctranslate2 {
           }
         }
 
-        if (_q_norm)
-          (*_q_norm)(queries_proj, queries_proj);
-        if (_k_norm)
-          (*_k_norm)(keys_proj, keys_proj);
+        if (!_qk_norm_post_rope) {
+          if (_q_norm)
+            (*_q_norm)(queries_proj, queries_proj);
+          if (_k_norm)
+            (*_k_norm)(keys_proj, keys_proj);
+        }
 
         // Maybe move rope to dpa for fa2 fusion
         // Potential mqa optimzation: use untransposed rope
         if (_rotary_embeddings) {
           if (_merge_time_and_head_dims) {
-            queries_proj.reshape({queries_proj.dim(0), -1, _d_model});
+            queries_proj.reshape({queries_proj.dim(0), -1, _d_head * _num_heads});
             split_heads(queries_proj, _num_heads);
           }
 
@@ -436,6 +439,13 @@ namespace ctranslate2 {
             combine_heads(queries_proj, _num_heads);
             queries_proj.reshape({queries_proj.dim(0), -1, _d_head});
           }
+        }
+
+        if (_qk_norm_post_rope) {
+          if (_q_norm)
+            (*_q_norm)(queries_proj, queries_proj);
+          if (_k_norm)
+            (*_k_norm)(keys_proj, keys_proj);
         }
 
         if (cached_keys != nullptr) {
@@ -540,7 +550,10 @@ namespace ctranslate2 {
       }
 
       if (_merge_time_and_head_dims) {
-        context.reshape(queries.shape());
+        const dim_t batch_size = queries_proj.dim(0);
+        const dim_t time = queries_proj.dim(1) / _num_heads;
+        const dim_t depth = _num_heads * _d_head;
+        context.reshape({batch_size, time, depth});
         if (queries_padder)
           queries_padder->remove_padding(context);
       } else {
@@ -599,7 +612,7 @@ namespace ctranslate2 {
       // fa2 x has shape [batch_size, time, num_heads, _d_head]
       // eager x has shape [batch_size, num_heads, time, _d_head]
       const dim_t batch_size = x.dim(0);
-      const dim_t time = x.dim(_cache_time_dim);
+      const dim_t time = x.dim(_flash_attention ? 1 : 2);
       const dim_t depth = _d_head * num_heads;
 
       if (!_flash_attention && time > 1) {

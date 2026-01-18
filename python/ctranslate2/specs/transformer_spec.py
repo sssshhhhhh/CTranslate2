@@ -151,6 +151,7 @@ class TransformerDecoderSpec(model_spec.LayerSpec):
         quant_group_size: Optional[int] = None,
         quant_bits: Optional[int] = None,
         qk_norm: bool = False,
+        qk_norm_post_rope: bool = False,
         external_pre_post_encoder_layers: Optional[bool] = False,
     ):
         """Initializes a Transformer decoder specification.
@@ -185,8 +186,8 @@ class TransformerDecoderSpec(model_spec.LayerSpec):
           rotary_scaling_factor: Factor used in the RoPE scaling.
           rotary_base: The base period of the rotary embeddings.
           original_max_position_embeddings: The original max position embeddings
-            for Su rope embeddings
-          max_position_embeddings: The max position embeddings for Su rope embeddings
+            for LongRoPE rope embeddings
+          max_position_embeddings: The max position embeddings for LongRoPE rope embeddings
           parallel_residual: Use parallel residual connections in each layer block, as used
             by the GPT-J and GPT-NeoX models.
           shared_layer_norm: When using parallel residual, share the input and post
@@ -198,6 +199,8 @@ class TransformerDecoderSpec(model_spec.LayerSpec):
           quant_type: quantization type used (like awq... for lower bit quantization)
           quant_group_size: group size of the lower bit quantization
           quant_bits: number of bit of the quantization (ex: 4bit)
+          qk_norm: Apply layer normalization to the query and key projections.
+          qk_norm_post_rope: Apply QK norm after RoPE
           external_pre_post_encoder_layers: if the encoder attention pre and processing
             is done outside the attention.
         """
@@ -262,6 +265,7 @@ class TransformerDecoderSpec(model_spec.LayerSpec):
                 head_dim=head_dim,
                 sliding_window=sliding_window,
                 qk_norm=qk_norm,
+                qk_norm_post_rope=qk_norm_post_rope,
                 external_pre_post_encoder_layers=external_pre_post_encoder_layers,
             )
             for _ in range(num_layers)
@@ -275,7 +279,7 @@ class TransformerDecoderSpec(model_spec.LayerSpec):
             self.project_in = common_spec.LinearSpec()
             self.project_out = common_spec.LinearSpec()
 
-        if quant_type is not None:
+        if quant_type:
             self._config["quantization_type"] = quant_type
             self._config["quantization_bits"] = quant_bits
             self._config["quantization_group_size"] = quant_group_size
@@ -358,6 +362,7 @@ class TransformerDecoderLayerSpec(model_spec.LayerSpec):
         head_dim=None,
         sliding_window=None,
         qk_norm=False,
+        qk_norm_post_rope=False,
         external_pre_post_encoder_layers=False,
     ):
         self.self_attention = attention_spec.MultiHeadAttentionSpec(
@@ -376,6 +381,7 @@ class TransformerDecoderLayerSpec(model_spec.LayerSpec):
             head_dim=head_dim,
             sliding_window=sliding_window,
             qk_norm=qk_norm,
+            qk_norm_post_rope=qk_norm_post_rope,
         )
 
         if with_encoder_attention:
@@ -646,6 +652,7 @@ class TransformerDecoderModelSpec(model_spec.LanguageModelSpec):
         quant_group_size: Optional[int] = None,
         quant_bits: Optional[int] = None,
         qk_norm: bool = False,
+        qk_norm_post_rope: bool = False,
     ):
         """Creates a Transformer decoder model specification.
 
@@ -673,8 +680,8 @@ class TransformerDecoderModelSpec(model_spec.LanguageModelSpec):
           rotary_scaling_factor: Factor used in the RoPE scaling.
           rotary_base: The base period of the rotary embeddings.
           original_max_position_embeddings: The original max position embeddings
-            for Su rope embeddings
-          max_position_embeddings: The max position embeddings for Su rope embeddings
+            for LongRoPE rope embeddings
+          max_position_embeddings: The max position embeddings for LongRoPE rope embeddings
           parallel_residual: Use parallel residual connections in each layer block, as used
             by the GPT-J and GPT-NeoX models.
           shared_layer_norm: When using parallel residual, share the input and post
@@ -687,6 +694,8 @@ class TransformerDecoderModelSpec(model_spec.LanguageModelSpec):
           quant_type: quantization type used (like awq... for lower bit quantization)
           quant_group_size: group size of the lower bit quantization
           quant_bits: number of bit of the quantization (ex: 4bit)
+          qk_norm: Apply layer normalization to the query and key projections.
+          qk_norm_post_rope: Apply QK norm after RoPE
         """
         decoder = TransformerDecoderSpec(
             num_layers,
@@ -721,6 +730,7 @@ class TransformerDecoderModelSpec(model_spec.LanguageModelSpec):
             quant_group_size=quant_group_size,
             quant_bits=quant_bits,
             qk_norm=qk_norm,
+            qk_norm_post_rope=qk_norm_post_rope,
         )
 
         return cls(decoder)

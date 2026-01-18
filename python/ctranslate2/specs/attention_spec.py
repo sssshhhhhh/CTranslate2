@@ -10,7 +10,7 @@ class RotaryScalingType(enum.IntEnum):
     """RoPE scaling type."""
 
     Linear = 0
-    Su = 1
+    LongRoPE = 1
     Llama3 = 2
 
 
@@ -33,6 +33,7 @@ class MultiHeadAttentionSpec(model_spec.LayerSpec):
         head_dim=None,
         sliding_window=None,
         qk_norm=False,
+        qk_norm_post_rope=False,
         qk_norm_rms=True,
         has_norm=True,
     ):
@@ -47,6 +48,8 @@ class MultiHeadAttentionSpec(model_spec.LayerSpec):
         if qk_norm:
             self.q_norm = common_spec.LayerNormSpec(rms_norm=qk_norm_rms)
             self.k_norm = common_spec.LayerNormSpec(rms_norm=qk_norm_rms)
+        if qk_norm_post_rope:
+            self.qk_norm_post_rope = True
 
         if relative_position:
             self.relative_position_keys = None
@@ -77,11 +80,11 @@ class MultiHeadAttentionSpec(model_spec.LayerSpec):
 
             if rotary_scaling_type is not None:
                 self.rotary_scaling_type = np.dtype("int8").type(rotary_scaling_type)
-            if rotary_scaling_type is RotaryScalingType.Linear:
+            if rotary_scaling_factor != 1:
                 self.rotary_scaling_factor = np.dtype("float32").type(
                     rotary_scaling_factor
                 )
-            elif rotary_scaling_type is RotaryScalingType.Su:
+            if rotary_scaling_type is RotaryScalingType.LongRoPE:
                 self.rotary_scaling_long_factor = None
                 self.rotary_scaling_short_factor = None
             elif rotary_scaling_type is RotaryScalingType.Llama3:
