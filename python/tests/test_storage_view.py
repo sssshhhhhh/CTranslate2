@@ -37,11 +37,11 @@ def test_storageview_cpu(dtype, name):
     with pytest.raises(AttributeError, match="CPU"):
         s.__cuda_array_interface__
 
-    assert str(s) == " 1 1 1 ... 1 1 1\n[cpu:0 %s storage viewed as 2x4]" % name
+    assert str(s) == " 1 1 1 1\n 1 1 1 1\n[cpu:0 %s storage viewed as 2x4]" % name
 
     x[0][2] = 3
     x[1][3] = 8
-    assert str(s) == " 1 1 3 ... 1 1 8\n[cpu:0 %s storage viewed as 2x4]" % name
+    assert str(s) == " 1 1 3 1\n 1 1 1 8\n[cpu:0 %s storage viewed as 2x4]" % name
 
     y = np.array(x)
     assert test_utils.array_equal(x, y)
@@ -75,11 +75,11 @@ def test_storageview_cuda():
     with pytest.raises(AttributeError, match="CUDA"):
         s.__array_interface__
 
-    assert str(s) == " 1 1 1 ... 1 1 1\n[cuda:0 float32 storage viewed as 2x4]"
+    assert str(s) == " 1 1 1 1\n 1 1 1 1\n[cuda:0 float32 storage viewed as 2x4]"
 
     x[0][2] = 3
     x[1][3] = 8
-    assert str(s) == " 1 1 3 ... 1 1 8\n[cuda:0 float32 storage viewed as 2x4]"
+    assert str(s) == " 1 1 3 1\n 1 1 1 8\n[cuda:0 float32 storage viewed as 2x4]"
 
     y = torch.as_tensor(s, device="cuda")
     _assert_same_array(s.__cuda_array_interface__, y.__cuda_array_interface__)
