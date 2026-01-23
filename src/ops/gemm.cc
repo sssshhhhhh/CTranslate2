@@ -7,7 +7,7 @@
 namespace ctranslate2 {
   namespace ops {
 
-    // act(x + bias + residual)
+    // activation_type(x + bias + residual)
     void apply_bias_and_activation(StorageView& x,
                                    const StorageView* bias,
                                    const ActivationType* activation_type,
