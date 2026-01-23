@@ -142,7 +142,10 @@ namespace ctranslate2 {
     }
 
     template <typename In, typename Out>
-    static void mul(const In* a, const In* x, Out* y, dim_t size);
+    static void mul(const In* x, Out* y, const float s, dim_t size);
+
+    template <typename In, typename Out>
+    static void mul(const In* a, const In* b, Out* c, const float s, dim_t size);
 
     template <typename T>
     static void penalize_previous_tokens(T* scores,

@@ -37,14 +37,14 @@ namespace ctranslate2 {
                        const StorageView* bias,
                        const StorageView* residual,
                        const StorageView* scale_a,
-                       const StorageView* scale_b) const {
-      // c = _activation_type(_alpha * (scale_a * a) @ (scale_b * b) + bias + residual)
+                       const StorageView* scale_b,
+                       const float scale_c) const {
+      // c = _activation_type(_alpha * (scale_a * a) @ (scale_b * b) + bias + residual) * scale_c
       // If _beta != 0, c = _activation_type(_alpha * (scale_a * a) @ (scale_b * b) + bias + _beta * c) + residual
+      // scale_a/b/c is only supported with low precision matrices a/b/c
       // scale_a/b is supported with 2 modes:
-      // - FP8 scalar applied to the whole tensor
-      // - FP8 vector outer-dim len (m/n) [m,k]@[k,n]=[m,n] for each row/col
-      // Find supported solutions in msgpack hipblaslt/library/TensileLibrary_lazy_gfx0000.dat
-      // e.g. gfx1201 vector scale on b only supported with bf16 output
+      // - Scalar applied to the whole tensor
+      // - Vector outer-dim len (m/n) [m,k]@[k,n]=[m,n] for each row/col
 
       const dim_t k = a.dim(_trans_a ? -2 : -1);
       const dim_t n = b.dim(_trans_b ? -2 : -1);
@@ -61,8 +61,13 @@ namespace ctranslate2 {
       }
 
 #ifdef CT2_USE_HIP
+      // Find supported solutions in msgpack hipblaslt/library/TensileLibrary_lazy_gfx0000.dat
+      // e.g. gfx1201 vector scale on b (weights) only supported with bf16 output
       // hipBLAS assumes column-major storage, so swap a and b accordingly.
-      // HIPBLASLT_ORDER_ROW doesn't work?
+      // Silently fails:
+      // HIPBLASLT_ORDER_ROW doesn't do anything
+      // SCALE_OUTER_VEC_32F on DESC_B_SCALE_MODE stays on scalar mode
+      // hipblasLtMatmulHeuristicResult_t.workspaceSize is always 0
       if constexpr (!std::is_same_v<Out, int32_t>) {
         hipStream_t stream = cuda::get_cuda_stream();
         hipblasLtHandle_t handle = cuda::get_cublas_handle();
@@ -186,6 +191,18 @@ namespace ctranslate2 {
                                                          sizeof(float*)));
           }
         }
+        StorageView scale_d(DataType::FLOAT32, D);
+        if (scale_c != 1.f) {
+          if (!act_fused || residual && _beta != 0.f)
+            throw std::invalid_argument("Gemm scale_c unsupported, remove input_scale from model");
+          scale_d.resize({});
+          float* d_scale_d = scale_d.data<float>();
+          cross_device_primitives<Device::CPU, D>::copy(&scale_c, d_scale_d, 1);
+          CUBLAS_CHECK(hipblasLtMatmulDescSetAttribute(matmul,
+                                                       HIPBLASLT_MATMUL_DESC_D_SCALE_POINTER,
+                                                       &d_scale_d,
+                                                       sizeof(float*)));
+        }
 
         hipblasLtMatmulPreference_t pref;
         CUBLAS_CHECK(hipblasLtMatmulPreferenceCreate(&pref));
@@ -276,7 +293,8 @@ namespace ctranslate2 {
                                                const StorageView* bias,                 \
                                                const StorageView* residual,             \
                                                const StorageView* scale_a,              \
-                                               const StorageView* scale_b) const;
+                                               const StorageView* scale_b,              \
+                                               const float scale_c) const;
 
     DECLARE_IMPL(int8_t, int32_t, int32_t)
     DECLARE_IMPL(float, float, float)

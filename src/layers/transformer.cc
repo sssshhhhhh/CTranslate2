@@ -24,24 +24,28 @@ namespace ctranslate2 {
 
       StorageView ff_input(_ff1.input_type(), device);
       const StorageView* x = &input;
+      bool scaled_input = false;
       if (_layer_norm && _pre_norm) {
-        (*_layer_norm)(input, ff_input);
+        (*_layer_norm)(input, ff_input, 1.f / _ff1.input_scale());
+        scaled_input = true;
         x = &ff_input;
       }
 
       // For low precision quantize ff2 input in ff1, or Mul for GLU
       StorageView inner(_ff1_noact ? dtype : _ff2.input_type(), device);
-      _ff1(*x, inner);
+      const float output_scale = _ff1_noact ? 1.f : 1.f / _ff2.input_scale();
+      _ff1(*x, inner, scaled_input, output_scale);
+
       StorageView* y = &inner;
       if (_ff1_noact) {
         StorageView linear(dtype, device);
-        (*_ff1_noact)(*x, linear);
+        (*_ff1_noact)(*x, linear, scaled_input);
         if (is_lowp_type(_ff2.input_type()))
           y = &ff_input;
-        ops::Mul()(linear, inner, *y);
+        ops::Mul()(linear, inner, *y, 1.f / _ff2.input_scale());
       }
 
-      _ff2(*y, output, _layer_norm ? &input : nullptr);
+      _ff2(*y, output, _layer_norm ? &input : nullptr, /*scaled_input=*/true);
 
       if (_tensor_parallel) {
         Shape shape = output.shape();

@@ -7,11 +7,6 @@
   DEVICE_DISPATCH(DEVICE, TYPE_DISPATCH(TYPE, (STMTS)))
 
 
-#define NON_FLOAT_CASE(NAME)                                            \
-  default:                                                              \
-    throw std::invalid_argument(NAME " only supports float types");     \
-
-
 #ifndef CT2_WITH_CUDA
 
 #  define DEVICE_AND_FLOAT_DISPATCH(NAME, DEVICE, TYPE, STMTS)          \

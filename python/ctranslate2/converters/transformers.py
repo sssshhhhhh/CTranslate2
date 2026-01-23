@@ -231,6 +231,8 @@ class ModelLoader(abc.ABC):
             spec.weight = module.weight
             if hasattr(module, "weight_scale"):  # compressed-tensors
                 spec.weight_scale = module.weight_scale.squeeze().float()
+                if hasattr(module, "input_scale"):
+                    spec.input_scale = module.input_scale.item()
         else:
             spec.weight = module.qweight
             spec.weight_scale = module.scales

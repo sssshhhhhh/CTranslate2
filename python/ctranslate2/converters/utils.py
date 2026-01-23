@@ -25,15 +25,20 @@ def fuse_linear(spec, layers):
             break
 
     if scale_dtype is not None:
-        scales = []
+        weight_scales = []
+        input_scale = 0
         for layer in layers:
             if not layer.has_scale():
-                scales.append(ones([layer.weight.shape[0]], dtype=scale_dtype))
+                weight_scales.append(ones([layer.weight.shape[0]], dtype=scale_dtype))
             elif layer.weight_scale.ndim == 0:  # scalar scale
-                scales.append(layer.weight_scale.repeat(layer.weight.shape[0]))
+                weight_scales.append(layer.weight_scale.repeat(layer.weight.shape[0]))
             else:  # outer vec scale
-                scales.append(layer.weight_scale)
-        spec.weight_scale = concatenate(scales)
+                weight_scales.append(layer.weight_scale)
+            if not isinstance(layer.input_scale, str):
+                input_scale = max(input_scale, layer.input_scale)
+        spec.weight_scale = concatenate(weight_scales)
+        if input_scale != 0:
+            spec.input_scale = input_scale
 
     bias_dtype = None
     for layer in layers:

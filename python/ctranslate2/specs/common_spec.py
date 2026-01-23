@@ -46,6 +46,7 @@ class LinearSpec(model_spec.LayerSpec):
         self.weight = None
         self.weight_scale = model_spec.OPTIONAL
         self.weight_zero = model_spec.OPTIONAL
+        self.input_scale = model_spec.OPTIONAL
         self.bias = model_spec.OPTIONAL
 
     def has_bias(self):

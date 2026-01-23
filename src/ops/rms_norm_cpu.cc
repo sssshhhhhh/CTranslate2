@@ -8,7 +8,11 @@ namespace ctranslate2 {
     template <Device D, typename In, typename Out>
     void RMSNorm::compute(const StorageView& gamma,
                           const StorageView& input,
-                          StorageView& output) const {
+                          StorageView& output,
+                          const float scale) const {
+      if (scale != 1.f)
+        throw std::invalid_argument("RMSNorm scale not supported on CPU");
+
       const dim_t depth = input.dim(-1);
       const dim_t batch_size = input.size() / depth;
       CPU_ISA_DISPATCH((cpu::rms_norm<ISA>(input.data<In>(),
@@ -23,7 +27,8 @@ namespace ctranslate2 {
 #define DECLARE_IMPL(T)                                                   \
     template void RMSNorm::compute<Device::CPU, T, T>(const StorageView&, \
                                                       const StorageView&, \
-                                                      StorageView&) const;
+                                                      StorageView&,       \
+                                                      const float) const;
 
     DECLARE_IMPL(float)
 

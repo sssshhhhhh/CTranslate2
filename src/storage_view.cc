@@ -111,7 +111,6 @@ namespace ctranslate2 {
       DEVICE_DISPATCH(x.device(), primitives<D>::convert(x.data<bfloat8_t>(), y.data<T>(), x.size()));
       break;
     default:
-      // TODO: support other conversions.
       throw std::invalid_argument("Conversion from " + dtype_name(x.dtype())
                                   + " to " + dtype_name(y.dtype()) + " is not yet implemented");
     }
@@ -119,7 +118,7 @@ namespace ctranslate2 {
 
   void StorageView::to(StorageView& out) const {
     if (_device != out._device || _device_index != out._device_index)
-      throw std::invalid_argument("out StorageView must have the same device");
+      throw std::invalid_argument("StorageView out must have the same device");
     out.resize(_shape);
     switch (out.dtype()) {
     case DataType::FLOAT32:

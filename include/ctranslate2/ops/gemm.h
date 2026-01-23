@@ -29,7 +29,8 @@ namespace ctranslate2 {
                       const StorageView* bias = nullptr,
                       const StorageView* residual = nullptr,
                       const StorageView* scale_a = nullptr,
-                      const StorageView* scale_b = nullptr) const;
+                      const StorageView* scale_b = nullptr,
+                      const float scale_c = 1.f) const;
 
       // Return the packed representation of b, if implemented by the GEMM backend.
       static StorageView pack_b_input(const StorageView& b,
@@ -53,9 +54,6 @@ namespace ctranslate2 {
       bool _a_is_packed;
       bool _b_is_packed;
 
-    protected:
-      const ActivationType* _activation_type;
-
       template <Device D, typename In, typename Out, typename Bias>
       void compute(const StorageView& a,
                    const StorageView& b,
@@ -64,7 +62,21 @@ namespace ctranslate2 {
                    const StorageView* bias,
                    const StorageView* residual,
                    const StorageView* scale_a = nullptr,
-                   const StorageView* scale_b = nullptr) const;
+                   const StorageView* scale_b = nullptr,
+                   const float scale_c = 1.f) const;
+
+      template <Device D, typename T>
+      void compute_lowp(const StorageView& a,
+                        const StorageView& b,
+                        StorageView& c,
+                        const StorageView* bias,
+                        const StorageView* residual,
+                        const StorageView* scale_a,
+                        const StorageView* scale_b,
+                        const float scale_c) const;
+
+    protected:
+      const ActivationType* _activation_type;
     };
 
   }

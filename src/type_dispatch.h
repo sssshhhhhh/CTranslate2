@@ -58,6 +58,11 @@ namespace ctranslate2 {
     break;                                      \
   }
 
+#define NON_FLOAT_CASE(NAME)                                            \
+  default:                                                              \
+    throw std::invalid_argument(NAME " only supports float types");     \
+
+
 #define SINGLE_ARG(...) __VA_ARGS__
 #define TYPE_DISPATCH(TYPE_ENUM, STMTS)         \
   switch (TYPE_ENUM) {                          \
@@ -69,6 +74,14 @@ namespace ctranslate2 {
     TYPE_CASE(bfloat16_t, SINGLE_ARG(STMTS))    \
     TYPE_CASE(float8_t, SINGLE_ARG(STMTS))      \
     TYPE_CASE(bfloat8_t, SINGLE_ARG(STMTS))     \
+  }
+
+#define FLOAT_DISPATCH(NAME, TYPE_ENUM, STMTS)  \
+  switch (TYPE_ENUM) {                          \
+    TYPE_CASE(float, SINGLE_ARG(STMTS))         \
+    TYPE_CASE(float16_t, SINGLE_ARG(STMTS))     \
+    TYPE_CASE(bfloat16_t, SINGLE_ARG(STMTS))    \
+    NON_FLOAT_CASE(NAME)                        \
   }
 
 #define DECLARE_ALL_TYPES(FUNC)                 \

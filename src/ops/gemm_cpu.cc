@@ -13,7 +13,8 @@ namespace ctranslate2 {
                        const StorageView* bias,
                        const StorageView* residual,
                        const StorageView*,
-                       const StorageView*) const {
+                       const StorageView*,
+                       const float) const {
       const dim_t k = a.dim(_trans_a ? -2 : -1);
       const dim_t n = b.dim(_trans_b ? -2 : -1);
       const dim_t m = a.size() / k;  // Collapse leading dimensions.
@@ -50,7 +51,8 @@ namespace ctranslate2 {
                                              const StorageView* bias,                   \
                                              const StorageView* residual,               \
                                              const StorageView* scale_a,                \
-                                             const StorageView* scale_b) const;
+                                             const StorageView* scale_b,                \
+                                             const float scale_c) const;
 
     DECLARE_IMPL(int8_t, int32_t)
     DECLARE_IMPL(int16_t, int32_t)

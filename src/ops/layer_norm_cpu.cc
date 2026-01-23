@@ -13,7 +13,11 @@ namespace ctranslate2 {
                             const dim_t outer_size,
                             const dim_t axis_size,
                             const dim_t inner_size,
-                            StorageView& output) const {
+                            StorageView& output,
+                            const float scale) const {
+      if (scale != 1.f)
+        throw std::invalid_argument("LayerNorm scale not supported on CPU");
+
       if (axis == input.rank() - 1 && beta && gamma) {
         CPU_ISA_DISPATCH((cpu::layer_norm<ISA>(input.data<In>(),
                                                gamma->data<In>(),
@@ -43,7 +47,8 @@ namespace ctranslate2 {
                                           const dim_t outer_size,   \
                                           const dim_t axis_size,    \
                                           const dim_t inner_size,   \
-                                          StorageView& output) const;
+                                          StorageView& output,      \
+                                          const float scale) const;
 
     DECLARE_IMPL(float)
 

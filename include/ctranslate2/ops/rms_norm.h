@@ -11,13 +11,15 @@ namespace ctranslate2 {
 
       void operator()(const StorageView& gamma,
                       const StorageView& input,
-                      StorageView& output) const;
+                      StorageView& output,
+                      const float scale = 1.f) const;
 
     private:
       template <Device D, typename In, typename Out>
       void compute(const StorageView& gamma,
                    const StorageView& input,
-                   StorageView& output) const;
+                   StorageView& output,
+                    const float scale) const;
 
       const float _epsilon;
       const bool _use_residual;

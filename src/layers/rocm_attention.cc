@@ -366,7 +366,7 @@ namespace ctranslate2 {
                                    bool return_normalized_attention,
                                    StorageView* position_bias,
                                    dim_t offset) const {
-      PROFILE("Attention");
+      PROFILE(_self_attention ? "SelfAttention" : "CrossAttention");
       const Device device = queries.device();
       const DataType dtype = queries.dtype();
       StorageView fused_proj(dtype, device);
@@ -376,12 +376,14 @@ namespace ctranslate2 {
       StorageView proj_input(_linear[0].input_type(), device);
 
       const StorageView* q = &queries;
+      bool scaled_input = false;
       if (_layer_norm && _pre_norm) {
-        (*_layer_norm)(queries, proj_input);
+        (*_layer_norm)(queries, proj_input, 1.f / _linear[0].input_scale());
+        scaled_input = true;
         q = &proj_input;
       }
 
-      _linear[0](*q, fused_proj);
+      _linear[0](*q, fused_proj, scaled_input);
 
       dim_t beam_size = 1;
 
@@ -480,20 +482,20 @@ namespace ctranslate2 {
       StorageView& context = fused_proj;  // Reuse storage.
       if (_flash_attention && !attention) {
         bool is_causal = bool(values_lengths); // Assume values_lengths means causal
-        ops::FlashAttention fl_attn_ops(_queries_scale, 0, is_causal);
-        fl_attn_ops(queries_proj,
-                    keys_proj,
-                    values_proj,
-                    context,
-                    nullptr, // cached_keys
-                    nullptr, // cached_values
-                    nullptr, // attention
-                    false, // return_normalized_attention
-                    nullptr, // rotary_cos
-                    nullptr, // rotary_sin
-                    false, // rotary_interleave
-                    nullptr, // alibi
-                    0); // offset
+        ops::FlashAttention fl_attn_op(_queries_scale, 0, is_causal);
+        fl_attn_op(queries_proj,
+                   keys_proj,
+                   values_proj,
+                   context,
+                   nullptr, // cached_keys
+                   nullptr, // cached_values
+                   nullptr, // attention
+                   false, // return_normalized_attention
+                   nullptr, // rotary_cos
+                   nullptr, // rotary_sin
+                   false, // rotary_interleave
+                   nullptr, // alibi
+                   0); // offset
 
       } else {
         if (_flash_attention) { // transpose and use eager to return attention
@@ -560,12 +562,7 @@ namespace ctranslate2 {
         combine_heads(context, _num_heads, queries_padder, beam_size);
       }
 
-      const StorageView* a = &context;
-      if (dtype != _linear.back().input_type()) {
-        context.to(proj_input);
-        a = &proj_input;
-      }
-      _linear.back()(*a, output, _layer_norm ? &queries : nullptr);
+      _linear.back()(context, output, _layer_norm ? &queries : nullptr);
 
       if (_tensor_parallel) {
         Shape shape = output.shape();

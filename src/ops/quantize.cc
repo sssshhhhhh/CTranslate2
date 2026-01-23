@@ -53,20 +53,23 @@ namespace ctranslate2 {
         ScaleType type = scale_type ? *scale_type : ScaleType::PER_LAYER;
         if (type == ScaleType::GLOBAL)
           throw std::invalid_argument("FP8 quantization doesn't support GLOBAL scales");
-        if (input.device() != Device::CPU)
-          throw std::invalid_argument("FP8 quantization is only supported on CPU");
 
         if (type == ScaleType::PER_LAYER) {
+          if (input.device() != Device::CPU)
+            throw std::invalid_argument("FP8 PER_LAYER quantization is only supported on CPU");
           scale.resize({});
         } else {
           const dim_t depth = input.dim(-1);
           const dim_t batch_size = input.size() / depth;
           scale.resize({batch_size});
         }
-        if (output.dtype() == DataType::FLOAT8)
-          quantize<Device::CPU, float, float8_t>(input, output, scale, type);
-        else
-          quantize<Device::CPU, float, bfloat8_t>(input, output, scale, type);
+        if (output.dtype() == DataType::FLOAT8) {
+          DEVICE_AND_FLOAT_DISPATCH("Quantize", input.device(), input.dtype(),
+                                    (quantize<D, T, float8_t>(input, output, scale, type)));
+        } else {
+          DEVICE_AND_FLOAT_DISPATCH("Quantize", input.device(), input.dtype(),
+                                    (quantize<D, T, bfloat8_t>(input, output, scale, type)));
+        }
         break;
       }
 

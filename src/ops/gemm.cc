@@ -42,52 +42,6 @@ namespace ctranslate2 {
     {
     }
 
-
-#define LOWP_CASE(T)                                                                    \
-      case DataTypeToEnum<T>::value: {                                                  \
-        if (a.device() != Device::CUDA)                                                 \
-          throw std::invalid_argument("Low precision gemm is only supported on GPU");   \
-        const StorageView a_lowp = a.to(DataTypeToEnum<T>::value);                      \
-        switch (c.dtype()) {                                                            \
-        case DataType::FLOAT32:                                                         \
-          compute<Device::CUDA, T, float, float>(a_lowp, b, c, nullptr, bias,           \
-                                                 residual, scale_a, scale_b);           \
-          break;                                                                        \
-        case DataType::FLOAT16:                                                         \
-          compute<Device::CUDA, T, float16_t, float16_t>(a_lowp, b, c, nullptr, bias,   \
-                                                         residual, scale_a, scale_b);   \
-          break;                                                                        \
-        case DataType::BFLOAT16:                                                        \
-          compute<Device::CUDA, T, bfloat16_t, bfloat16_t>(a_lowp, b, c, nullptr, bias, \
-                                                           residual, scale_a, scale_b); \
-          break;                                                                        \
-        case DataTypeToEnum<T>::value:                                                  \
-          switch (bias ? bias->dtype() : DataType::FLOAT32) {                           \
-          case DataType::FLOAT32:                                                       \
-            compute<Device::CUDA, T, T, float>(a_lowp, b, c, nullptr, bias,             \
-                                               residual, scale_a, scale_b);             \
-            break;                                                                      \
-          case DataType::FLOAT16:                                                       \
-            compute<Device::CUDA, T, T, float16_t>(a_lowp, b, c, nullptr, bias,         \
-                                                   residual, scale_a, scale_b);         \
-            break;                                                                      \
-          case DataType::BFLOAT16:                                                      \
-            compute<Device::CUDA, T, T, bfloat16_t>(a_lowp, b, c, nullptr, bias,        \
-                                                    residual, scale_a, scale_b);        \
-            break;                                                                      \
-          default:                                                                      \
-            throw std::invalid_argument("Gemm unsupported bias type "                   \
-                                        + dtype_name(bias->dtype()));                   \
-            break;                                                                      \
-          }                                                                             \
-          break;                                                                        \
-        default:                                                                        \
-          throw std::invalid_argument("Gemm unsupported output type "                   \
-                                      + dtype_name(c.dtype()));                         \
-        }                                                                               \
-        break;                                                                          \
-      }
-
     void Gemm::operator()(const StorageView& a,
                           const StorageView& b,
                           StorageView& c,
@@ -95,7 +49,8 @@ namespace ctranslate2 {
                           const StorageView* bias,
                           const StorageView* residual,
                           const StorageView* scale_a,
-                          const StorageView* scale_b) const {
+                          const StorageView* scale_b,
+                          const float scale_c) const {
       PROFILE("Gemm");
 
       switch (b.dtype()) {
@@ -118,11 +73,71 @@ namespace ctranslate2 {
         break;
       }
 
-      LOWP_CASE(float8_t)
-      LOWP_CASE(bfloat8_t)
+      case DataType::FLOAT8:
+        compute_lowp<Device::CUDA, float8_t>(a, b, c, bias, residual, scale_a, scale_b, scale_c);
+        break;
+      case DataType::BFLOAT8:
+        compute_lowp<Device::CUDA, bfloat8_t>(a, b, c, bias, residual, scale_a, scale_b, scale_c);
+        break;
 
       default:
         throw std::invalid_argument("Gemm: unsupported input type " + dtype_name(a.dtype()));
+      }
+    }
+
+    template <Device D, typename In>
+    static void quantize(const StorageView& src, StorageView& dst, const StorageView* scale) {
+      PROFILE("GemmQuantize");
+
+      if (src.dtype() == DataTypeToEnum<In>::value) { // already quantized
+        dst.shallow_copy(const_cast<StorageView&>(src));
+
+      } else if (scale) { // quantize with input scale
+        if (!scale->is_scalar())
+          throw std::invalid_argument("Gemm scale should be a scalar for implicit quantization");
+
+        dst.resize_as(src);
+        const float r_scale = 1.f / scale->as_scalar<float>();
+        FLOAT_DISPATCH("Gemm input", src.dtype(),
+                       (primitives<D>::mul(src.data<T>(), dst.data<In>(), r_scale, src.size())));
+
+      } else { // rounding quantization
+        src.to(dst);
+      }
+    }
+
+    template <Device D, typename In>
+    void Gemm::compute_lowp(const StorageView& a,
+                            const StorageView& b,
+                            StorageView& c,
+                            const StorageView* bias,
+                            const StorageView* residual,
+                            const StorageView* scale_a,
+                            const StorageView* scale_b,
+                            const float scale_c) const {
+      if (a.device() != D)
+        throw std::invalid_argument("Low precision gemm is only supported on GPU");
+
+      StorageView a_lowp(DataTypeToEnum<In>::value, D);
+      quantize<D, In>(a, a_lowp, scale_a);
+
+      switch (c.dtype()) {
+      case DataType::FLOAT32:
+        compute<D, In, float, float>(a_lowp, b, c, nullptr, bias, residual, scale_a, scale_b);
+        break;
+      case DataType::FLOAT16:
+        compute<D, In, float16_t, float16_t>(a_lowp, b, c, nullptr, bias, residual, scale_a, scale_b);
+        break;
+      case DataType::BFLOAT16:
+        compute<D, In, bfloat16_t, bfloat16_t>(a_lowp, b, c, nullptr, bias, residual, scale_a, scale_b);
+        break;
+      case DataTypeToEnum<In>::value:
+        FLOAT_DISPATCH("Gemm bias", bias ? bias->dtype() : DataType::FLOAT32,
+                       (compute<D, In, In, T>(a_lowp, b, c, nullptr, bias, residual,
+                                              scale_a, scale_b, scale_c)));
+        break;
+      default:
+        throw std::invalid_argument("Gemm unsupported output type " + dtype_name(c.dtype()));
       }
     }
 

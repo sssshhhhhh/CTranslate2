@@ -1,9 +1,18 @@
 #include "ctranslate2/ops/quantize.h"
 
+#ifdef CT2_USE_HIP
+#include <hipcub/block/block_reduce.hpp>
+#define cub hipcub
+#else
+#include <cub/block/block_reduce.cuh>
+#endif
+
 #include "cuda/helpers.h"
 
 namespace ctranslate2 {
   namespace ops {
+
+    constexpr dim_t num_threads = 256;
 
     template <typename T>
     struct absolute_maximum_func {
@@ -60,17 +69,15 @@ namespace ctranslate2 {
                                     float* scales,
                                     int8_t* output,
                                     bool round_before_cast) {
-      extern __shared__ unsigned char smem[];
-      auto* sdata = reinterpret_cast<T*>(smem);
+      typedef cub::BlockReduce<T, num_threads> BlockReduce;
+      __shared__ typename BlockReduce::TempStorage temp_storage;
+      __shared__ float scale;
 
       input += blockIdx.x * depth;
       output += blockIdx.x * depth;
 
       T thread_max = cuda::ilp_reduce(input, depth, absolute_maximum_func<T>(), T(0.f));
-      float max = cuda::block_reduce(sdata, thread_max, cuda::maximum<T>(), T(0.f));
-
-      __shared__ float scale;
-
+      float max = BlockReduce(temp_storage).Reduce(thread_max, cuda::maximum<T>());
       if (threadIdx.x == 0) {
         scale = max != 0.f ? 127.f / max : 1.f;
         scales[blockIdx.x] = scale;
@@ -84,6 +91,32 @@ namespace ctranslate2 {
         cuda::apply_epilogue(input, depth, rescale_func(scale), output);
     }
 
+    template <typename InT, typename OutT>
+    __global__ void quantize_lowp_kernel(const InT* input,
+                                         cuda::index_t depth,
+                                         float* scales,
+                                         OutT* output) {
+      typedef cub::BlockReduce<InT, num_threads> BlockReduce;
+      __shared__ typename BlockReduce::TempStorage temp_storage;
+      __shared__ float r_scale;
+
+      input += blockIdx.x * depth;
+      output += blockIdx.x * depth;
+
+      InT thread_max = cuda::ilp_reduce(input, depth, absolute_maximum_func<InT>(), InT(0.f));
+      float max = BlockReduce(temp_storage).Reduce(thread_max, cuda::maximum<InT>());
+      if (threadIdx.x == 0) {
+        constexpr float fmax = 448;
+        const float scale = max != 0.f ? max / fmax : 1.f;
+        scales[blockIdx.x] = scale;
+        r_scale = 1.f / scale;
+      }
+
+      __syncthreads();
+
+      cuda::apply_epilogue(input, depth, rescale_func(r_scale), output);
+    }
+
     template <Device D, typename InT, typename OutT>
     void Quantize::quantize(const StorageView& input,
                             StorageView& output,
@@ -95,22 +128,38 @@ namespace ctranslate2 {
       const dim_t batch_size = scale.size();
       const dim_t depth = input.dim(-1);
 
-      const dim3 grid(batch_size);
-      const dim3 block(cuda::get_block_size(depth));
-      quantize_kernel<<<grid, block, block.x * sizeof (InT), cuda::get_cuda_stream()>>>(
-        cuda::device_cast<InT>(input.data<InT>()),
-        depth,
-        scale.data<float>(),
-        cuda::device_cast<OutT>(output.data<OutT>()),
-        _round_before_cast);
+      if constexpr (std::is_same_v<OutT, int8_t>) {
+        quantize_kernel<<<batch_size, num_threads, 0, cuda::get_cuda_stream()>>>(
+          cuda::device_cast<InT>(input.data<InT>()),
+          depth,
+          scale.data<float>(),
+          cuda::device_cast<OutT>(output.data<OutT>()),
+          _round_before_cast);
+      } else {
+        quantize_lowp_kernel<<<batch_size, num_threads, 0, cuda::get_cuda_stream()>>>(
+          cuda::device_cast<InT>(input.data<InT>()),
+          depth,
+          scale.data<float>(),
+          cuda::device_cast<OutT>(output.data<OutT>()));
+      }
     }
 
-#define DECLARE_IMPL(T)                                                 \
-    template void                                                       \
-    Quantize::quantize<Device::CUDA, T, int8_t>(const StorageView&,     \
-                                                StorageView&,           \
-                                                StorageView&,           \
-                                                const ScaleType) const;
+#define DECLARE_IMPL(T)                                                       \
+    template void                                                             \
+    Quantize::quantize<Device::CUDA, T, int8_t>(const StorageView&,           \
+                                                StorageView&,                 \
+                                                StorageView&,                 \
+                                                const ScaleType) const;       \
+    template void                                                             \
+    Quantize::quantize<Device::CUDA, T, float8_t>(const StorageView&,         \
+                                                  StorageView&,               \
+                                                  StorageView&,               \
+                                                  const ScaleType) const;     \
+    template void                                                             \
+    Quantize::quantize<Device::CUDA, T, bfloat8_t>(const StorageView&,        \
+                                                   StorageView&,              \
+                                                   StorageView&,              \
+                                                   const ScaleType) const;
 
     DECLARE_IMPL(float)
     DECLARE_IMPL(float16_t)

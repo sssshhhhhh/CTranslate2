@@ -118,33 +118,6 @@ TEST(OpTest, QuantizeINT16) {
   expect_storage_eq(reverse, input);
 }
 
-TEST(OpTest, QuantizeFLOAT8) {
-  StorageView a({2, 4}, std::vector<float>{-0.819201, 0.439794, -1.714573, 1.413359, -0.408348, -1.254553, -0.250718, -2.234478});
-  using ScaleType = ops::Quantize::ScaleType;
-
-  {
-    StorageView scale;
-    StorageView qa(DataType::FLOAT8);
-    StorageView expected_scale({2}, std::vector<float>{0.003827, 0.004988});
-    StorageView expected_qa(a.shape(), std::vector<float>{-208, 112, -448, 384, -80, -256, -52, -448});
-    const ScaleType scale_type = ScaleType::PER_ROW;
-    ops::Quantize()(a, qa, scale, &scale_type);
-    expect_storage_eq(scale, expected_scale, 1e-5);
-    expect_storage_eq(qa.to_float32(), expected_qa);
-  }
-
-  {
-    StorageView scale;
-    StorageView qa(DataType::BFLOAT8);
-    StorageView expected_scale({}, std::vector<float>{3.896620e-5});
-    StorageView expected_qa(a.shape(), std::vector<float>{-20480, 12288, -40960, 32768, -10240, -32768, -6144, -57344});
-    const ScaleType scale_type = ScaleType::PER_LAYER;
-    ops::Quantize()(a, qa, scale, &scale_type);
-    expect_storage_eq(scale, expected_scale, 1e-8);
-    expect_storage_eq(qa.to_float32(), expected_qa);
-  }
-}
-
 class OpDeviceTest : public ::testing::TestWithParam<Device> {
 };
 
@@ -704,14 +677,13 @@ TEST(OpTest, GemmFLOAT8) {
   StorageView scale_b;
   ops::Quantize()(gemm_b, b, scale_b);
   b = b.to(Device::CUDA);
-  scale_b = scale_b.to(Device::CUDA);
   const StorageView bias({2}, std::vector<float>{0.2f, -0.7f}, Device::CUDA);
 
   // a @ b * scale_b
   {
     StorageView expected({4, 2}, std::vector<float>{
         -3.818893, -2.409729, -2.084265, 2.804924,
-        -0.805753, -1.200045, 0.081404, -3.649233}, Device::CUDA);
+        -0.805753, -1.200045, 0.081404, -3.649233});
     StorageView y = gemm_y.to(Device::CUDA).to(DataType::FLOAT16);
     ops::Gemm op(1.0, 0.0, false, false);
     op(a, b, y, nullptr, nullptr, nullptr, nullptr, &scale_b);
@@ -722,7 +694,7 @@ TEST(OpTest, GemmFLOAT8) {
   {
     StorageView expected({4, 2}, std::vector<float>{
         -3.618893, -3.109729, -1.884265, 2.104924,
-        -0.605753, -1.900045, 0.281404, -4.349233}, Device::CUDA);
+        -0.605753, -1.900045, 0.281404, -4.349233});
     StorageView y = gemm_y.to(Device::CUDA).to(DataType::FLOAT32);
     ops::Gemm op(1.0, 0.0, false, false);
     op(a, b, y, nullptr, &bias, nullptr, nullptr, &scale_b);
@@ -733,7 +705,7 @@ TEST(OpTest, GemmFLOAT8) {
   {
     StorageView expected({4, 2}, std::vector<float>{
         -0.000535, -0.002912, -0.056084, 2.067775,
-        -0.164970, -0.054557, 0.171881, -0.000030}, Device::CUDA);
+        -0.164970, -0.054557, 0.171881, -0.000030});
     StorageView y = gemm_y.to(Device::CUDA);
     const ops::ActivationType activation_type = ops::ActivationType::GELU;
     ops::Gemm op(1.0, 0.0, false, false, false, false, &activation_type);
@@ -749,7 +721,7 @@ TEST(OpTest, GemmFLOAT8) {
     StorageView c(DataType::FLOAT32, Device::CUDA);
     StorageView expected({4, 2}, std::vector<float>{
         -0.003008, -0.057163, 0.780032, 3.681259,
-        0.353013, -0.114022, -0.083503, -0.002291}, Device::CUDA);
+        0.353013, -0.114022, -0.083503, -0.002291});
     StorageView y = gemm_y.to(Device::CUDA);
     const ops::ActivationType activation_type = ops::ActivationType::GELU;
     ops::Gemm op(1.0, 0.0, false, false, false, false, &activation_type);
@@ -757,6 +729,51 @@ TEST(OpTest, GemmFLOAT8) {
     expect_storage_eq(y, expected, 1e-2);
   }
 };
+
+TEST(OpTest, GemmFLOAT8Scale) {
+  StorageView a = gemm_a.to(Device::CUDA);
+  StorageView scale_a({}, 0.003979f); // max(abs(a))/448
+  StorageView b(DataType::FLOAT8);
+  StorageView scale_b;
+  ops::Quantize()(gemm_b, b, scale_b);
+  b = b.to(Device::CUDA);
+  StorageView expected({4, 2}, std::vector<float>{
+      -3.890016, -2.454607, -2.105593, 2.601884,
+      -0.821220, -1.300942, 0.046101, -3.520828});
+
+  // (scale_a * quantize(a, scale_a)) @ (b * scale_b)
+  {
+    StorageView y = gemm_y.to(Device::CUDA).to(DataType::FLOAT16);
+    ops::Gemm op(1.0, 0.0, false, false);
+    op(a, b, y, nullptr, nullptr, nullptr, &scale_a, &scale_b);
+    expect_storage_eq(y.to_float32(), expected, 1e-2);
+  }
+
+  {
+    StorageView y = gemm_y.to(Device::CUDA).to(DataType::FLOAT16);
+    ops::Gemm op(1.0, 0.0, false, false);
+    op(a.to(DataType::FLOAT16), b, y, nullptr, nullptr, nullptr, &scale_a, &scale_b);
+    expect_storage_eq(y.to_float32(), expected, 1e-2);
+  }
+
+  {
+    StorageView y = gemm_y.to(Device::CUDA).to(DataType::FLOAT16);
+    ops::Gemm op(1.0, 0.0, false, false);
+    op(a.to(DataType::BFLOAT16), b, y, nullptr, nullptr, nullptr, &scale_a, &scale_b);
+    expect_storage_eq(y.to_float32(), expected, 1e-2);
+  }
+
+  // (quantize(a) @ (b * scale_b)) * scale_c
+  {
+    StorageView y = gemm_y.to(Device::CUDA).to(DataType::FLOAT8);
+    const float scale_c = 89.3442f;
+    StorageView expected_c({4, 2}, std::vector<float>{
+      -352, -208, -192, 256, -72, -104, 7.5, -320});
+    ops::Gemm op(1.0, 0.0, false, false);
+    op(a, b, y, nullptr, nullptr, nullptr, nullptr, &scale_b, scale_c);
+    expect_storage_eq(y.to_float32(), expected_c);
+  }
+}
 #endif
 
 TEST_P(OpDeviceTest, GemmInt8) {
@@ -1066,6 +1083,36 @@ TEST_P(OpDeviceTest, QuantizeINT8ZeroRow) {
     ops::Quantize(ops::Quantize::ScaleType::GLOBAL, false, false)(a, qa, scale);
     expect_storage_eq(scale, expected_scale);
     expect_storage_eq(qa, expected_qa);
+  }
+}
+
+TEST_P(OpDeviceTest, QuantizeFLOAT8) {
+  Device device = GetParam();
+  StorageView a({2, 4}, std::vector<float>{
+      -0.819201, 0.439794, -1.714573, 1.413359,
+      -0.408348, -1.254553, -0.250718, -2.234478}, device);
+  using ScaleType = ops::Quantize::ScaleType;
+
+  {
+    StorageView scale(DataType::FLOAT32, device);
+    StorageView qa(DataType::FLOAT8, device);
+    StorageView expected_scale({2}, std::vector<float>{0.003827, 0.004988});
+    StorageView expected_qa(a.shape(), std::vector<float>{-208, 112, -448, 384, -80, -256, -52, -448});
+    const ScaleType scale_type = ScaleType::PER_ROW;
+    ops::Quantize()(a, qa, scale, &scale_type);
+    expect_storage_eq(scale, expected_scale, 1e-5);
+    expect_storage_eq(qa.to_float32(), expected_qa);
+  }
+
+  if (device == Device::CPU) { // PER_LAYER quantization not supported on GPU
+    StorageView scale(DataType::FLOAT32, device);
+    StorageView qa(DataType::BFLOAT8, device);
+    StorageView expected_scale({}, std::vector<float>{3.896620e-5});
+    StorageView expected_qa(a.shape(), std::vector<float>{-20480, 12288, -40960, 32768, -10240, -32768, -6144, -57344});
+    const ScaleType scale_type = ScaleType::PER_LAYER;
+    ops::Quantize()(a, qa, scale, &scale_type);
+    expect_storage_eq(scale, expected_scale, 1e-8);
+    expect_storage_eq(qa.to_float32(), expected_qa);
   }
 }
 

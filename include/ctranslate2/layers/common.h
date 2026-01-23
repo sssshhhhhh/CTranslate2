@@ -130,9 +130,18 @@ namespace ctranslate2 {
             const ops::ActivationType* activation_type = nullptr,
             const bool is_layer_out = false);
       DataType input_type() const;
+      float input_scale() const;
       DataType output_type() const override;
       dim_t output_size() const override;
-      void operator()(const StorageView& input, StorageView& output, const StorageView* residual = nullptr) const;
+      void operator()(const StorageView& input,
+                      StorageView& output,
+                      const bool scaled_input,
+                      const float output_scale = 1.f) const;
+      void operator()(const StorageView& input,
+                      StorageView& output,
+                      const StorageView* residual = nullptr,
+                      const bool scaled_input = false,
+                      const float output_scale = 1.f) const;
       void select_weights(const StorageView* index, const StorageView* extra_bias = nullptr);
     private:
       bool _packed_weight;
@@ -140,6 +149,7 @@ namespace ctranslate2 {
       const StorageView* _bias;
       const StorageView* _qscale;
       const StorageView* _qzero;
+      const StorageView* _input_scale;
       const StorageView* _u8_shift_compensation;
       StorageView _partial_weight;
       StorageView _partial_bias;
@@ -162,7 +172,7 @@ namespace ctranslate2 {
       LayerNorm(const models::Model& model, const std::string& scope);
       DataType output_type() const override;
       dim_t output_size() const override;
-      void operator()(const StorageView& input, StorageView& output) const;
+      void operator()(const StorageView& input, StorageView& output, const float scale = 1.f) const;
     private:
       const StorageView* _beta;
       const StorageView& _gamma;

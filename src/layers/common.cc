@@ -272,6 +272,7 @@ namespace ctranslate2 {
       , _bias(model.get_variable_if_exists(scope + "/bias"))
       , _qscale(model.get_variable_if_exists(scope + "/weight_scale"))
       , _qzero(model.get_variable_if_exists(scope + "/weight_zero"))
+      , _input_scale(model.get_variable_if_exists(scope + "/input_scale"))
       , _u8_shift_compensation((_weight.device() == Device::CPU
                                 && _weight.dtype() == DataType::INT8
                                 && cpu::prefer_u8s8s32_gemm())
@@ -305,6 +306,10 @@ namespace ctranslate2 {
 
     DataType Dense::input_type() const {
       return _input_type;
+    }
+
+    float Dense::input_scale() const {
+      return _input_scale ? _input_scale->as_scalar<float>() : 1.f;
     }
 
     DataType Dense::output_type() const {
@@ -341,7 +346,18 @@ namespace ctranslate2 {
       }
     }
 
-    void Dense::operator()(const StorageView& input, StorageView& output, const StorageView* residual) const {
+    void Dense::operator()(const StorageView& input,
+                           StorageView& output,
+                           const bool scaled_input,
+                           const float output_scale) const {
+      operator()(input, output, nullptr, scaled_input, output_scale);
+    }
+
+    void Dense::operator()(const StorageView& input,
+                           StorageView& output,
+                           const StorageView* residual,
+                           const bool scaled_input,
+                           const float output_scale) const {
       PROFILE("Dense");
       const StorageView* qscale = _partial_qscale.empty() ? _qscale : &_partial_qscale;
       const StorageView* weight = _partial_weight.empty() ? &_weight : &_partial_weight;
@@ -448,8 +464,9 @@ namespace ctranslate2 {
                  nullptr, // a_shift_compensation
                  bias,
                  residual,
-                 nullptr, // a_scale
-                 qscale); // b_scale
+                 scaled_input || input.dtype() != input_type() ? _input_scale : nullptr,
+                 qscale,
+                 output_scale);
       }
     }
 
@@ -473,13 +490,13 @@ namespace ctranslate2 {
       return _gamma.size();
     }
 
-    void LayerNorm::operator()(const StorageView& input, StorageView& output) const {
+    void LayerNorm::operator()(const StorageView& input, StorageView& output, const float scale) const {
       if (_beta) {
         const ops::LayerNorm norm_op(-1, _epsilon);
-        norm_op(*_beta, _gamma, input, output);
+        norm_op(*_beta, _gamma, input, output, scale);
       } else {
         const ops::RMSNorm norm_op(_epsilon, _use_residual);
-        norm_op(_gamma, input, output);
+        norm_op(_gamma, input, output, scale);
       }
     }
 
