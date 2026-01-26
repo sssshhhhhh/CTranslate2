@@ -10,6 +10,7 @@
 #include "gemm.h"
 #include "gumbel_max.h"
 #include "identity.h"
+#include "insert.h"
 #include "layer_norm.h"
 #include "matmul.h"
 #include "mean.h"

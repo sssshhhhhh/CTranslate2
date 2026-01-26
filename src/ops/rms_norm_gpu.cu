@@ -36,15 +36,15 @@ namespace ctranslate2 {
       sum_squares = BlockReduce(temp_storage).Sum(sum_squares);
 
       if (threadIdx.x == 0)
-        s_inv_rms = rsqrtf(sum_squares / depth + epsilon);
+        s_inv_rms = rsqrtf(sum_squares / depth + epsilon) * scale;
 
       __syncthreads();
 
       for (cuda::index_t i = threadIdx.x; i < depth; i += blockDim.x)
         if constexpr (Residual)
-          output[i] = float(input[i]) * s_inv_rms * (1 + float(gamma[i])) * scale;
+          output[i] = float(input[i]) * s_inv_rms * (1 + float(gamma[i]));
         else
-          output[i] = float(input[i]) * s_inv_rms * float(gamma[i]) * scale;
+          output[i] = float(input[i]) * s_inv_rms * float(gamma[i]);
     }
 
     template <Device D, typename In, typename Out>

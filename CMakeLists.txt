@@ -157,7 +157,6 @@ set(SOURCES
   src/ops/bias_add.cc
   src/ops/bias_add_cpu.cc
   src/ops/concat.cc
-  src/ops/concat_split_slide_cpu.cc
   src/ops/conv1d.cc
   src/ops/conv1d_cpu.cc
   src/ops/cos.cc
@@ -172,9 +171,11 @@ set(SOURCES
   src/ops/gemm_cpu.cc
   src/ops/gumbel_max.cc
   src/ops/gumbel_max_cpu.cc
+  src/ops/insert.cc
   src/ops/layer_norm.cc
   src/ops/layer_norm_cpu.cc
   src/ops/log.cc
+  src/ops/manipulation_cpu.cc
   src/ops/matmul.cc
   src/ops/mean.cc
   src/ops/mean_cpu.cc
@@ -236,7 +237,6 @@ set(CUDA_SOURCES
   src/cuda/utils.cc
   src/ops/alibi_add_gpu.cu
   src/ops/bias_add_gpu.cu
-  src/ops/concat_split_slide_gpu.cu
   src/ops/conv1d_gpu.cu
   src/ops/dequantize_gpu.cu
   src/ops/flash_attention_gpu.cu
@@ -244,6 +244,7 @@ set(CUDA_SOURCES
   src/ops/gemm_gpu.cu
   src/ops/gumbel_max_gpu.cu
   src/ops/layer_norm_gpu.cu
+  src/ops/manipulation_gpu.cu
   src/ops/mean_gpu.cu
   src/ops/median_filter_gpu.cu
   src/ops/multinomial_gpu.cu

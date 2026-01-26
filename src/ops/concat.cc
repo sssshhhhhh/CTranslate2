@@ -5,8 +5,9 @@
 namespace ctranslate2 {
   namespace ops {
 
-    Concat::Concat(int axis)
-      : _axis(axis) {
+    Concat::Concat(int axis, int padding)
+      : _axis(axis)
+      , _padding(padding) {
     }
 
     void Concat::operator()(const std::vector<const StorageView*>& inputs,
@@ -14,7 +15,7 @@ namespace ctranslate2 {
       PROFILE("Concat");
       const dim_t rank = inputs.front()->rank();
       const dim_t axis = _axis < 0 ? rank + _axis : _axis;
-      dim_t concat_dims = 0;
+      dim_t concat_dims = _padding;
       for (const StorageView* x : inputs) {
         assert(x->rank() == rank);
         concat_dims += x->dim(axis);

@@ -1,4 +1,5 @@
 #include "ctranslate2/ops/concat.h"
+#include "ctranslate2/ops/insert.h"
 #include "ctranslate2/ops/split.h"
 #include "ctranslate2/ops/slide.h"
 
@@ -8,14 +9,14 @@
 namespace ctranslate2 {
   namespace ops {
 
-    static dim_t compute_copy_size(const StorageView& x, dim_t axis) {
+    static inline dim_t compute_copy_size(const StorageView& x, dim_t axis) {
       dim_t copy_size = 1;
       for (dim_t i = axis; i < x.rank(); ++i)
         copy_size *= x.dim(i);
       return copy_size;
     }
 
-    static dim_t compute_iter_size(const StorageView& x, dim_t axis) {
+    static inline dim_t compute_iter_size(const StorageView& x, dim_t axis) {
       dim_t iter_size = 1;
       for (dim_t i = 0; i < axis; ++i)
         iter_size *= x.dim(i);
@@ -26,7 +27,7 @@ namespace ctranslate2 {
     void Concat::compute(const std::vector<const StorageView*>& inputs,
                          StorageView& output) const {
       const dim_t axis = _axis < 0 ? output.rank() + _axis : _axis;
-      const dim_t step_size = output.dim(axis) * output.stride(axis);
+      const dim_t step_size = compute_copy_size(output, axis);
       T* output_data = output.data<T>();
 
       for (const StorageView* input : inputs) {
@@ -48,10 +49,29 @@ namespace ctranslate2 {
     }
 
     template <Device D, typename T>
+    void Insert::compute(const StorageView& input, StorageView& output) const {
+      const dim_t axis = _axis < 0 ? output.rank() + _axis : _axis;
+      const dim_t step_size = compute_copy_size(output, axis);
+      T* output_data = output.data<T>() + _index * output.stride(axis);
+
+      const dim_t copy_size = compute_copy_size(input, axis);
+      if (copy_size == 0)
+        return;
+      const dim_t iter_size = compute_iter_size(input, axis);
+      const T* input_data = input.data<T>();
+
+      const dim_t grain_size = cpu::get_minimum_batch_copies_per_thread<T>(copy_size);
+      cpu::parallel_for(0, iter_size, grain_size, [&](dim_t begin, dim_t end) {
+        for (dim_t i = begin; i < end; ++i)
+          primitives<D>::copy(input_data + i * copy_size, output_data + i * step_size, copy_size);
+      });
+    }
+
+    template <Device D, typename T>
     void Split::compute(const StorageView& input,
                         std::vector<StorageView*>& outputs) const {
       const dim_t axis = _axis < 0 ? input.rank() + _axis : _axis;
-      const dim_t step_size = input.dim(axis) * input.stride(axis);
+      const dim_t step_size = compute_copy_size(input, axis);
       const T* input_data = input.data<T>();
 
       for (StorageView* output : outputs) {
@@ -83,9 +103,8 @@ namespace ctranslate2 {
       T* x_data = x.data<T>();
 
       const dim_t copy_size = compute_copy_size(x, axis);
-      if (copy_size == 0)
-        return;
-
+        if (copy_size == 0)
+          return;
       const dim_t iter_size = compute_iter_size(x, axis);
 
       const dim_t grain_size = cpu::get_minimum_batch_copies_per_thread<T>(copy_size);
@@ -99,6 +118,9 @@ namespace ctranslate2 {
 #define DECLARE_IMPL(T)                                                 \
     template void                                                       \
     Concat::compute<Device::CPU, T>(const std::vector<const StorageView*>& inputs, \
+                                    StorageView& output) const;         \
+    template void                                                       \
+    Insert::compute<Device::CPU, T>(const StorageView& input,           \
                                     StorageView& output) const;         \
     template void                                                       \
     Split::compute<Device::CPU, T>(const StorageView& input,            \

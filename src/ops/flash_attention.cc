@@ -4,10 +4,14 @@
 
 namespace ctranslate2 {
   namespace ops {
-    FlashAttention::FlashAttention(float queries_scale, dim_t sliding_window, bool is_causal)
+    FlashAttention::FlashAttention(float queries_scale,
+                                   dim_t sliding_window,
+                                   bool is_causal,
+                                   bool self_attention)
     : _queries_scale(queries_scale)
     , _sliding_window(sliding_window)
     , _is_causal(is_causal)
+    , _self_attention(self_attention)
     {
     }
 

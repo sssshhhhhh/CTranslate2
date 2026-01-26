@@ -47,15 +47,15 @@ namespace ctranslate2 {
         sum1 *= r_size;
         sum2 = fmaxf(sum2 * r_size - sum1 * sum1, 0.f);
         s_mean = sum1;
-        s_var = rsqrtf(sum2 + epsilon);
+        s_var = rsqrtf(sum2 + epsilon) * scale;
       }
 
       __syncthreads();
 
       for (cuda::index_t i = threadIdx.x; i < axis_size; i += blockDim.x) {
         const float gamma_v = gamma == nullptr ? 1.f : float(gamma[i]);
-        const float beta_v = beta == nullptr ? 0.f : float(beta[i]);
-        output[i] = ((float(input[i]) - s_mean) * s_var * gamma_v + beta_v) * scale;
+        const float beta_v = beta == nullptr ? 0.f : float(beta[i]) * scale;
+        output[i] = (float(input[i]) - s_mean) * s_var * gamma_v + beta_v;
       }
     }
 
@@ -93,16 +93,15 @@ namespace ctranslate2 {
         sum1 *= r_size;
         sum2 = fmaxf(sum2 * r_size - sum1 * sum1, 0.f);
         s_mean = sum1;
-        s_var = rsqrtf(sum2 + epsilon);
+        s_var = rsqrtf(sum2 + epsilon) * scale;
       }
 
       __syncthreads();
 
       const float gamma_v = gamma == nullptr ? 1.f : float(gamma[feature_idx]);
-      const float beta_v = beta == nullptr ? 0.f : float(beta[feature_idx]);
+      const float beta_v = beta == nullptr ? 0.f : float(beta[feature_idx]) * scale;
       for (cuda::index_t i = threadIdx.x; i < axis_size; i += blockDim.x)
-        output[i * inner_size] = ((float(input[i * inner_size]) - s_mean)
-                                  * s_var * gamma_v + beta_v) * scale;
+        output[i * inner_size] = (float(input[i * inner_size]) - s_mean) * s_var * gamma_v + beta_v;
     }
 
     template <Device D, typename In, typename Out>

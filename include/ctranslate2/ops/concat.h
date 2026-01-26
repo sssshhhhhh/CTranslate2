@@ -7,12 +7,13 @@ namespace ctranslate2 {
 
     class Concat : public Op {
     public:
-      Concat(int axis);
+      Concat(int axis, int padding = 0);
       void operator()(const std::vector<const StorageView*>& inputs,
                       StorageView& output) const;
 
     private:
-      int _axis;
+      const dim_t _axis;
+      const dim_t _padding;
 
       template <Device D, typename T>
       void compute(const std::vector<const StorageView*>& inputs, StorageView& output) const;

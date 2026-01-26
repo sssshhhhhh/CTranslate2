@@ -387,15 +387,12 @@ namespace ctranslate2 {
 
       dim_t beam_size = 1;
 
-      bool prefilling = (_sliding_window > 0 && values_lengths);
-
       if (!_self_attention) {
-
         process_cross_attention(values, fused_proj, queries_proj, keys_proj,
                                 values_proj, cached_keys, cached_values,
                                 queries_padder, values_padder, beam_size);
-      } else {
 
+      } else {
         if (_merge_time_and_head_dims) { // MQA
           if (queries_padder)
             queries_padder->add_padding(fused_proj);
@@ -427,7 +424,7 @@ namespace ctranslate2 {
         }
 
         // Maybe move rope to dpa for fa2 fusion
-        // Potential mqa optimzation: use untransposed rope
+        // Potential mqa optimisation: use untransposed rope
         if (_rotary_embeddings) {
           if (_merge_time_and_head_dims) {
             queries_proj.reshape({queries_proj.dim(0), -1, _d_head * _num_heads});
@@ -451,10 +448,14 @@ namespace ctranslate2 {
         }
 
         if (cached_keys != nullptr) {
+          const dim_t new_length = offset + keys_proj.dim(_cache_time_dim);
           if (cached_keys->empty()) {
+            // prefill
             *cached_keys = std::move(keys_proj);
             *cached_values = std::move(values_proj);
-          } else {
+
+          } else if (_sliding_window > 0 && new_length >= _sliding_window) {
+            // SWA generation hitting window limit, concat kv then slice to window size
             const ops::Concat concat_op(_cache_time_dim);
             StorageView& tmp = fused_proj;  // Reuse storage.
             tmp = std::move(*cached_keys);
@@ -462,14 +463,38 @@ namespace ctranslate2 {
             tmp = std::move(*cached_values);
             concat_op({&tmp, &values_proj}, *cached_values);
 
-            if (!prefilling && _sliding_window > 0 && cached_keys->shape()[_cache_time_dim] > _sliding_window) {
-              // only for generation
-              const ops::Slide slide_op(_cache_time_dim, 1, cached_keys->shape()[_cache_time_dim] - 1);
-              slide_op(*cached_keys, tmp);
-              *cached_keys = std::move(tmp);
-              slide_op(*cached_values, tmp);
-              *cached_values = std::move(tmp);
+            const ops::Slide slide_op(_cache_time_dim,
+                                      cached_keys->dim(_cache_time_dim) - _sliding_window,
+                                      _sliding_window);
+            slide_op(*cached_keys, tmp);
+            *cached_keys = std::move(tmp);
+            slide_op(*cached_values, tmp);
+            *cached_values = std::move(tmp);
+
+          } else if (cached_keys->dim(_cache_time_dim) < new_length) {
+            // Grow cache: eager to needed size
+            // FA2 pad to multiples of 2^n >= 32 depending on length
+            // 32,64,96,...,224,256,320,384,448,512,640,768,896,1024,1280,...
+            dim_t padding = 0;
+            if (_flash_attention) {
+              int bits = -2;
+              unsigned int i = new_length;
+              while (i >>= 1) ++bits;
+              const dim_t sz = 1 << std::max(bits, 5);
+              padding = sz - new_length % sz;
             }
+            const ops::Concat concat_op(_cache_time_dim, padding);
+            StorageView& tmp = fused_proj;  // Reuse storage.
+            tmp = std::move(*cached_keys);
+            concat_op({&tmp, &keys_proj}, *cached_keys);
+            tmp = std::move(*cached_values);
+            concat_op({&tmp, &values_proj}, *cached_values);
+
+          } else {
+            // append cache
+            const ops::Insert insert_op(_cache_time_dim, offset);
+            insert_op(keys_proj, *cached_keys);
+            insert_op(values_proj, *cached_values);
           }
         }
       }
@@ -482,7 +507,7 @@ namespace ctranslate2 {
       StorageView& context = fused_proj;  // Reuse storage.
       if (_flash_attention && !attention) {
         bool is_causal = bool(values_lengths); // Assume values_lengths means causal
-        ops::FlashAttention fl_attn_op(_queries_scale, 0, is_causal);
+        ops::FlashAttention fl_attn_op(_queries_scale, 0, is_causal, _self_attention);
         fl_attn_op(queries_proj,
                    keys_proj,
                    values_proj,
@@ -495,7 +520,7 @@ namespace ctranslate2 {
                    nullptr, // rotary_sin
                    false, // rotary_interleave
                    nullptr, // alibi
-                   0); // offset
+                   offset); // offset
 
       } else {
         if (_flash_attention) { // transpose and use eager to return attention
@@ -539,10 +564,13 @@ namespace ctranslate2 {
         }
       }
 
-      if (prefilling && cached_keys && cached_keys->shape()[_cache_time_dim] > _sliding_window) {
-        // set only last sliding_window tokens to cached_keys and cached_values after computing attention
+      if (offset == 0
+          && _sliding_window > 0
+          && cached_keys
+          && cached_keys->dim(_cache_time_dim) > _sliding_window) {
+        // After SWA prefill, slice cache to window size
         const ops::Slide slide_op(_cache_time_dim,
-                                  cached_keys->shape()[_cache_time_dim] - _sliding_window,
+                                  cached_keys->dim(_cache_time_dim) - _sliding_window,
                                   _sliding_window);
         StorageView tmp(dtype, device);
         slide_op(*cached_keys, tmp);
