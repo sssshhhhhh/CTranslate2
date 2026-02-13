@@ -20,7 +20,7 @@
 #define CUBLAS_STATUS_EXECUTION_FAILED HIPBLAS_STATUS_EXECUTION_FAILED
 #define CUBLAS_STATUS_INTERNAL_ERROR   HIPBLAS_STATUS_INTERNAL_ERROR
 #define CUBLAS_STATUS_NOT_SUPPORTED    HIPBLAS_STATUS_NOT_SUPPORTED
-#define CUBLAS_STATUS_LICENSE_ERROR    HIPBLAS_STATUS_UNKNOWN + 1 //so this is never reached
+#define CUBLAS_STATUS_LICENSE_ERROR    HIPBLAS_STATUS_UNKNOWN
 #define cudaStreamDefault hipStreamDefault
 #define cudaGetDevice hipGetDevice
 #define cudaStreamCreate hipStreamCreate
@@ -222,10 +222,10 @@ namespace ctranslate2 {
       return *device_prop;
     }
 
-    // See docs.nvidia.com/deeplearning/sdk/tensorrt-support-matrix/index.html
-    // for hardware support of reduced precision.
-
 #ifdef CT2_USE_HIP
+    // https://rocm.docs.amd.com/en/latest/reference/precision-support.html
+    // All archs supported by ROCm 7 support the following precisions
+
     bool gpu_supports_int8(int device) {
       return true;
     }
@@ -238,6 +238,10 @@ namespace ctranslate2 {
       return true;
     }
 #else
+
+    // See docs.nvidia.com/deeplearning/sdk/tensorrt-support-matrix/index.html
+    // for hardware support of reduced precision.
+
     bool gpu_supports_int8(int device) {
       const cudaDeviceProp& device_prop = get_device_properties(device);
       return device_prop.major > 6 || (device_prop.major == 6 && device_prop.minor == 1);

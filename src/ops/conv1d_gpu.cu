@@ -73,8 +73,7 @@ namespace ctranslate2 {
       const dim_t out_channels_per_group = out_channels / _groups;
       const dim_t k = in_channels_per_group * kernel_size;
 
-      StorageView buffer({batch_size, _groups, output_length, k},
-                         DataTypeToEnum<T>::value, Device::CUDA);
+      StorageView buffer({batch_size, _groups, output_length, k}, DataTypeToEnum<T>::value, D);
       const T* x = input.data<T>();
       const T* w = weight.data<T>();
       T* o = output.data<T>();

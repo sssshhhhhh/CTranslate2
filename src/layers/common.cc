@@ -423,7 +423,7 @@ namespace ctranslate2 {
       } else if (_qzero && _qscale) {
 #ifdef CT2_USE_HIP
         (void)_activation_type;
-        throw std::invalid_argument("AWQ unsupported with HIP");
+        throw std::invalid_argument("AWQ unsupported with ROCm");
 #else
         switch (_quant_method) {
           case models::QUANTIZATION_TYPE::AWQ_GEMM:

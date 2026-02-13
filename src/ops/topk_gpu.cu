@@ -121,7 +121,7 @@ namespace ctranslate2 {
 #define cub hipcub
 namespace hipcub {
   template <>
-  struct FpLimits<__hip_bfloat16>  // hipcub only hip_bfloat16
+  struct FpLimits<__hip_bfloat16>  // hipcub only defines hip_bfloat16
   {
       static HIPCUB_HOST_DEVICE __forceinline__ __hip_bfloat16 Max() {
           unsigned short max_word = 0x7F7F;
