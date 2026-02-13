@@ -149,6 +149,9 @@ namespace ctranslate2 {
           case ActivationType::Swish:
             epilogue = HIPBLASLT_EPILOGUE_SWISH_EXT;
             break;
+          case ActivationType::Sigmoid:
+            epilogue = HIPBLASLT_EPILOGUE_SIGMOID;
+            break;
           default:
             act_fused = false;
           }

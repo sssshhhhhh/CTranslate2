@@ -21,7 +21,8 @@ namespace ctranslate2 {
                              bias_enum::no_bias, // bias_type
                              false, // has_lse
                              false, // has_dropout
-                             quant_scale_enum::no_scale}; // qscale_type
+                             false, // do_fp8_static_quant
+                             false}; // skip_min_seqlen_q
     }
 
     fmha_fwd_args get_ck_fmha_fwd_args(const mask_info &mask,
@@ -69,37 +70,36 @@ namespace ctranslate2 {
         auto rng_state_ptr = reinterpret_cast<uint64_t*>(rng_state.buffer());
         auto drop_seed_offset = std::make_pair(rng_state_ptr, rng_state_ptr + 1);
 
-        return fmha_fwd_args{q.buffer(),
-                             k.buffer(),
-                             v.buffer(),
-                             nullptr, // bias
-                             nullptr, // q_descale_ptr
-                             nullptr, // k_descale_ptr
-                             nullptr, // v_descale_ptr
-                             nullptr, // rand_val_ptr
-                             nullptr, // lse_ptr
-                             out.buffer(),
-                             nullptr, // seqstart_q_ptr
-                             nullptr, // seqstart_k_ptr
-                             nullptr, // seqlen_q_ptr
-                             nullptr, // seqlen_k_ptr
-                             nullptr, // cu_seqlen_q_ptr
-                             nullptr, // cu_seqlen_k_ptr
-                             seqlen_q,
-                             seqlen_k,
-                             b,
+        return fmha_fwd_args{q.buffer(),    // q_ptr
+                             k.buffer(),    // k_ptr
+                             v.buffer(),    // v_ptr
+                             nullptr,       // bias_ptr
+                             nullptr,       // rand_val_ptr
+                             nullptr,       // lse_ptr
+                             out.buffer(),  // o_ptr
+                             nullptr,       // seqstart_q_ptr
+                             nullptr,       // seqstart_k_ptr
+                             nullptr,       // seqlen_q_ptr
+                             nullptr,       // seqlen_k_ptr
+                             nullptr,       // cu_seqlen_q_ptr
+                             nullptr,       // cu_seqlen_k_ptr
+                             seqlen_q,      // seqlen_q
+                             seqlen_k,      // seqlen_k
+                             b,             // batch
                              seqlen_q,      // max_seqlen_q
                              d,             // hdim_q
                              d,             // hdim_v
-                             h,             // nhead
+                             h,             // nhead_q
                              h_k,           // nhead_k
                              softmax_scale, // scale_s
+                             1.0f,          // scale_p
+                             1.0f,          // scale_o
                              0.0f,          // logits_soft_cap
-                             stride_q,
-                             stride_k,
-                             stride_v,
-                             0, // stride_alibi_slopes,
-                             0, // stride_randval,
+                             stride_q,      // stride_q
+                             stride_k,      // stride_k
+                             stride_v,      // stride_v
+                             0,             // stride_bias
+                             0,             // stride_randval
                              stride_o,
                              nhead_stride_q,
                              nhead_stride_k,
@@ -117,11 +117,10 @@ namespace ctranslate2 {
                              batch_stride_o,
                              mask.left,
                              mask.right,
-                             0, // sink_size
                              static_cast<ck_tile::index_t>(mask.type),
-                             0, // min_seqlen_q
-                             0.0f, // p_drop
-                             false, // has_dropout_randval,
+                             0,     // min_seqlen_q
+                             0.0f,  // p_drop
+                             false, // s_randval
                              drop_seed_offset};
     }
 

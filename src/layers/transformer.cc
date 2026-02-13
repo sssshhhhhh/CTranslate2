@@ -619,9 +619,10 @@ namespace ctranslate2 {
       StorageView layer_out(dtype, device);
 
       _embeddings(ids, layer_in);
-      if (_start_from_zero_embedding)
+      const bool zero_embedding = _start_from_zero_embedding && step <= 0;
+      if (zero_embedding)
         zero_first_timestep(layer_in, step);
-      if (_embeddings_scale && (!_start_from_zero_embedding || step != 0))
+      if (_embeddings_scale && (!zero_embedding || layer_in.dim(-2) != 1))
         ops::Mul()(layer_in, *_embeddings_scale, layer_in);
       if (_project_in) {
         (*_project_in)(layer_in, layer_out);

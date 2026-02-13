@@ -11,17 +11,14 @@ namespace ctranslate2 {
   namespace layers {
 
     void zero_first_timestep(StorageView& x, dim_t step) {
-      if (step == 0) {
+      if (step == 0 && x.dim(-2) == 1) {
         x.zero();
-      } else if (step < 0) {
-        // TODO: a more direct way to set the first timestep to 0.
-        const auto dtype = x.dtype();
-        const auto device = x.device();
-        StorageView first_step(dtype, device);
-        StorageView other_steps(dtype, device);
-        ops::Split(1, {1, x.dim(1) - 1})(x, first_step, other_steps);
+      } else if (step <= 0) {
+        Shape shape = x.shape();
+        shape[shape.size()-2] = 1;
+        StorageView first_step(std::move(shape), x.dtype(), x.device());
         first_step.zero();
-        ops::Concat(1)({&first_step, &other_steps}, x);
+        ops::Insert(-2, 0)(first_step, x);
       }
     }
 

@@ -613,6 +613,9 @@ namespace ctranslate2 {
         auto& result = results[batch_id];
         dim_t secondary_candidates_offset = _beam_size;
 
+        StorageView logits_vocab;
+        if (return_logits_vocab)
+          logits_vocab = std::move(logits_vec[i]);
         for (dim_t k = 0; k < _beam_size; ++k) {
           const size_t last_id = topk_ids.at<int32_t>({i, k});
           dim_t next_beam_id = k;
@@ -631,7 +634,7 @@ namespace ctranslate2 {
             if (alive_attention)
               result.attention.emplace_back(build_attention(alive_attention, i, k, start, end));
             if (return_logits_vocab) {
-              result.logits_vocab.emplace_back(std::move(logits_vec[i * k]));
+              result.logits_vocab.emplace_back(std::vector<StorageView>{logits_vocab});
             }
 
             // Move another active beam to this position.
