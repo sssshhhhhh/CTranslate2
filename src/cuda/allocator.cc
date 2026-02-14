@@ -143,15 +143,11 @@ namespace ctranslate2 {
 
     static CudaAllocator resolve_cuda_allocator() {
       const bool cuda_malloc_async_is_supported = support_cuda_malloc_async();
-#if _WIN32 && defined(CT2_USE_HIP)
-      // defaults to cub_caching on Windows due to graphic card crash issue with cudaMallocAsync
-      const auto allocator_name = read_string_from_env("CT2_CUDA_ALLOCATOR", "cub_caching");
-#else
       const auto allocator_name = read_string_from_env("CT2_CUDA_ALLOCATOR",
                                                        cuda_malloc_async_is_supported
                                                        ? "cuda_malloc_async"
                                                        : "cub_caching");
-#endif
+
       CudaAllocator allocator = CudaAllocator::MallocAsync;
 
       if (allocator_name == "cub_caching") {
